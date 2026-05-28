@@ -1,0 +1,14 @@
+// Production Configuration
+// 이 파일을 복사하여 Production.xcconfig로 사용하세요.
+// Production.xcconfig는 .gitignore에 포함되어 있습니다.
+
+// Backend API
+API_BASE_URL = https:/$()/api.snail.example.com/api/v1
+
+// App Identity
+BUNDLE_IDENTIFIER = com.snail.app
+APP_DISPLAY_NAME = Snail
+
+// Feature Flags
+ENABLE_DEBUG_MENU = NO
+ENABLE_MOCK_API = NO
