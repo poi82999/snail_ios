@@ -1,0 +1,34 @@
+# Snail iOS — 유저 앱
+
+이 프로젝트는 네일 예약 + 커뮤니티 플랫폼 Snail의 iOS 유저 앱이다.
+Swift 5.10+, iOS 17+, SwiftUI, MVVM + Clean Architecture 기반이다.
+
+## 백엔드 API 컨텍스트
+
+`backend-context/` 폴더에 백엔드 API 명세가 동기화되어 있다.
+API 관련 코드 작성 시 반드시 아래 파일을 참조하라:
+
+1. `backend-context/frontend_app.ai.txt` — 유저 앱 전용 API 번들 (인증, 검색, 예약, 커뮤니티). 화면 구현 시 가장 먼저 읽어라.
+2. `backend-context/api_cookbook.ai.txt` — end-to-end 흐름 레시피 (검색→예약 등).
+3. `backend-context/openapi.json` — 전체 OpenAPI 3.1 스펙. 타입 생성 시 사용.
+
+## API 연동 필수 규칙
+
+- 인증: `Authorization: Bearer <token>` 헤더.
+- 변이 요청(POST/PUT/PATCH/DELETE)에 `Idempotency-Key: <UUID>` 헤더 필수.
+- 에러: `error.code` 필드로 분기. 에러 코드 목록은 `frontend_app.ai.txt` 참고.
+- 페이지네이션: cursor 기반. `next_cursor` → `cursor` 파라미터.
+- 토큰 만료(401) 시 `POST /auth/refresh`로 자동 갱신.
+
+## 아키텍처
+
+- Presentation(SwiftUI + @Observable ViewModel) → Domain(UseCase, Entity) → Data(Repository, NetworkService)
+- NavigationStack 기반 네비게이션.
+- URLSession async/await 기반 APIClient.
+- 외부 의존성 최소화 (Apple 프레임워크 우선).
+
+## 코드 스타일
+
+- SwiftLint 규칙 준수 (.swiftlint.yml).
+- 한국어 주석 사용 (비즈니스 로직).
+- Conventional Commits (feat:, fix:, refactor: 등).
