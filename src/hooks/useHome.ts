@@ -60,19 +60,23 @@ export function useLikeToggle() {
       });
 
       // 모든 홈 디자인 캐시에 같은 찜 상태를 반영해 탭 간 표시가 어긋나지 않게 한다.
+      // ['designs'] prefix는 무한쿼리(['designs','infinite',...]: InfiniteData)도 매칭되므로,
+      // Design[] 배열 형태가 아닌 캐시는 건드리지 않는다(런타임 타입 오류 방지).
       queryClient.setQueriesData<Design[]>({ queryKey: ['designs'] }, (old) =>
-        old?.map((d) =>
-          d.id === designId
-            ? {
-                ...d,
-                isLiked,
-                likeCount: Math.max(
-                  0,
-                  d.likeCount + (d.isLiked === isLiked ? 0 : isLiked ? 1 : -1)
-                ),
-              }
-            : d
-        )
+        Array.isArray(old)
+          ? old.map((d) =>
+              d.id === designId
+                ? {
+                    ...d,
+                    isLiked,
+                    likeCount: Math.max(
+                      0,
+                      d.likeCount + (d.isLiked === isLiked ? 0 : isLiked ? 1 : -1)
+                    ),
+                  }
+                : d
+            )
+          : old
       );
 
       return { previousDesigns };
