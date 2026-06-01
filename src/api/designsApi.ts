@@ -74,6 +74,7 @@ export function buildDesignQuery(
   if (hasValues(filters.moods)) params.moods = filters.moods;
   if (filters.priceMin !== undefined) params.price_min = filters.priceMin;
   if (filters.priceMax !== undefined) params.price_max = filters.priceMax;
+  if (filters.durationMin !== undefined) params.duration_min = filters.durationMin;
   if (filters.durationMax !== undefined) params.duration_max = filters.durationMax;
   if (filters.sort !== undefined) params.sort = filters.sort;
   if (cursor !== undefined && cursor !== null) params.cursor = cursor;

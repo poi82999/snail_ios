@@ -24,12 +24,21 @@ export type DesignSort =
 export interface SearchFilters {
   q?: string;
   region?: string;
-  colors?: string[]; // 한국어 자유 문자열 (예: '핑크')
-  moods?: string[]; // 예: '러블리'
+  colors?: string[]; // 한국어 자유 문자열 (예: '핑크') — 값은 useTaxonomy().colors에서
+  moods?: string[]; // 예: '러블리' — 값은 useTaxonomy().moods에서
   priceMin?: number;
   priceMax?: number;
+  durationMin?: number; // 분
   durationMax?: number; // 분
   sort?: DesignSort;
+}
+
+// GET /taxonomy — 필터 값 선택 UI가 쓰는 백엔드 통제어휘 SSOT
+export interface Taxonomy {
+  colors: string[];
+  moods: string[];
+  seasons: string[];
+  regions: string[];
 }
 
 export interface FilterChipItem {

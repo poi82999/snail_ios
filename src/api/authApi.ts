@@ -53,6 +53,33 @@ export async function signInWithApple(
   }
 }
 
+type DevLoginOperation = paths['/api/v1/auth/dev-login']['post'];
+type DevLoginRequest = components['schemas']['DevLoginRequest'];
+type DevLoginResponse =
+  DevLoginOperation['responses'][200]['content']['application/json'];
+
+// 개발용 로그인: Apple id_token 없이 토큰 발급(로컬/스테이징 전용).
+// FE가 인증 화면을 토큰 없이도 테스트할 수 있게 한다. 응답은 Apple과 동일한 {tokens,user}.
+export async function devLogin(nickname?: string | null): Promise<UserMe> {
+  try {
+    const body: DevLoginRequest = nickname != null ? { nickname } : {};
+    const response = await apiClient.post<DevLoginResponse>(
+      '/auth/dev-login',
+      body
+    );
+    const tokens: TokenPair = response.data.tokens;
+
+    setTokens({
+      access: tokens.access_token,
+      refresh: tokens.refresh_token,
+    });
+
+    return response.data.user;
+  } catch (error) {
+    throw toApiError(error);
+  }
+}
+
 export async function fetchMe(): Promise<UserMe> {
   try {
     const response = await apiClient.get<UserMe>('/me');

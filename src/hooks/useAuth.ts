@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
+  devLogin,
   fetchMe,
   signInWithApple,
   signOut,
@@ -50,6 +51,18 @@ export function useSignOut() {
     mutationFn: signOut,
     onSuccess: () => {
       queryClient.setQueryData(AUTH_SESSION_QUERY_KEY, null);
+    },
+  });
+}
+
+// 개발용 로그인(로컬/스테이징). nickname 선택. Apple과 동일하게 세션 캐시를 채운다.
+export function useDevLogin() {
+  const queryClient = useQueryClient();
+
+  return useMutation<UserMe, ApiError, string | null | undefined>({
+    mutationFn: (nickname) => devLogin(nickname),
+    onSuccess: (user: UserMe) => {
+      queryClient.setQueryData(AUTH_SESSION_QUERY_KEY, user);
     },
   });
 }

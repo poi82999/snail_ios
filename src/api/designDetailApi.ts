@@ -1,9 +1,13 @@
 import apiClient from './client';
-import type { Designer, DesignDetail, DesignOption } from '../types';
+import { mapDesignToUi } from './designsApi';
+import type { Design, Designer, DesignDetail, DesignOption } from '../types';
 import type { components, paths } from '../types/api';
 
 type DesignDetailResponse =
   paths['/api/v1/designs/{design_id}']['get']['responses'][200]['content']['application/json'];
+type RelatedOperation = paths['/api/v1/designs/{design_id}/related']['get'];
+type RelatedResponse =
+  RelatedOperation['responses'][200]['content']['application/json'];
 type DesignPublic = components['schemas']['DesignPublic'];
 type DesignDesignerPublic = components['schemas']['DesignDesignerPublic'];
 type DesignOptionPublic = components['schemas']['DesignOptionPublic'];
@@ -69,4 +73,18 @@ export async function fetchDesignDetail(id: string): Promise<DesignDetail> {
   );
 
   return mapDesignToDetail(response.data);
+}
+
+// GET /designs/{id}/related — 연관 추천 디자인(상세 화면 하단 섹션).
+// 응답은 DesignPublic[] → 홈/검색과 동일한 Design 카드 모델로 매핑.
+export async function fetchRelatedDesigns(
+  id: string,
+  limit?: number
+): Promise<Design[]> {
+  const response = await apiClient.get<RelatedResponse>(
+    `/designs/${encodeURIComponent(id)}/related`,
+    { params: limit !== undefined ? { limit } : undefined }
+  );
+
+  return response.data.map((design) => mapDesignToUi(design, '추천'));
 }
