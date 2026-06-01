@@ -1,5 +1,6 @@
 import apiClient from './client';
 import type { components, paths } from '../types/api';
+import type { DesignOption } from '../types';
 
 type AvailabilityOperation =
   paths['/api/v1/designs/{design_id}/availability']['get'];
@@ -16,6 +17,20 @@ export type AvailableSlot = AvailabilityResponse[number];
 export type ReservationCreatePayload = components['schemas']['ReservationCreate'];
 export type ReservationResponse =
   CreateReservationOperation['responses'][201]['content']['application/json'];
+
+export interface DisplaySlot {
+  startAt: string;
+  endAt: string;
+  label: string;
+  availableDesignerIds: string[];
+  isAvailable: boolean;
+}
+
+export interface GroupedOptions {
+  removal: DesignOption[];
+  extend: DesignOption[];
+  care: DesignOption[];
+}
 
 export interface ReservationSelection {
   designId: string;
@@ -39,6 +54,52 @@ export function buildReservationPayload(
     selected_option_ids: selection.selectedOptionIds ?? [],
     user_request: selection.userRequest ?? undefined,
   };
+}
+
+export function formatSlotLabel(startAt: string): string {
+  const date = new Date(startAt);
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+
+  return `${hours}:${minutes}`;
+}
+
+export function toDisplaySlots(slots: AvailableSlot[]): DisplaySlot[] {
+  return slots.map((slot) => {
+    const availableDesignerIds = [...(slot.available_designer_ids ?? [])];
+
+    return {
+      startAt: slot.start_at,
+      endAt: slot.end_at,
+      label: formatSlotLabel(slot.start_at),
+      availableDesignerIds,
+      isAvailable: availableDesignerIds.length > 0,
+    };
+  });
+}
+
+export function filterSlotsByDesigner(
+  slots: DisplaySlot[],
+  designerId?: string | null
+): DisplaySlot[] {
+  if (!designerId) return slots;
+
+  return slots.filter((slot) => slot.availableDesignerIds.includes(designerId));
+}
+
+export function groupOptionsByKind(options: DesignOption[]): GroupedOptions {
+  return options.reduce<GroupedOptions>(
+    (groups, option) => {
+      groups[option.kind].push(option);
+
+      return groups;
+    },
+    {
+      removal: [],
+      extend: [],
+      care: [],
+    }
+  );
 }
 
 export async function fetchAvailability(
