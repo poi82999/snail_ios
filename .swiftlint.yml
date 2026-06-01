@@ -1,0 +1,87 @@
+# SwiftLint Configuration for Snail iOS
+
+included:
+  - Snail
+
+excluded:
+  - Pods
+  - DerivedData
+  - .build
+  - Tests
+
+# 규칙 비활성화
+disabled_rules:
+  - trailing_whitespace       # 한국어 주석에서 자주 발생
+  - todo                      # TODO/FIXME 허용
+  - orphaned_doc_comment
+
+# 옵트인 규칙
+opt_in_rules:
+  - closure_spacing
+  - collection_alignment
+  - contains_over_filter_count
+  - empty_count
+  - empty_string
+  - fatal_error_message
+  - first_where
+  - identical_operands
+  - last_where
+  - modifier_order
+  - operator_usage_whitespace
+  - overridden_super_call
+  - prefer_self_in_static_references
+  - private_action
+  - private_outlet
+  - sorted_first_last
+  - toggle_bool
+  - unneeded_parentheses_in_closure_argument
+  - vertical_whitespace_closing_braces
+
+# 규칙 설정
+line_length:
+  warning: 120
+  error: 200
+  ignores_comments: true
+  ignores_urls: true
+
+file_length:
+  warning: 500
+  error: 1000
+
+type_body_length:
+  warning: 300
+  error: 500
+
+function_body_length:
+  warning: 50
+  error: 100
+
+function_parameter_count:
+  warning: 6
+  error: 8
+
+type_name:
+  min_length: 2
+  max_length: 50
+
+identifier_name:
+  min_length:
+    warning: 2
+    error: 1
+  max_length:
+    warning: 50
+    error: 60
+  excluded:
+    - id
+    - x
+    - y
+    - i
+    - j
+    - to
+    - at
+
+nesting:
+  type_level: 3
+  function_level: 5
+
+reporter: "xcode"
