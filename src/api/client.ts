@@ -4,11 +4,12 @@ import axios, {
   type InternalAxiosRequestConfig,
 } from 'axios';
 
+import { API_BASE_URL } from '../config/env';
 import { clearTokens, getAccessToken, getRefreshToken, setTokens } from './authToken';
 import { ApiError, toApiError } from './errors';
 
-export const API_BASE_URL = 'http://localhost:8000/api/v1';
-// Android 에뮬레이터에서는 localhost 대신 10.0.2.2를 사용해야 한다.
+// 베이스 URL은 src/config/env.ts에서 플랫폼/환경별로 결정한다(재노출만).
+export { API_BASE_URL };
 
 const IDEMPOTENCY_HEADER = 'Idempotency-Key';
 const REFRESH_ENDPOINT = '/auth/refresh';
