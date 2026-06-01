@@ -78,9 +78,30 @@ export function useAuth(): AuthState {
   };
 }
 
+// DEV 전용 자동 로그인에 쓸 시드 유저(로컬/스테이징 테스트용).
+const DEV_AUTO_LOGIN_NICKNAME = 'seed_user_01';
+
+async function bootstrapTokens(): Promise<boolean> {
+  const hasToken = await loadPersistedTokens();
+  if (hasToken) return true;
+
+  // 운영 빌드(__DEV__ === false)에선 절대 동작하지 않는다.
+  // 개발 중 토큰이 없으면 dev-login으로 자동 인증해 찜/예약 등 인증 화면을 바로 테스트한다.
+  if (__DEV__) {
+    try {
+      await devLogin(DEV_AUTO_LOGIN_NICKNAME);
+      return true;
+    } catch {
+      return false; // dev-login 실패해도 비로그인 상태로 진행
+    }
+  }
+
+  return false;
+}
+
 function loadAuthBootstrapOnce(): Promise<boolean> {
   if (!authBootstrapPromise) {
-    authBootstrapPromise = loadPersistedTokens().catch((error: unknown) => {
+    authBootstrapPromise = bootstrapTokens().catch((error: unknown) => {
       authBootstrapPromise = null;
       throw error;
     });
