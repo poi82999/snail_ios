@@ -38,9 +38,36 @@ git diff                                              # 사령관 품질 리뷰
 5. 예약 플로우 (생성·시간/날짜 조회)
 6. 화면 상태처리: 로딩 스켈레톤 / 빈 상태 / 에러 재시도
 
+## 멀티 에이전트 (업그레이드)
+역할 다양성으로 품질↑, 병렬로 처리량↑.
+
+| 도구 | 역할 | 모델 | 비고 |
+|---|---|---|---|
+| Opus | 사령관·판정 | claude-opus-4-8 | 계획·리뷰·통합·커밋 |
+| Codex | 주 실행관 | gpt-5.5 / xhigh | 코드 수정 |
+| Gemini | 교차 리뷰어 | gemini-3.1-pro | read-only(`plan`). 실행관(`yolo`)도 가능하나 worktree 폴더 trust 필요 |
+
+```bash
+# 교차 리뷰 (Codex 변경을 Gemini가 검수 → Opus 판정)
+scripts/gemini-review.sh <work-order.md> [git-diff-인자...]
+
+# 병렬 실행 (격리 worktree에서 동시 진행, 충돌 없음)
+scripts/codex-worktree.sh <work-order.md> [codex|gemini] [name]
+#   → 이후: cd .worktrees/<name> && verify, 메인에서 git merge wt/<name>
+
+# 공유 타입 계약 재생성 (backend-context 동기화 후)
+scripts/gen-api-types.sh    # openapi.json → src/types/api.ts
+```
+
 ## 파일 안내
 - `AGENTS.md` — Codex가 매 실행 시 자동 로드하는 운영 계약 (규칙의 단일 출처)
 - `CLAUDE.md` — 사령관(Opus)용 프로젝트 컨텍스트
+- `src/types/api.ts` — openapi.json에서 생성한 공유 타입 계약 (직접 수정 금지)
 - `ops/codex/work-order-template.md` — work-order 양식
 - `ops/codex/work-orders/` — 실제 발행한 work-order (감사 추적)
+- `ops/codex/reports/` — 병렬 실행 보고 (worktree별)
 - `scripts/codex-do.{sh,ps1}` — 디스패치 래퍼
+- `scripts/verify.sh` — 자동 검증 게이트
+- `scripts/gemini-review.sh` — 교차 모델 리뷰 (read-only)
+- `scripts/codex-worktree.sh` — 병렬 worktree 디스패치
+- `scripts/gen-api-types.sh` — 타입 codegen

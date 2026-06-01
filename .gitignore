@@ -110,3 +110,8 @@ backend-context/
 
 # Codex 디스패치 transient 리포트
 ops/codex/last-report.md
+
+# 병렬 실행관 worktree
+.worktrees/
+# Gemini 교차 리뷰 transient
+ops/codex/last-review.md
