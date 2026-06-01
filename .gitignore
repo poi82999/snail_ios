@@ -107,3 +107,6 @@ backend-context/
 # Misc
 *.log
 *.orig
+
+# Codex 디스패치 transient 리포트
+ops/codex/last-report.md
