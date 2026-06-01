@@ -115,3 +115,5 @@ ops/codex/last-report.md
 .worktrees/
 # Gemini 교차 리뷰 transient
 ops/codex/last-review.md
+# 병렬 실행 보고(transient)
+ops/codex/reports/
