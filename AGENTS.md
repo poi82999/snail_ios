@@ -14,7 +14,7 @@
   `src/navigation/`, `src/theme/`, `App.tsx`, `index.ts`,
   `package.json` / `package-lock.json`, `tailwind.config.js`, `babel.config.js`, `app.json`, `tsconfig.json`.
 - **의존성 추가는 work-order가 지시할 때만.** 임의로 새 패키지를 설치하지 마라.
-- **git 커밋·브랜치·푸시 금지.** 변경만 작업트리에 남기고 멈춰라. 커밋은 사령관이 한다.
+- **git 커밋·브랜치·푸시 금지.** 변경만 작업트리에 남기고 멈춰라. 커밋은 사령관이 한다. (work-order 자체는 디스패치 전에 이미 커밋되어 있다 — 작업트리의 미커밋 변경은 모두 네가 만든 것이어야 한다.)
 - 새 상태관리 라이브러리(Redux/MobX/Zustand 등) 도입 금지. 서버 상태는 **TanStack Query v5 훅으로만**.
 
 ## 2. 스타일링 (중요 — 자주 틀리는 부분)

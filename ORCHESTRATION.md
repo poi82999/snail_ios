@@ -19,6 +19,7 @@ scripts/codex-do.sh ops/codex/work-orders/<task>.md
 ## 안전 루프 (매 work-order)
 1. **브랜치**: 작업은 항상 전용 브랜치에서. `main` 직접 작업 금지.
 2. **좁은 범위**: work-order는 한 번에 하나의 이음매(seam)만. "수정 허용 파일"을 명시(`ALLOWED-FILES` 블록).
+   - `codex-do.sh`가 디스패치 직전 work-order(+brief)를 **자동 선커밋**해 baseline을 깨끗이 만든다 → verify가 Codex 변경만 본다.
 3. **자동 게이트**: Codex 실행 직후 `scripts/verify.sh <work-order>` 실행 — git 기준으로 (a) 범위 밖 변경, (b) 의존성 변경, (c) `tsc --noEmit`을 자동 검사하고 PASS/FAIL을 낸다. 그 위에 사령관이 `git diff`로 코드 품질 리뷰 + 필요시 에뮬레이터 렌더 확인.
 4. **롤백**: 범위 이탈·오작동 시 `git checkout -- <file>` 또는 `git restore`로 즉시 되돌림.
 5. **커밋**: 게이트 통과 + 사용자 승인 후에만 사령관이 커밋.

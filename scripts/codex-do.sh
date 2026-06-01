@@ -23,6 +23,21 @@ OUT="${2:-ops/codex/last-report.md}"
 command -v codex >/dev/null 2>&1 || { echo "codex CLI를 PATH에서 찾을 수 없습니다" >&2; exit 1; }
 mkdir -p "$(dirname "$OUT")"
 
+# [프로세스 자동화] work-order 선커밋: 디스패치 전에 work-order(및 참조 brief)를 커밋해
+# 깨끗한 baseline을 만든다 → 이후 verify.sh가 'Codex가 만든 변경'만 보고 깔끔히 판정한다.
+if [ -n "$(git status --porcelain -- "$WO")" ]; then
+  echo ">> work-order 미커밋 감지 → 선커밋 (clean baseline)" >&2
+  git add "$WO"
+  # 같은 작업의 brief가 함께 미커밋이면 같이 커밋 (참조 무결성)
+  git add ops/codex/briefs 2>/dev/null || true
+  git commit -q -m "chore(wo): $(basename "$WO" .md) 디스패치 전 선커밋" \
+    -m "Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>" || true
+fi
+if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+  echo "⚠ 경고: 작업트리에 미커밋 변경이 남아있음 — verify 범위검증이 오염될 수 있음" >&2
+  git status --short >&2
+fi
+
 echo ">> Codex 디스패치: $WO  (model=$MODEL, effort=$EFFORT)" >&2
 codex exec \
   -C "$REPO" \
