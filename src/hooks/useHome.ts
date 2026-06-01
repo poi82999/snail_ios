@@ -16,11 +16,39 @@ interface LikeToggleVariables {
 }
 
 interface LikeToggleContext {
-  previousDesigns: Array<[QueryKey, Design[] | undefined]>;
+  previousDesigns: Array<[QueryKey, unknown]>;
 }
 
 async function fetchDesigns(tab: HomeTab, filters: FilterId[]): Promise<Design[]> {
   return fetchDesignList(tab, filters);
+}
+
+function patchDesign(d: Design, designId: string, isLiked: boolean): Design {
+  if (d.id !== designId) return d;
+  return {
+    ...d,
+    isLiked,
+    likeCount: Math.max(0, d.likeCount + (d.isLiked === isLiked ? 0 : isLiked ? 1 : -1)),
+  };
+}
+
+// ['designs'] prefix는 단발 쿼리(Design[])와 무한 쿼리(InfiniteData<{designs:Design[]}>)를
+// 모두 매칭한다. 두 캐시 형태를 모두 안전하게 패치한다.
+function patchDesignsCache(old: unknown, designId: string, isLiked: boolean): unknown {
+  if (Array.isArray(old)) {
+    return (old as Design[]).map((d) => patchDesign(d, designId, isLiked));
+  }
+  if (old && typeof old === 'object' && 'pages' in old) {
+    const data = old as { pages: { designs: Design[] }[] };
+    return {
+      ...data,
+      pages: data.pages.map((page) => ({
+        ...page,
+        designs: page.designs.map((d) => patchDesign(d, designId, isLiked)),
+      })),
+    };
+  }
+  return old;
 }
 
 export function useDesigns(tab: HomeTab, filters: FilterId[]) {
@@ -55,39 +83,24 @@ export function useLikeToggle() {
     onMutate: async ({ designId, isLiked }) => {
       await queryClient.cancelQueries({ queryKey: ['designs'] });
 
-      const previousDesigns = queryClient.getQueriesData<Design[]>({
-        queryKey: ['designs'],
-      });
+      const previousDesigns = queryClient.getQueriesData({ queryKey: ['designs'] });
 
-      // 모든 홈 디자인 캐시에 같은 찜 상태를 반영해 탭 간 표시가 어긋나지 않게 한다.
-      // ['designs'] prefix는 무한쿼리(['designs','infinite',...]: InfiniteData)도 매칭되므로,
-      // Design[] 배열 형태가 아닌 캐시는 건드리지 않는다(런타임 타입 오류 방지).
-      queryClient.setQueriesData<Design[]>({ queryKey: ['designs'] }, (old) =>
-        Array.isArray(old)
-          ? old.map((d) =>
-              d.id === designId
-                ? {
-                    ...d,
-                    isLiked,
-                    likeCount: Math.max(
-                      0,
-                      d.likeCount + (d.isLiked === isLiked ? 0 : isLiked ? 1 : -1)
-                    ),
-                  }
-                : d
-            )
-          : old
+      // 모든 홈/검색 디자인 캐시(단발+무한)에 같은 찜 상태를 낙관적으로 반영한다.
+      queryClient.setQueriesData({ queryKey: ['designs'] }, (old) =>
+        patchDesignsCache(old, designId, isLiked)
       );
 
       return { previousDesigns };
     },
     onError: (_error, _variables, context) => {
       context?.previousDesigns.forEach(([queryKey, data]) => {
-        queryClient.setQueryData<Design[]>(queryKey, data);
+        queryClient.setQueryData(queryKey, data);
       });
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['designs'] });
+      // 상세 화면 좋아요 상태도 서버 기준으로 다시 맞춘다.
+      queryClient.invalidateQueries({ queryKey: ['design'] });
     },
   });
 }

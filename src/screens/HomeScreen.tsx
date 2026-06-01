@@ -5,15 +5,17 @@ import {
   FlatList,
   TouchableOpacity,
   Text,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import tw from 'twrnc';
-import { useDesigns, useLikeToggle } from '../hooks/useHome';
+import { useLikeToggle } from '../hooks/useHome';
+import { useInfiniteDesigns } from '../hooks/useInfiniteDesigns';
 import { FILTER_CHIPS } from '../api/mockData';
-import { Design, FilterId, HomeTab, RootStackParamList } from '../types';
+import { Design, FilterId, HomeTab, RootStackParamList, SearchFilters } from '../types';
 import FilterChip from '../components/FilterChip';
 import HomeTabSelector from '../components/HomeTabSelector';
 import DesignCard from '../components/DesignCard';
@@ -44,24 +46,44 @@ function EmptyState() {
 export default function HomeScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [activeTab, setActiveTab] = useState<HomeTab>('추천');
-  const [activeFilters, setActiveFilters] = useState<FilterId[]>([]);
+  const [filters, setFilters] = useState<SearchFilters>({});
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [filterSection, setFilterSection] = useState<string | undefined>();
 
-  const { data: designs, isLoading, isError, refetch } = useDesigns(activeTab, activeFilters);
+  const {
+    designs,
+    isLoading,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteDesigns(activeTab, filters);
   const { mutate: toggleLike } = useLikeToggle();
 
-  function handleFilterToggle(id: FilterId) {
-    setActiveFilters((prev) =>
-      prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]
-    );
+  // 칩 활성 표시는 적용된 SearchFilters 값에서 파생한다.
+  function chipActive(id: FilterId): boolean {
+    switch (id) {
+      case 'region':
+        return Boolean(filters.region);
+      case 'color':
+        return (filters.colors?.length ?? 0) > 0;
+      case 'duration':
+        return filters.durationMax !== undefined;
+      case 'price':
+        return filters.priceMin !== undefined || filters.priceMax !== undefined;
+      case 'filter':
+        return Object.values(filters).some((v) =>
+          Array.isArray(v) ? v.length > 0 : v !== undefined
+        );
+      default:
+        return false;
+    }
   }
 
   const cardPairs: Array<[Design, Design | undefined]> = [];
-  if (designs) {
-    for (let i = 0; i < designs.length; i += 2) {
-      cardPairs.push([designs[i], designs[i + 1]]);
-    }
+  for (let i = 0; i < designs.length; i += 2) {
+    cardPairs.push([designs[i], designs[i + 1]]);
   }
 
   return (
@@ -98,7 +120,7 @@ export default function HomeScreen() {
             <FilterChip
               key={chip.id}
               label={chip.label}
-              isActive={activeFilters.includes(chip.id)}
+              isActive={chipActive(chip.id)}
               onPress={() => {
                 if (chip.id === 'filter') {
                   setFilterSection(undefined);
@@ -136,7 +158,7 @@ export default function HomeScreen() {
             <Text style={tw`text-white text-[14px]`}>다시 시도</Text>
           </TouchableOpacity>
         </View>
-      ) : !designs || designs.length === 0 ? (
+      ) : designs.length === 0 ? (
         <EmptyState />
       ) : (
         <FlatList
@@ -145,6 +167,17 @@ export default function HomeScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={tw`pb-[20px]`}
           ItemSeparatorComponent={() => <View style={tw`h-[8px]`} />}
+          onEndReachedThreshold={0.5}
+          onEndReached={() => {
+            if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+          }}
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <View style={tw`py-[20px] items-center`}>
+                <ActivityIndicator color="#7D695D" />
+              </View>
+            ) : null
+          }
           renderItem={({ item: [left, right] }) => (
             <View style={tw`flex-row gap-x-[8px]`}>
               <DesignCard
@@ -165,7 +198,16 @@ export default function HomeScreen() {
           )}
         />
       )}
-      <FilterModal visible={showFilterModal} onClose={() => setShowFilterModal(false)} initialSection={filterSection} />
+      <FilterModal
+        visible={showFilterModal}
+        onClose={() => setShowFilterModal(false)}
+        initialSection={filterSection}
+        initialFilters={filters}
+        onApply={(applied) => {
+          setFilters(applied);
+          setShowFilterModal(false);
+        }}
+      />
     </SafeAreaView>
   );
 }
