@@ -12,6 +12,26 @@ export type RootStackParamList = {
 
 export type FilterId = 'filter' | 'region' | 'duration' | 'date' | 'price' | 'color';
 
+export type DesignSort =
+  | 'relevance'
+  | 'popular'
+  | 'latest'
+  | 'price_asc'
+  | 'price_desc'
+  | 'rating'
+  | 'distance';
+
+export interface SearchFilters {
+  q?: string;
+  region?: string;
+  colors?: string[]; // 한국어 자유 문자열 (예: '핑크')
+  moods?: string[]; // 예: '러블리'
+  priceMin?: number;
+  priceMax?: number;
+  durationMax?: number; // 분
+  sort?: DesignSort;
+}
+
 export interface FilterChipItem {
   id: FilterId;
   label: string;
