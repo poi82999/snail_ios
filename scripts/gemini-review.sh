@@ -10,6 +10,12 @@ set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
 export PATH="$PATH:${HOME:-}/AppData/Roaming/npm:$(npm config get prefix 2>/dev/null || true)"
 
+# 다계정 격리: GEMINI_PROFILE=acct2 면 그 계정 프로필로 실행 (병렬 함대용)
+if [ -n "${GEMINI_PROFILE:-}" ]; then
+  export USERPROFILE="C:\\gemini-profiles\\$GEMINI_PROFILE"
+  export HOME="/c/gemini-profiles/$GEMINI_PROFILE"
+fi
+
 WO="${1:-}"; shift || true
 OUT="ops/codex/last-review.md"
 mkdir -p "$(dirname "$OUT")"

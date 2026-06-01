@@ -47,7 +47,28 @@ git diff                                              # 사령관 품질 리뷰
 | Codex | 주 실행관 | gpt-5.5 / xhigh | 코드 수정 |
 | Gemini | 교차 리뷰어 | gemini-3.1-pro | read-only(`plan`). 실행관(`yolo`)도 가능하나 worktree 폴더 trust 필요 |
 
+### 토큰 경제 (역할 배치 원리)
+판단 밀도가 높은 일은 비싼 모델, 분량 많고 판단 적은 일은 싼 Gemini로.
+- **Opus**(최고가): 아키텍처·work-order·최종 판정만. 원자료 직접 흡입 최소화.
+- **Codex**(고가): 모호하고 어려운 이음매, 진짜 추론 코드.
+- **Gemini**(싸고 무제한·거대컨텍스트, 약한 판단): ①사전소화 브리프(큰 자료→1페이지) ②기계적 코드생성(타이트 스펙) ③와이드 탐색·픽스처·로그요약 ④교차리뷰.
+
+### 보수적 난이도 라우팅
+work-order의 `executor:` 필드로 지정. **기본 codex**, 자동 휴리스틱 없음. Gemini 실행분은
+verify + 교차리뷰 필수, 2회 실패 시 codex 에스컬레이션. (상세 규칙: work-order-template.md)
+
+### 다계정 Gemini 함대 (병렬)
+계정별 프로필로 격리 → 병렬 워커. Windows에선 `USERPROFILE`/`HOME` 오버라이드로 `~/.gemini` 분리.
 ```bash
+scripts/gemini-login.sh acct2          # (사용자, 1회) 계정별 대화형 로그인+trust
+GEMINI_PROFILE=acct2 scripts/gemini-brief.sh ...    # 그 계정으로 헤드리스 실행
+GEMINI_PROFILE=acct3 scripts/gemini-review.sh ...   # 동시에 다른 계정으로
+```
+
+```bash
+# 사전소화 (큰 backend-context → 작업별 1페이지 브리프, Opus/Codex 입력 토큰 절약)
+scripts/gemini-brief.sh "<작업>" backend-context/frontend_app.ai.txt
+
 # 교차 리뷰 (Codex 변경을 Gemini가 검수 → Opus 판정)
 scripts/gemini-review.sh <work-order.md> [git-diff-인자...]
 
