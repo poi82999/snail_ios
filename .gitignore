@@ -1,3 +1,56 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.provisionprofile
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+*.pem
+
+# local env files
+.env
+.env.*
+.env*.local
+
+# Claude Code
+.claude/
+
+# typescript
+*.tsbuildinfo
+
+# generated native folders
+/ios
+/android
+
 # Xcode
 build/
 DerivedData/
@@ -22,21 +75,13 @@ xcuserdata/
 Packages/
 Package.resolved
 
-# CocoaPods (사용 시)
+# CocoaPods
 Pods/
 *.xcworkspace
 
-# Carthage (사용 시)
+# Carthage
 Carthage/Build/
 Carthage/Checkouts/
-
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-._*
-.Spotlight-V100
-.Trashes
 
 # IDE
 *.swp
@@ -44,23 +89,11 @@ Carthage/Checkouts/
 *~
 .idea/
 *.xcscmblueprint
-
-# Environment / Secrets
 *.xcconfig
 !*.xcconfig.example
-.env
-.env.*
 
 # Archives
 *.xcarchive
-
-# Provisioning profiles
-*.mobileprovision
-*.provisionprofile
-
-# Playground
-timeline.xctimeline
-playground.xcworkspace
 
 # Fastlane
 fastlane/report.xml
@@ -68,7 +101,7 @@ fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
 
-# Backend API context (synced per developer)
+# Backend API context
 backend-context/
 
 # Misc
