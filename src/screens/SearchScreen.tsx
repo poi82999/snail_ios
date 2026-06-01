@@ -6,13 +6,15 @@ import {
   TouchableOpacity,
   ScrollView,
   FlatList,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import tw from 'twrnc';
 import { FilterId, Design } from '../types';
-import { getMockDesigns, FILTER_CHIPS } from '../api/mockData';
+import { FILTER_CHIPS } from '../api/mockData';
+import { useSearch } from '../hooks/useSearch';
 import FilterChip from '../components/FilterChip';
 import DesignCard from '../components/DesignCard';
 
@@ -38,11 +40,19 @@ export default function SearchScreen() {
   }, []);
 
   const isSearching = query.length > 0;
-  const allDesigns = getMockDesigns('추천');
 
+  // 실제 검색: GET /search?scope=designs (q 기준). 필터칩 값 선택 UI는 추후.
+  const {
+    data: results,
+    isLoading: isSearchLoading,
+    isError: isSearchError,
+    refetch: refetchSearch,
+  } = useSearch({ q: query.trim() });
+
+  const resultDesigns = results?.designs ?? [];
   const cardPairs: Array<[Design, Design | undefined]> = [];
-  for (let i = 0; i < allDesigns.length; i += 2) {
-    cardPairs.push([allDesigns[i], allDesigns[i + 1]]);
+  for (let i = 0; i < resultDesigns.length; i += 2) {
+    cardPairs.push([resultDesigns[i], resultDesigns[i + 1]]);
   }
 
   return (
@@ -197,19 +207,40 @@ export default function SearchScreen() {
 
           {/* 결과 */}
           {activeTab === '디자인' ? (
-            <FlatList
-              data={cardPairs}
-              keyExtractor={(_, i) => String(i)}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={tw`px-[16px] pb-[20px]`}
-              ItemSeparatorComponent={() => <View style={tw`h-[20px]`} />}
-              renderItem={({ item: [left, right] }) => (
-                <View style={tw`flex-row gap-x-[10px]`}>
-                  <DesignCard design={left} />
-                  {right ? <DesignCard design={right} /> : <View style={tw`flex-1`} />}
-                </View>
-              )}
-            />
+            isSearchLoading ? (
+              <View style={tw`flex-1 items-center justify-center`}>
+                <ActivityIndicator color="#7D695D" />
+              </View>
+            ) : isSearchError ? (
+              <View style={tw`flex-1 items-center justify-center gap-[12px]`}>
+                <Text style={tw`text-[14px] text-[#6F6F6F]`}>검색 중 문제가 발생했어요.</Text>
+                <TouchableOpacity
+                  onPress={() => refetchSearch()}
+                  style={tw`border border-[#D9D9D9] rounded-[16px] py-[7px] px-[20px]`}
+                  activeOpacity={0.7}
+                >
+                  <Text style={tw`text-[14px] text-[#6F6F6F]`}>다시 시도</Text>
+                </TouchableOpacity>
+              </View>
+            ) : resultDesigns.length === 0 ? (
+              <View style={tw`flex-1 items-center justify-center`}>
+                <Text style={tw`text-[14px] text-[#D9D9D9]`}>검색 결과가 없어요</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={cardPairs}
+                keyExtractor={(_, i) => String(i)}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={tw`px-[16px] pb-[20px]`}
+                ItemSeparatorComponent={() => <View style={tw`h-[20px]`} />}
+                renderItem={({ item: [left, right] }) => (
+                  <View style={tw`flex-row gap-x-[10px]`}>
+                    <DesignCard design={left} />
+                    {right ? <DesignCard design={right} /> : <View style={tw`flex-1`} />}
+                  </View>
+                )}
+              />
+            )
           ) : (
             <View style={tw`flex-1 items-center justify-center`}>
               <Text style={tw`text-[14px] text-[#D9D9D9]`}>준비 중</Text>
