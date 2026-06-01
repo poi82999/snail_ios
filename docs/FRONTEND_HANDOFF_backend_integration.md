@@ -127,3 +127,21 @@
 5. **T7** (정리)
 
 모든 작업 후 `npx tsc --noEmit` + 에뮬레이터 실기 확인 필수.
+
+---
+
+## 5. ✅ 데이터 레이어 v2 — F-플랜 완료 (2026-06-02, 민석)
+
+백엔드 계약 레이어(`src/api`·`src/hooks`·`src/types`)를 **전부 배선 완료**했습니다. tsc 통과. FE는 아래 **이미 배선된 타입드 훅/함수**를 import해서 UI만 붙이면 됩니다. (백엔드 의존이라던 dev-login/taxonomy는 실제로 존재하지 않아 — dev-login 생략, colors/moods는 한국어 자유문자열로 처리)
+
+| F | 무엇을 쓰면 되나 (FE 소비 지점) |
+|---|---|
+| **F1 인증** | `useAuth()`→`{user,isAuthenticated,isLoading}`, `useSignInWithApple().mutate({idToken,acceptedTermsVersion,acceptedPrivacyVersion})`, `useSignOut()`. 부트스트랩은 `App.tsx`에 이미 연결됨(`useAuthBootstrap`). FE는 **Apple 버튼 + 로그인 모달 UI**만. (`expo-apple-authentication`으로 id_token 획득은 FE/네이티브 작업) |
+| **F2/F3 검색·필터** | `useSearch(filters: SearchFilters)` — `SearchScreen`의 `getMockDesigns` 대체. `SearchFilters = {q,region,colors[],moods[],priceMin,priceMax,durationMax,sort}`. 필터 칩에 **값 선택 UI**를 붙여 `SearchFilters`를 채우면 됨(현재 FilterId 칩은 카테고리만). 홈 필터도 동일 타입. |
+| **F4 예약** | `useDisplaySlots(designId,date,optionIds,designerId)`→`DisplaySlot[]`(로컬 `HH:mm` 라벨 + 디자이너 가용 필터 적용). `groupOptionsByKind(design.options)`→`{removal,extend,care}`. 확정: `buildReservationPayload({...})`→`useCreateReservation().mutate(payload)`. **슬롯 그리드 비주얼·레이아웃은 T2(FE 몫).** date는 ISO `YYYY-MM-DD`. |
+| **F5 찜** | `useLikeToggle().mutate({designId,isLiked})` — 낙관적 업데이트+롤백 자동. **비로그인 시 `mutation.error`가 `ApiError(code:'UNAUTHORIZED')`** → 이걸로 로그인 모달 트리거. |
+| **F6 에러** | `import { getErrorMessage } from '../api/errors'`. `catch`/`mutation.error`를 `getErrorMessage(err)`에 넣어 **그대로 표시**(코드별 한국어, 폴백 포함). 필드오류는 `getFieldErrorMessage(err)`. |
+| **F7 무한스크롤** | `useInfiniteDesigns(tab,filters?)` / `useInfiniteSearch(filters)` — `.designs`(평탄화 배열) 바로 사용, FlatList `onEndReached`에서 `fetchNextPage()`, `hasNextPage` 가드. |
+| **F8 env** | 베이스URL 자동 분기(iOS/Android/prod). 실기기 로컬백엔드는 `EXPO_PUBLIC_API_BASE_URL`로 오버라이드. 타입 재생성: `npm run gen:api`. |
+
+> 남은 T1~T7은 **순수 UI 배선**(데이터 소스를 위 훅으로 교체 + 로그인/슬롯 그리드 비주얼)만 남았습니다.
