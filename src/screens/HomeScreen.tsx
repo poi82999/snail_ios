@@ -149,11 +149,13 @@ export default function HomeScreen() {
             <View style={tw`flex-row gap-x-[8px]`}>
               <DesignCard
                 design={left}
+                onPress={() => navigation.navigate('DesignDetail', { designId: left.id })}
                 onLike={(id, liked) => toggleLike({ designId: id, isLiked: liked })}
               />
               {right ? (
                 <DesignCard
                   design={right}
+                  onPress={() => navigation.navigate('DesignDetail', { designId: right.id })}
                   onLike={(id, liked) => toggleLike({ designId: id, isLiked: liked })}
                 />
               ) : (

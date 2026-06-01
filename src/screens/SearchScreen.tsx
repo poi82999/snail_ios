@@ -172,6 +172,7 @@ export default function SearchScreen() {
           </View>
 
           {/* 필터 칩 */}
+          <View style={tw`h-[56px]`}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -192,6 +193,7 @@ export default function SearchScreen() {
               />
             ))}
           </ScrollView>
+          </View>
 
           {/* 결과 */}
           {activeTab === '디자인' ? (
