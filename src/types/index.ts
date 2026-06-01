@@ -5,9 +5,14 @@ export type RootStackParamList = {
   Search: { initialQuery?: string } | undefined;
   DesignDetail: { designId: string };
   Booking: { designId: string };
-  BookingDate: { designId: string; removalOptionId: string; extensionOptionId: string };
-  BookingTime: { designId: string; removalOptionId: string; extensionOptionId: string; selectedDate: string };
-  BookingConfirm: undefined;
+  BookingDate: { designId: string; selectedOptionIds: string[] };
+  BookingTime: { designId: string; selectedOptionIds: string[]; selectedDate: string };
+  BookingConfirm: {
+    designId: string;
+    startAt: string; // 슬롯 start_at(ISO 8601, UTC) 그대로
+    designerId?: string | null;
+    selectedOptionIds: string[];
+  };
 };
 
 export type FilterId = 'filter' | 'region' | 'duration' | 'date' | 'price' | 'color';

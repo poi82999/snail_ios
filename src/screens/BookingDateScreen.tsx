@@ -10,29 +10,18 @@ import { colors } from '../theme/tokens';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BookingDate'>;
 
-const MOCK_OPTIONS = {
-  removal:   [
-    { id: 'self',  price: 5000,  duration: 20 },
-    { id: 'other', price: 10000, duration: 30 },
-    { id: 'none',  price: 0,     duration: 0  },
-  ],
-  extension: [
-    { id: 'full', price: 15000, duration: 30 },
-    { id: 'none', price: 0,     duration: 0  },
-  ],
-};
-
 const TEXT = '#6F6F6F';
 const WEEK = ['일', '월', '화', '수', '목', '금', '토'];
 
 export default function BookingDateScreen({ route, navigation }: Props) {
-  const { designId, removalOptionId, extensionOptionId } = route.params;
+  const { designId, selectedOptionIds } = route.params;
   const { data: design } = useDesignDetail(designId);
 
-  const removalOption   = MOCK_OPTIONS.removal.find(o => o.id === removalOptionId);
-  const extensionOption = MOCK_OPTIONS.extension.find(o => o.id === extensionOptionId);
-  const totalPrice    = (design?.price ?? 0) + (removalOption?.price ?? 0) + (extensionOption?.price ?? 0);
-  const totalDuration = (design?.duration ?? 0) + (removalOption?.duration ?? 0) + (extensionOption?.duration ?? 0);
+  const chosen = (design?.options ?? []).filter((o) => selectedOptionIds.includes(o.id));
+  const extraPrice = chosen.reduce((s, o) => s + o.priceDelta, 0);
+  const extraDuration = chosen.reduce((s, o) => s + o.durationDelta, 0);
+  const totalPrice    = (design?.price ?? 0) + extraPrice;
+  const totalDuration = (design?.duration ?? 0) + extraDuration;
 
   const today = new Date();
   const [year,  setYear]  = useState(today.getFullYear());
@@ -50,7 +39,10 @@ export default function BookingDateScreen({ route, navigation }: Props) {
   const rem = cells.length % 7 === 0 ? 0 : 7 - (cells.length % 7);
   for (let d = 1; d <= rem; d++) cells.push({ day: d, current: false });
 
-  function dateKey(d: number) { return `${year}-${month}-${d}`; }
+  function dateKey(d: number) {
+    // 백엔드 availability는 ISO YYYY-MM-DD를 요구하므로 zero-pad한다.
+    return `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  }
   function isPast(d: number) {
     const cellDate = new Date(year, month - 1, d);
     cellDate.setHours(0, 0, 0, 0);
@@ -165,7 +157,7 @@ export default function BookingDateScreen({ route, navigation }: Props) {
         <TouchableOpacity
           activeOpacity={canBook ? 0.8 : 1}
           onPress={() => canBook && navigation.navigate('BookingTime', {
-            designId, removalOptionId, extensionOptionId, selectedDate: selectedDate!,
+            designId, selectedOptionIds, selectedDate: selectedDate!,
           })}
           style={[tw`flex-1 h-[42px] rounded-[5px] items-center justify-center`, { backgroundColor: canBook ? colors.secondary : '#D9D9D9' }]}
         >
