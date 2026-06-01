@@ -1,6 +1,23 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  type QueryKey,
+} from '@tanstack/react-query';
+import { getAccessToken } from '../api/authToken';
 import { fetchDesignList } from '../api/designsApi';
+import { ApiError } from '../api/errors';
+import { addFavorite, removeFavorite } from '../api/favoriteApi';
 import { Design, FilterId, HomeTab } from '../types';
+
+interface LikeToggleVariables {
+  designId: string;
+  isLiked: boolean;
+}
+
+interface LikeToggleContext {
+  previousDesigns: Array<[QueryKey, Design[] | undefined]>;
+}
 
 async function fetchDesigns(tab: HomeTab, filters: FilterId[]): Promise<Design[]> {
   return fetchDesignList(tab, filters);
@@ -17,21 +34,56 @@ export function useDesigns(tab: HomeTab, filters: FilterId[]) {
 export function useLikeToggle() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async ({ designId, isLiked }: { designId: string; isLiked: boolean }) => {
-      // TODO: API 연결 시 교체
-      // await axios.post(`${BASE_URL}/designs/${designId}/like`, { isLiked });
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      return { designId, isLiked };
+  return useMutation<void, ApiError, LikeToggleVariables, LikeToggleContext>({
+    mutationFn: async ({ designId, isLiked }) => {
+      // 토큰이 없으면 네트워크 요청 전에 로그인 필요 상태를 화면에 전달한다.
+      if (!getAccessToken()) {
+        throw new ApiError({
+          code: 'UNAUTHORIZED',
+          message: '로그인이 필요합니다.',
+          status: 401,
+        });
+      }
+
+      if (isLiked) {
+        await addFavorite(designId);
+        return;
+      }
+
+      await removeFavorite(designId);
     },
-    onSuccess: ({ designId, isLiked }) => {
+    onMutate: async ({ designId, isLiked }) => {
+      await queryClient.cancelQueries({ queryKey: ['designs'] });
+
+      const previousDesigns = queryClient.getQueriesData<Design[]>({
+        queryKey: ['designs'],
+      });
+
+      // 모든 홈 디자인 캐시에 같은 찜 상태를 반영해 탭 간 표시가 어긋나지 않게 한다.
       queryClient.setQueriesData<Design[]>({ queryKey: ['designs'] }, (old) =>
         old?.map((d) =>
           d.id === designId
-            ? { ...d, isLiked, likeCount: d.likeCount + (isLiked ? 1 : -1) }
+            ? {
+                ...d,
+                isLiked,
+                likeCount: Math.max(
+                  0,
+                  d.likeCount + (d.isLiked === isLiked ? 0 : isLiked ? 1 : -1)
+                ),
+              }
             : d
         )
       );
+
+      return { previousDesigns };
+    },
+    onError: (_error, _variables, context) => {
+      context?.previousDesigns.forEach(([queryKey, data]) => {
+        queryClient.setQueryData<Design[]>(queryKey, data);
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['designs'] });
     },
   });
 }
