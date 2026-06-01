@@ -34,9 +34,29 @@ export interface SnailPost {
   totalCount: number; // 해당 스네일 포스트의 총 이미지 수
 }
 
+export type DesignOptionKind = 'extend' | 'removal' | 'care';
+
+export interface DesignOption {
+  id: string; // UUID — 예약 시 selected_option_ids에 그대로 사용
+  kind: DesignOptionKind;
+  name: string;
+  priceDelta: number;
+  durationDelta: number; // 분
+}
+
+export interface Designer {
+  id: string;
+  name: string;
+  position: string; // 직책/한줄소개 (없으면 '')
+  profileImageUri: string; // 없으면 ''
+  specialtyTags: string[];
+}
+
 export interface DesignDetail extends Design {
   duration: number;
   tags: string[];
+  designers: Designer[];
+  options: DesignOption[];
   snailPosts: SnailPost[];
   relatedDesigns: Design[];
 }

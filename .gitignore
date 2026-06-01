@@ -117,3 +117,6 @@ ops/codex/last-report.md
 ops/codex/last-review.md
 # 병렬 실행 보고(transient)
 ops/codex/reports/
+.orch/reports/
+.orch/last-report.md
+.orch/last-review.md

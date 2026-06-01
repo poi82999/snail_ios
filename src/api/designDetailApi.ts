@@ -1,10 +1,12 @@
 import apiClient from './client';
-import type { DesignDetail } from '../types';
+import type { Designer, DesignDetail, DesignOption } from '../types';
 import type { components, paths } from '../types/api';
 
 type DesignDetailResponse =
   paths['/api/v1/designs/{design_id}']['get']['responses'][200]['content']['application/json'];
 type DesignPublic = components['schemas']['DesignPublic'];
+type DesignDesignerPublic = components['schemas']['DesignDesignerPublic'];
+type DesignOptionPublic = components['schemas']['DesignOptionPublic'];
 
 function getDesignImageUri(design: DesignPublic): string {
   const thumbnailImage = design.images?.find((image) => image.is_thumbnail);
@@ -16,6 +18,26 @@ function getDesignImageUri(design: DesignPublic): string {
     firstImage?.original_url ??
     ''
   );
+}
+
+function mapDesigner(designer: DesignDesignerPublic): Designer {
+  return {
+    id: designer.id,
+    name: designer.name,
+    position: designer.position ?? '',
+    profileImageUri: designer.profile_image_url ?? '',
+    specialtyTags: designer.specialty_tags ?? [],
+  };
+}
+
+function mapOption(option: DesignOptionPublic): DesignOption {
+  return {
+    id: option.id,
+    kind: option.kind,
+    name: option.name,
+    priceDelta: option.price_delta,
+    durationDelta: option.duration_delta_min,
+  };
 }
 
 function mapDesignToDetail(design: DesignPublic): DesignDetail {
@@ -30,9 +52,13 @@ function mapDesignToDetail(design: DesignPublic): DesignDetail {
     tab: [],
     duration: design.duration_minutes,
     tags: design.ai_tags ?? [],
-    // TODO: 별도 엔드포인트 필요
+    designers: (design.designers ?? []).map(mapDesigner),
+    options: (design.options ?? [])
+      .filter((option) => option.is_active)
+      .map(mapOption),
+    // TODO(프론트): 스네일 포스트 전용 엔드포인트 연동 필요
     snailPosts: [],
-    // TODO: 별도 엔드포인트 필요
+    // TODO(프론트): 연관 추천 디자인 전용 엔드포인트 연동 필요
     relatedDesigns: [],
   };
 }
