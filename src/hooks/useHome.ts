@@ -1,21 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchDesignList } from '../api/designsApi';
 import { Design, FilterId, HomeTab } from '../types';
-import { getMockDesigns } from '../api/mockData';
 
-// TODO: API 연결 시 아래 fetchDesigns 함수를 교체하세요
-// import axios from 'axios';
-// const BASE_URL = 'https://api.snail.com/v1';
-// async function fetchDesigns(tab: HomeTab, filters: FilterId[]): Promise<Design[]> {
-//   const { data } = await axios.get(`${BASE_URL}/designs`, {
-//     params: { tab, filters: filters.join(',') },
-//     headers: { Authorization: `Bearer ${token}` },
-//   });
-//   return data.designs;
-// }
-
-async function fetchDesigns(tab: HomeTab, _filters: FilterId[]): Promise<Design[]> {
-  await new Promise((resolve) => setTimeout(resolve, 300));
-  return getMockDesigns(tab);
+async function fetchDesigns(tab: HomeTab, filters: FilterId[]): Promise<Design[]> {
+  return fetchDesignList(tab, filters);
 }
 
 export function useDesigns(tab: HomeTab, filters: FilterId[]) {
