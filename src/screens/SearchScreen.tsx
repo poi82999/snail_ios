@@ -13,7 +13,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import tw from 'twrnc';
-import { FilterId, Design, RootStackParamList } from '../types';
+import { FilterId, RootStackParamList } from '../types';
+import { chunkIntoPairs } from '../utils/array';
 import { FILTER_CHIPS } from '../api/filterChips';
 import { useSearch } from '../hooks/useSearch';
 import { useLikeToggle } from '../hooks/useHome';
@@ -84,10 +85,7 @@ export default function SearchScreen() {
   } = useSearch({ q: debouncedQuery });
 
   const resultDesigns = results?.designs ?? [];
-  const cardPairs: Array<[Design, Design | undefined]> = [];
-  for (let i = 0; i < resultDesigns.length; i += 2) {
-    cardPairs.push([resultDesigns[i], resultDesigns[i + 1]]);
-  }
+  const cardPairs = chunkIntoPairs(resultDesigns);
 
   return (
     <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>

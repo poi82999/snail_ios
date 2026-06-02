@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import tw from 'twrnc';
 import { RootStackParamList } from '../types';
-import { useDesignDetail } from '../hooks/useDesignDetail';
+import { useBookingSummary } from '../hooks/useBookingSummary';
+import BookingDesignCard from '../components/BookingDesignCard';
+import BookingBottomBar from '../components/BookingBottomBar';
 import { colors } from '../theme/tokens';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BookingDate'>;
@@ -15,13 +17,7 @@ const WEEK = ['일', '월', '화', '수', '목', '금', '토'];
 
 export default function BookingDateScreen({ route, navigation }: Props) {
   const { designId, selectedOptionIds } = route.params;
-  const { data: design } = useDesignDetail(designId);
-
-  const chosen = (design?.options ?? []).filter((o) => selectedOptionIds.includes(o.id));
-  const extraPrice = chosen.reduce((s, o) => s + o.priceDelta, 0);
-  const extraDuration = chosen.reduce((s, o) => s + o.durationDelta, 0);
-  const totalPrice    = (design?.price ?? 0) + extraPrice;
-  const totalDuration = (design?.duration ?? 0) + extraDuration;
+  const { design, totalPrice, totalDuration } = useBookingSummary(designId, selectedOptionIds);
 
   const today = new Date();
   const [year,  setYear]  = useState(today.getFullYear());
@@ -72,19 +68,12 @@ export default function BookingDateScreen({ route, navigation }: Props) {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* 디자인 카드 */}
-        <View style={[tw`mx-[10px] p-[20px] rounded-[10px] flex-row items-center gap-[18px]`, { shadowColor: '#000', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.1, shadowRadius: 3.78, elevation: 3 }]}>
-          <Image source={{ uri: design?.imageUri ?? '' }} style={{ width: 57, height: 57, borderRadius: 10 }} resizeMode="cover" />
-          <View style={tw`flex-1 flex-row items-center justify-between`}>
-            <View style={tw`gap-y-[5px]`}>
-              <Text style={{ fontSize: 18, fontWeight: '600', color: TEXT }}>{design?.shopName ?? '...'}</Text>
-              <Text style={{ fontSize: 24, fontWeight: '600', color: TEXT }}>{totalPrice.toLocaleString('ko-KR')}원</Text>
-            </View>
-            <View style={tw`flex-row items-center`}>
-              <Ionicons name="alarm-outline" size={18} color={TEXT} />
-              <Text style={{ fontSize: 12, color: TEXT }}>{totalDuration}분</Text>
-            </View>
-          </View>
-        </View>
+        <BookingDesignCard
+          imageUri={design?.imageUri}
+          shopName={design?.shopName}
+          totalPrice={totalPrice}
+          totalDuration={totalDuration}
+        />
 
         {/* 날짜 섹션 */}
         <View style={tw`px-[20px] py-[10px]`}>
@@ -145,25 +134,13 @@ export default function BookingDateScreen({ route, navigation }: Props) {
       </ScrollView>
 
       {/* 하단 액션 바 */}
-      <View style={[tw`flex-row items-center px-[20px] h-[70px] gap-[12px]`, { backgroundColor: colors.background, shadowColor: '#000', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.1, shadowRadius: 1.5, elevation: 3 }]}>
-        <TouchableOpacity activeOpacity={0.7} style={tw`items-center gap-y-[2px]`}>
-          <Ionicons name="heart-outline" size={28} color={TEXT} />
-          <Text style={{ fontSize: 8, color: TEXT }}>999+</Text>
-        </TouchableOpacity>
-        <TouchableOpacity activeOpacity={0.7} style={tw`items-center gap-y-[2px]`}>
-          <Ionicons name="share-social-outline" size={28} color={TEXT} />
-          <Text style={{ fontSize: 8, color: TEXT }}>999+</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          activeOpacity={canBook ? 0.8 : 1}
-          onPress={() => canBook && navigation.navigate('BookingTime', {
-            designId, selectedOptionIds, selectedDate: selectedDate!,
-          })}
-          style={[tw`flex-1 h-[42px] rounded-[5px] items-center justify-center`, { backgroundColor: canBook ? colors.secondary : '#D9D9D9' }]}
-        >
-          <Text style={{ fontSize: 14, fontWeight: '700', color: canBook ? colors.background : TEXT }}>다음</Text>
-        </TouchableOpacity>
-      </View>
+      <BookingBottomBar
+        ctaLabel="다음"
+        canProceed={canBook}
+        onPress={() => navigation.navigate('BookingTime', {
+          designId, selectedOptionIds, selectedDate: selectedDate!,
+        })}
+      />
     </SafeAreaView>
   );
 }

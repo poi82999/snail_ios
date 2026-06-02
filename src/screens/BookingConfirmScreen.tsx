@@ -14,7 +14,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import tw from 'twrnc';
 import { RootStackParamList } from '../types';
 import { useCreateReservation, buildReservationPayload } from '../hooks/useBooking';
-import { useDesignDetail } from '../hooks/useDesignDetail';
+import { useBookingSummary } from '../hooks/useBookingSummary';
 import { formatSlotLabel } from '../api/bookingApi';
 import { getErrorMessage } from '../api/errors';
 import { colors } from '../theme/tokens';
@@ -62,18 +62,13 @@ function SummaryRow({
 
 export default function BookingConfirmScreen({ route, navigation }: Props) {
   const { designId, startAt, designerId, selectedOptionIds } = route.params;
-  const { data: design } = useDesignDetail(designId);
+  const { design, selectedOptions, totalPrice, totalDuration } = useBookingSummary(
+    designId,
+    selectedOptionIds
+  );
   const { mutate, status, error, data } = useCreateReservation();
   const [userRequest, setUserRequest] = useState('');
   const [noticeChecked, setNoticeChecked] = useState(false);
-
-  const selectedOptions = (design?.options ?? []).filter((option) => (
-    selectedOptionIds.includes(option.id)
-  ));
-  const extraPrice = selectedOptions.reduce((sum, option) => sum + option.priceDelta, 0);
-  const extraDuration = selectedOptions.reduce((sum, option) => sum + option.durationDelta, 0);
-  const totalPrice = (design?.price ?? 0) + extraPrice;
-  const totalDuration = (design?.duration ?? 0) + extraDuration;
   const designerName = designerId
     ? design?.designers.find((designer) => designer.id === designerId)?.name ?? (design ? '자동 배정' : '불러오는 중...')
     : '자동 배정';

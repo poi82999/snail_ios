@@ -15,7 +15,8 @@ import tw from 'twrnc';
 import { useLikeToggle } from '../hooks/useHome';
 import { useInfiniteDesigns } from '../hooks/useInfiniteDesigns';
 import { FILTER_CHIPS } from '../api/filterChips';
-import { Design, FilterId, HomeTab, RootStackParamList, SearchFilters } from '../types';
+import { FilterId, HomeTab, RootStackParamList, SearchFilters } from '../types';
+import { chunkIntoPairs } from '../utils/array';
 import FilterChip from '../components/FilterChip';
 import HomeTabSelector from '../components/HomeTabSelector';
 import DesignCard from '../components/DesignCard';
@@ -81,10 +82,7 @@ export default function HomeScreen() {
     }
   }
 
-  const cardPairs: Array<[Design, Design | undefined]> = [];
-  for (let i = 0; i < designs.length; i += 2) {
-    cardPairs.push([designs[i], designs[i + 1]]);
-  }
+  const cardPairs = chunkIntoPairs(designs);
 
   return (
     <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>
