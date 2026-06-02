@@ -15,12 +15,13 @@ import tw from 'twrnc';
 import { FilterId, Design } from '../types';
 import { FILTER_CHIPS } from '../api/mockData';
 import { useSearch } from '../hooks/useSearch';
+import { useRecentSearches } from '../hooks/useRecentSearches';
 import FilterChip from '../components/FilterChip';
 import DesignCard from '../components/DesignCard';
 
 type SearchTab = '디자인' | '샵' | '리뷰';
 
-const RECENT_SEARCHES = ['봄 네일', '여름 네일', '가을 네일', '겨울 네일'];
+// 인기 검색어/최근 검색한 샵은 아직 백엔드 엔드포인트가 없어 임시 하드코딩을 유지한다.
 const RECENT_SHOPS = ['유후네일 잠실점', '유후네일 홍대점', '유후네일 수락점', '유후네일 노원점'];
 const POPULAR_SEARCHES = [
   '블랙 네일', '화이트 네일', '젤 네일', '프렌치 네일', '그라데이션',
@@ -33,6 +34,7 @@ export default function SearchScreen() {
   const [activeTab, setActiveTab] = useState<SearchTab>('디자인');
   const [activeFilters, setActiveFilters] = useState<FilterId[]>([]);
   const inputRef = useRef<TextInput>(null);
+  const { recent, add, remove, clear } = useRecentSearches();
 
   useEffect(() => {
     const timer = setTimeout(() => inputRef.current?.focus(), 100);
@@ -40,6 +42,26 @@ export default function SearchScreen() {
   }, []);
 
   const isSearching = query.length > 0;
+
+  const handleSubmitSearch = (): void => {
+    const q = query.trim();
+    if (!q) {
+      return;
+    }
+
+    add(q);
+    setQuery(q);
+  };
+
+  const handleSelectTerm = (term: string): void => {
+    const q = term.trim();
+    if (!q) {
+      return;
+    }
+
+    add(q);
+    setQuery(q);
+  };
 
   // 실제 검색: GET /search?scope=designs (q 기준). 필터칩 값 선택 UI는 추후.
   const {
@@ -71,6 +93,7 @@ export default function SearchScreen() {
             value={query}
             onChangeText={setQuery}
             returnKeyType="search"
+            onSubmitEditing={handleSubmitSearch}
           />
           <Ionicons name="search" size={18} color="#7D695D" />
         </View>
@@ -85,21 +108,43 @@ export default function SearchScreen() {
         <ScrollView showsVerticalScrollIndicator={false}>
           {/* 최근 검색어 */}
           <View style={tw`px-[22px] pt-[14px] gap-[10px]`}>
-            <Text style={tw`font-semibold text-[14px] text-[#6F6F6F]`}>최근 검색어</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View style={tw`flex-row gap-[10px]`}>
-                {RECENT_SEARCHES.map((tag) => (
-                  <TouchableOpacity
-                    key={tag}
-                    onPress={() => setQuery(tag)}
-                    style={tw`border border-[#D9D9D9] rounded-[16px] py-[7px] px-[15px]`}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={tw`font-medium text-[14px] text-[#6F6F6F]`}>{tag}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </ScrollView>
+            <View style={tw`flex-row items-center justify-between`}>
+              <Text style={tw`font-semibold text-[14px] text-[#6F6F6F]`}>최근 검색어</Text>
+              {recent.length > 0 && (
+                <TouchableOpacity onPress={clear} activeOpacity={0.7}>
+                  <Text style={tw`font-medium text-[12px] text-[#6F6F6F]`}>전체 삭제</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+            {recent.length > 0 ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View style={tw`flex-row gap-[10px]`}>
+                  {recent.map((tag) => (
+                    <View
+                      key={tag}
+                      style={tw`border border-[#D9D9D9] rounded-[16px] flex-row items-center overflow-hidden`}
+                    >
+                      <TouchableOpacity
+                        onPress={() => handleSelectTerm(tag)}
+                        style={tw`py-[7px] pl-[15px] pr-[6px]`}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={tw`font-medium text-[14px] text-[#6F6F6F]`}>{tag}</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => remove(tag)}
+                        style={tw`py-[7px] pl-[4px] pr-[10px]`}
+                        activeOpacity={0.7}
+                      >
+                        <Ionicons name="close" size={14} color="#6F6F6F" />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              </ScrollView>
+            ) : (
+              <Text style={tw`text-[14px] text-[#D9D9D9]`}>최근 검색어가 없어요</Text>
+            )}
           </View>
 
           {/* 최근 검색한 샵 */}
@@ -110,7 +155,7 @@ export default function SearchScreen() {
                 {RECENT_SHOPS.map((shop) => (
                   <TouchableOpacity
                     key={shop}
-                    onPress={() => setQuery(shop)}
+                    onPress={() => handleSelectTerm(shop)}
                     style={tw`border border-[#D9D9D9] rounded-[16px] py-[7px] px-[15px]`}
                     activeOpacity={0.7}
                   >
@@ -129,7 +174,7 @@ export default function SearchScreen() {
                 {POPULAR_SEARCHES.slice(0, 5).map((keyword, i) => (
                   <TouchableOpacity
                     key={keyword}
-                    onPress={() => setQuery(keyword)}
+                    onPress={() => handleSelectTerm(keyword)}
                     style={tw`flex-row items-center gap-[17px]`}
                     activeOpacity={0.7}
                   >
@@ -143,7 +188,7 @@ export default function SearchScreen() {
                 {POPULAR_SEARCHES.slice(5, 10).map((keyword, i) => (
                   <TouchableOpacity
                     key={keyword}
-                    onPress={() => setQuery(keyword)}
+                    onPress={() => handleSelectTerm(keyword)}
                     style={tw`flex-row items-center gap-[17px]`}
                     activeOpacity={0.7}
                   >
