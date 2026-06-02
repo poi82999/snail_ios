@@ -57,7 +57,7 @@ export default function TabNavigator() {
       })}
     >
       <Tab.Screen name="홈" component={HomeScreen} />
-      <Tab.Screen name="스네일" children={() => <SnailScreen />} />
+      <Tab.Screen name="스네일" component={SnailScreen} />
       <Tab.Screen name="주변" children={() => <PlaceholderScreen name="주변" />} />
       <Tab.Screen name="일정" children={() => <PlaceholderScreen name="일정" />} />
       <Tab.Screen name="프로필" component={ProfileScreen} />
