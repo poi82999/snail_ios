@@ -183,7 +183,7 @@ export default function BookingTimeScreen({ route, navigation }: Props) {
           })}
           style={[tw`flex-1 h-[42px] rounded-[5px] items-center justify-center`, { backgroundColor: canBook ? colors.secondary : '#D9D9D9' }]}
         >
-          <Text style={{ fontSize: 14, fontWeight: '700', color: canBook ? colors.background : TEXT }}>예약하기</Text>
+          <Text style={{ fontSize: 14, fontWeight: '700', color: canBook ? colors.background : TEXT }}>다음</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

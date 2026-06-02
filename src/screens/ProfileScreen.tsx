@@ -1,8 +1,9 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Image, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
+import { useAuth } from '../hooks/useAuth';
 
 const MOCK_POSTS = Array.from({ length: 9 });
 
@@ -19,6 +20,14 @@ const ACTIONS = [
 ];
 
 export default function ProfileScreen() {
+  // 로그인 세션의 실제 유저 정보를 표시한다. 통계/게시물은 전용 엔드포인트가 없어 placeholder 유지.
+  const { user } = useAuth();
+  const displayName = user?.nickname ?? '사용자';
+  const displayBio = user?.bio ?? '안녕하세요 자기소개입니다';
+  const avatarUri = user?.profile_image_url ?? null;
+  const [avatarError, setAvatarError] = useState(false);
+  const showAvatar = Boolean(avatarUri) && !avatarError;
+
   return (
     <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>
       {/* Top Bar */}
@@ -39,7 +48,16 @@ export default function ProfileScreen() {
         <View style={tw`py-[20px] gap-y-[15px]`}>
           {/* Profile image + stats */}
           <View style={tw`flex-row items-center px-[20px] gap-[40px]`}>
-            <View style={tw`w-[59px] h-[59px] rounded-full bg-[#D9D9D9]`} />
+            {showAvatar ? (
+              <Image
+                source={{ uri: avatarUri! }}
+                style={tw`w-[59px] h-[59px] rounded-full`}
+                resizeMode="cover"
+                onError={() => setAvatarError(true)}
+              />
+            ) : (
+              <View style={tw`w-[59px] h-[59px] rounded-full bg-[#D9D9D9]`} />
+            )}
             <View style={tw`flex-row items-center gap-[63px]`}>
               {STATS.map(({ value, label }) => (
                 <View key={label} style={tw`items-center gap-y-[9px] w-[34px]`}>
@@ -52,8 +70,8 @@ export default function ProfileScreen() {
 
           {/* Name + bio */}
           <View style={tw`px-[20px] gap-y-[9px]`}>
-            <Text style={tw`font-semibold text-[18px] text-[#6F6F6F]`}>사용자</Text>
-            <Text style={tw`font-medium text-[12px] text-[#6F6F6F]`}>안녕하세요 자기소개입니다</Text>
+            <Text style={tw`font-semibold text-[18px] text-[#6F6F6F]`}>{displayName}</Text>
+            <Text style={tw`font-medium text-[12px] text-[#6F6F6F]`}>{displayBio}</Text>
           </View>
 
           {/* Edit / Share buttons */}

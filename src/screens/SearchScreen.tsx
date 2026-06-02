@@ -11,10 +11,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import tw from 'twrnc';
-import { FilterId, Design } from '../types';
+import { FilterId, Design, RootStackParamList } from '../types';
 import { FILTER_CHIPS } from '../api/mockData';
 import { useSearch } from '../hooks/useSearch';
+import { useLikeToggle } from '../hooks/useHome';
 import { useRecentSearches } from '../hooks/useRecentSearches';
 import FilterChip from '../components/FilterChip';
 import DesignCard from '../components/DesignCard';
@@ -29,12 +31,13 @@ const POPULAR_SEARCHES = [
 ];
 
 export default function SearchScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [query, setQuery] = useState('');
   const [activeTab, setActiveTab] = useState<SearchTab>('디자인');
   const [activeFilters, setActiveFilters] = useState<FilterId[]>([]);
   const inputRef = useRef<TextInput>(null);
   const { recent, add, remove, clear } = useRecentSearches();
+  const { mutate: toggleLike } = useLikeToggle();
 
   useEffect(() => {
     const timer = setTimeout(() => inputRef.current?.focus(), 100);
@@ -280,8 +283,20 @@ export default function SearchScreen() {
                 ItemSeparatorComponent={() => <View style={tw`h-[20px]`} />}
                 renderItem={({ item: [left, right] }) => (
                   <View style={tw`flex-row gap-x-[10px]`}>
-                    <DesignCard design={left} />
-                    {right ? <DesignCard design={right} /> : <View style={tw`flex-1`} />}
+                    <DesignCard
+                      design={left}
+                      onPress={() => navigation.navigate('DesignDetail', { designId: left.id })}
+                      onLike={(id, liked) => toggleLike({ designId: id, isLiked: liked })}
+                    />
+                    {right ? (
+                      <DesignCard
+                        design={right}
+                        onPress={() => navigation.navigate('DesignDetail', { designId: right.id })}
+                        onLike={(id, liked) => toggleLike({ designId: id, isLiked: liked })}
+                      />
+                    ) : (
+                      <View style={tw`flex-1`} />
+                    )}
                   </View>
                 )}
               />

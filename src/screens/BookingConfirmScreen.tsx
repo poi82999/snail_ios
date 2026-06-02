@@ -63,7 +63,7 @@ function SummaryRow({
 export default function BookingConfirmScreen({ route, navigation }: Props) {
   const { designId, startAt, designerId, selectedOptionIds } = route.params;
   const { data: design } = useDesignDetail(designId);
-  const { mutate, status, error } = useCreateReservation();
+  const { mutate, status, error, data } = useCreateReservation();
   const [userRequest, setUserRequest] = useState('');
   const [noticeChecked, setNoticeChecked] = useState(false);
 
@@ -105,22 +105,30 @@ export default function BookingConfirmScreen({ route, navigation }: Props) {
   }
 
   if (isSuccess) {
+    // 자동수락 샵은 생성 즉시 confirmed로 응답 → "확정", 그 외(pending/payment_pending)는 "승인 대기".
+    const isConfirmed = data?.status === 'confirmed';
     return (
       <SafeAreaView style={tw`flex-1 bg-white`}>
         <View style={tw`flex-1 items-center justify-center px-[40px] gap-[16px]`}>
           <View
             style={[
               tw`w-[64px] h-[64px] rounded-full items-center justify-center`,
-              { backgroundColor: 'rgba(125,105,93,0.1)' },
+              { backgroundColor: isConfirmed ? 'rgba(76,175,80,0.12)' : 'rgba(125,105,93,0.1)' },
             ]}
           >
-            <Ionicons name="time-outline" size={32} color={colors.secondary} />
+            <Ionicons
+              name={isConfirmed ? 'checkmark-circle-outline' : 'time-outline'}
+              size={32}
+              color={isConfirmed ? '#4CAF50' : colors.secondary}
+            />
           </View>
           <Text style={{ fontSize: 20, fontWeight: '700', color: colors.primary, textAlign: 'center', marginTop: 8 }}>
-            예약을 요청했어요!
+            {isConfirmed ? '예약이 확정되었어요!' : '예약을 요청했어요!'}
           </Text>
           <Text style={{ fontSize: 14, color: colors.secondary50, textAlign: 'center', lineHeight: 22 }}>
-            사장님의 수락을 기다리는 중이에요.{'\n'}수락되면 알림으로 알려드릴게요.
+            {isConfirmed
+              ? '예약이 바로 확정되었어요.\n일정에서 확인할 수 있어요.'
+              : '사장님의 수락을 기다리는 중이에요.\n수락되면 알림으로 알려드릴게요.'}
           </Text>
         </View>
 
