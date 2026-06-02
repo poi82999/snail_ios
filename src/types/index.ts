@@ -1,9 +1,12 @@
 export type HomeTab = '추천' | '랭킹' | '이달의 아트';
 
+export type SnapFeedType = 'latest' | 'ranking' | 'following';
+
 export type RootStackParamList = {
   Main: undefined;
   Search: { initialQuery?: string } | undefined;
   DesignDetail: { designId: string };
+  SnapDetail: { snapId: string };
   Booking: { designId: string };
   BookingDate: { designId: string; selectedOptionIds: string[] };
   BookingTime: { designId: string; selectedOptionIds: string[]; selectedDate: string };
@@ -66,6 +69,42 @@ export interface SnailPost {
   id: string;
   imageUri: string;
   totalCount: number; // 해당 스네일 포스트의 총 이미지 수
+}
+
+export interface SnapAuthor {
+  id: string;
+  nickname: string;
+  profileImageUri: string;
+  bio?: string;
+}
+
+export interface Snap {
+  id: string;
+  author: SnapAuthor;
+  body: string;
+  tags: string[];
+  images: string[];
+  taggedDesignId?: string | null;
+  isReservationVerified: boolean;
+  likeCount: number;
+  commentCount: number;
+  saveCount: number;
+  viewCount: number;
+  likedByMe: boolean;
+  savedByMe: boolean;
+  createdAt: string;
+}
+
+export interface SnapComment {
+  id: string;
+  snapId: string;
+  parentId: string | null;
+  authorName: string;
+  body: string;
+  depth: number;
+  likeCount: number;
+  likedByMe: boolean;
+  createdAt: string;
 }
 
 export type DesignOptionKind = 'extend' | 'removal' | 'care';
