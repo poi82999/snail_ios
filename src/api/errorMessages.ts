@@ -60,22 +60,6 @@ function isApiError(value: unknown): value is ApiError {
   );
 }
 
-function isFieldErrors(value: unknown): value is Record<string, string> {
-  if (!isRecord(value)) return false;
-
-  return Object.values(value).every((message) => typeof message === 'string');
-}
-
-export function getFieldErrorMessage(err: unknown): string | null {
-  if (!isApiError(err) || !isFieldErrors(err.fieldErrors)) return null;
-
-  const firstFieldMessage = Object.values(err.fieldErrors).find(
-    (message) => message.trim().length > 0,
-  );
-
-  return firstFieldMessage?.trim() ?? null;
-}
-
 export function getErrorMessage(err: unknown): string {
   if (!isApiError(err)) return DEFAULT_ERROR_MESSAGE;
 

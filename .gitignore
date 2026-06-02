@@ -120,3 +120,7 @@ ops/codex/reports/
 .orch/reports/
 .orch/last-report.md
 .orch/last-review.md
+
+# 오케스트레이션 작업지시서/브리프 (개발 스크래치, 제품 산출물 아님)
+.orch/
+ops/codex/

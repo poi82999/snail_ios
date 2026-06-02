@@ -14,7 +14,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import tw from 'twrnc';
 import { useLikeToggle } from '../hooks/useHome';
 import { useInfiniteDesigns } from '../hooks/useInfiniteDesigns';
-import { FILTER_CHIPS } from '../api/mockData';
+import { FILTER_CHIPS } from '../api/filterChips';
 import { Design, FilterId, HomeTab, RootStackParamList, SearchFilters } from '../types';
 import FilterChip from '../components/FilterChip';
 import HomeTabSelector from '../components/HomeTabSelector';

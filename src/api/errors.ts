@@ -118,4 +118,4 @@ export function toApiError(error: unknown): ApiError {
   });
 }
 
-export { getErrorMessage, getFieldErrorMessage, ERROR_MESSAGES } from './errorMessages';
+export { getErrorMessage, ERROR_MESSAGES } from './errorMessages';
