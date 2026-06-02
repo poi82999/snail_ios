@@ -44,6 +44,13 @@ export default function SearchScreen() {
     return () => clearTimeout(timer);
   }, []);
 
+  // 키 입력(한글 조합 포함)마다 검색 요청이 터지지 않도록 300ms 디바운스.
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(query.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [query]);
+
   const isSearching = query.length > 0;
 
   const handleSubmitSearch = (): void => {
@@ -54,6 +61,7 @@ export default function SearchScreen() {
 
     add(q);
     setQuery(q);
+    setDebouncedQuery(q); // 명시적 제출은 디바운스 대기 없이 즉시 검색
   };
 
   const handleSelectTerm = (term: string): void => {
@@ -64,6 +72,7 @@ export default function SearchScreen() {
 
     add(q);
     setQuery(q);
+    setDebouncedQuery(q); // 항목 탭도 즉시 검색
   };
 
   // 실제 검색: GET /search?scope=designs (q 기준). 필터칩 값 선택 UI는 추후.
@@ -72,7 +81,7 @@ export default function SearchScreen() {
     isLoading: isSearchLoading,
     isError: isSearchError,
     refetch: refetchSearch,
-  } = useSearch({ q: query.trim() });
+  } = useSearch({ q: debouncedQuery });
 
   const resultDesigns = results?.designs ?? [];
   const cardPairs: Array<[Design, Design | undefined]> = [];
