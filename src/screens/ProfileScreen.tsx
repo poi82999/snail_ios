@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
 import { useAuth } from '../hooks/useAuth';
+import { shadows } from '../theme/tokens';
 
 const MOCK_POSTS = Array.from({ length: 9 });
 
@@ -93,13 +94,7 @@ export default function ProfileScreen() {
           <View
             style={[
               tw`bg-white rounded-[10px] h-[84px] flex-row items-center justify-evenly px-[20px]`,
-              {
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.1,
-                shadowRadius: 1.5,
-                elevation: 3,
-              },
+              shadows.bar,
             ]}
           >
             {ACTIONS.map(({ icon, label }) => (

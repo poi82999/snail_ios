@@ -17,7 +17,7 @@ import { useCreateReservation, buildReservationPayload } from '../hooks/useBooki
 import { useBookingSummary } from '../hooks/useBookingSummary';
 import { formatSlotLabel } from '../api/bookingApi';
 import { getErrorMessage } from '../api/errors';
-import { colors } from '../theme/tokens';
+import { colors, shadows } from '../theme/tokens';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BookingConfirm'>;
 
@@ -167,14 +167,7 @@ export default function BookingConfirmScreen({ route, navigation }: Props) {
         <View
           style={[
             tw`mx-[10px] p-[20px] rounded-[10px] gap-y-[16px]`,
-            {
-              backgroundColor: colors.background,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: 0.1,
-              shadowRadius: 3.78,
-              elevation: 3,
-            },
+            { backgroundColor: colors.background, ...shadows.card },
           ]}
         >
           <View style={tw`flex-row items-center gap-[14px]`}>
@@ -275,14 +268,7 @@ export default function BookingConfirmScreen({ route, navigation }: Props) {
       <View
         style={[
           tw`px-[20px] pt-[12px] pb-[18px] gap-y-[10px]`,
-          {
-            backgroundColor: colors.background,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0.1,
-            shadowRadius: 1.5,
-            elevation: 3,
-          },
+          { backgroundColor: colors.background, ...shadows.bar },
         ]}
       >
         {isError && (

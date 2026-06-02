@@ -10,7 +10,7 @@ import tw from 'twrnc';
 import { RootStackParamList, Design } from '../types';
 import { useDesignDetail, useRelatedDesigns } from '../hooks/useDesignDetail';
 import { useLikeToggle } from '../hooks/useHome';
-import { colors } from '../theme/tokens';
+import { colors, shadows } from '../theme/tokens';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DesignDetail'>;
 type DetailTab = '스네일' | '샵 후기' | '문의하기';
@@ -83,7 +83,7 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
         />
 
         {/* 샵 정보 */}
-        <View style={[tw`flex-row items-center justify-between px-[20px] py-[15px]`, { shadowColor: '#000', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.1, shadowRadius: 1.5, elevation: 2 }]}>
+        <View style={[tw`flex-row items-center justify-between px-[20px] py-[15px]`, shadows.subtle]}>
           <TouchableOpacity style={tw`flex-row items-center gap-[8px]`} activeOpacity={0.7}>
             <Text style={{ fontSize: 16, fontWeight: '500', color: colors.secondary }}>{design.shopName}</Text>
             <Ionicons name="chevron-forward" size={14} color={colors.secondary} />
@@ -113,7 +113,7 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
 
         {/* 연관 추천 디자인 — useRelatedDesigns(/designs/{id}/related). 없으면 섹션 숨김 */}
         {relatedDesigns.length > 0 && (
-          <View style={[tw`px-[20px] py-[15px] gap-y-[12px]`, { shadowColor: '#000', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.1, shadowRadius: 1.5, elevation: 2 }]}>
+          <View style={[tw`px-[20px] py-[15px] gap-y-[12px]`, shadows.subtle]}>
             <View style={tw`flex-row items-center justify-between`}>
               <Text style={{ fontSize: 14, fontWeight: '600', color: colors.secondary }}>연관 추천 디자인</Text>
             </View>
@@ -204,7 +204,7 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
       </ScrollView>
 
       {/* 하단 액션 바 */}
-      <View style={[tw`flex-row items-center px-[20px] h-[70px] gap-[12px]`, { backgroundColor: colors.background, shadowColor: '#000', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.1, shadowRadius: 1.5, elevation: 3 }]}>
+      <View style={[tw`flex-row items-center px-[20px] h-[70px] gap-[12px]`, { backgroundColor: colors.background, ...shadows.bar }]}>
         <TouchableOpacity
           onPress={onHeart}
           activeOpacity={0.7}

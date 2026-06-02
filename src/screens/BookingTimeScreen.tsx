@@ -9,7 +9,7 @@ import { useBookingSummary } from '../hooks/useBookingSummary';
 import { useDisplaySlots } from '../hooks/useBooking';
 import BookingDesignCard from '../components/BookingDesignCard';
 import BookingBottomBar from '../components/BookingBottomBar';
-import { colors } from '../theme/tokens';
+import { colors, shadows } from '../theme/tokens';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BookingTime'>;
 
@@ -76,8 +76,7 @@ export default function BookingTimeScreen({ route, navigation }: Props) {
                   onPress={() => selectDesigner(d.id)}
                   activeOpacity={0.8}
                   style={[tw`p-[20px] rounded-[10px] flex-row items-center gap-[18px]`, {
-                    shadowColor: '#000', shadowOffset: { width: 0, height: 0 },
-                    shadowOpacity: 0.1, shadowRadius: 3.78, elevation: 3,
+                    ...shadows.card,
                     backgroundColor: colors.background,
                     borderWidth: sel ? 1.5 : 0,
                     borderColor: sel ? colors.secondary : 'transparent',

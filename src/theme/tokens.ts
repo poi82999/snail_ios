@@ -5,6 +5,18 @@ export const colors = {
   background:  "#FFFFFF",
   secondary:   "#7D695D",
   secondary50: "#BBAFA8",
+  // 화면 전반에서 반복되던 의미색(값 동일, 중복 제거용)
+  text:        "#6F6F6F", // 본문/라벨 기본 텍스트
+  line:        "#E5E5E5", // 구분선/입력 보더
+  disabled:    "#D9D9D9", // 비활성 배경/플레이스홀더
+  danger:      "#FF6B6B", // 에러/하트
+} as const;
+
+// iOS 그림자 + Android elevation 프리셋. 인라인 중복(shadowColor/Offset/Opacity...) 제거용.
+export const shadows = {
+  card:   { shadowColor: "#000", shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.1, shadowRadius: 3.78, elevation: 3 },
+  bar:    { shadowColor: "#000", shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.1, shadowRadius: 1.5, elevation: 3 },
+  subtle: { shadowColor: "#000", shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.1, shadowRadius: 1.5, elevation: 2 },
 } as const;
 
 export const typography = {

@@ -2,8 +2,9 @@ import React from 'react';
 import { View, Text, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
+import { colors, shadows } from '../theme/tokens';
 
-const TEXT = '#6F6F6F';
+const TEXT = colors.text;
 
 interface BookingDesignCardProps {
   imageUri?: string;
@@ -23,7 +24,7 @@ export default function BookingDesignCard({
     <View
       style={[
         tw`mx-[10px] p-[20px] rounded-[10px] flex-row items-center gap-[18px]`,
-        { shadowColor: '#000', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.1, shadowRadius: 3.78, elevation: 3 },
+        shadows.card,
       ]}
     >
       <Image source={{ uri: imageUri ?? '' }} style={{ width: 57, height: 57, borderRadius: 10 }} resizeMode="cover" />
