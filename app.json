@@ -6,6 +6,16 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#7D695D",
+          "enableBackgroundRemoteNotifications": false
+        }
+      ]
+    ],
     "ios": {
       "supportsTablet": true
     },
