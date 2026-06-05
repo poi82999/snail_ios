@@ -12,10 +12,28 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
 import { colors } from '../theme/tokens';
+import { useTaxonomy } from '../hooks/useTaxonomy';
+import type { SearchFilters } from '../types';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const COLLAPSED_HEIGHT = SCREEN_HEIGHT * 0.55;
 const EXPANDED_HEIGHT  = SCREEN_HEIGHT * 0.92;
+
+// 색상 이름 → 스와치 hex (taxonomy는 이름만 주므로 표시용 매핑, 미정의는 회색 폴백)
+const COLOR_HEX: Record<string, string> = {
+  화이트: '#FFFFFF', 그레이: '#9E9E9E', 블랙: '#1A1A1A', 핑크: '#F9A8D4',
+  레드: '#EF4444', 베이지: '#D4B896', 그린: '#86EFAC', 네이비: '#1E3A5F',
+  블루: '#60A5FA', 퍼플: '#C4B5FD', 옐로우: '#FDE68A', 오렌지: '#FDBA74',
+  브라운: '#A57C5B', 골드: '#D4AF37', 실버: '#C0C0C0',
+};
+
+// 소요시간 칩 → durationMin/Max(분) 매핑
+const DURATION_OPTS: { label: string; min?: number; max?: number }[] = [
+  { label: '전체' },
+  { label: '1시간 이내', max: 60 },
+  { label: '1-2시간', min: 60, max: 120 },
+  { label: '2시간+', min: 120 },
+];
 
 // ── 작은 칩 컴포넌트들 ─────────────────────────────
 
@@ -78,7 +96,7 @@ function fmt(price: number) {
   return rest === 0 ? `${man}만원` : `${price.toLocaleString('ko-KR')}원`;
 }
 
-function PriceRangeSlider() {
+function PriceRangeSlider({ onChange }: { onChange?: (min: number, max: number) => void }) {
   const trackW   = useRef(0);
   const leftPx   = useRef(new Animated.Value(0)).current;
   const rightPx  = useRef(new Animated.Value(280)).current;
@@ -103,7 +121,9 @@ function PriceRangeSlider() {
       const next = Math.max(0, Math.min(rCur.current - MIN_GAP, lStart.current + dx));
       leftPx.setValue(next);
       lCur.current = next;
-      setMinP(toPrice(next));
+      const p = toPrice(next);
+      setMinP(p);
+      onChange?.(p, toPrice(rCur.current));
     },
   })).current;
 
@@ -116,7 +136,9 @@ function PriceRangeSlider() {
       const next  = Math.max(lCur.current + MIN_GAP, Math.min(maxPx, rStart.current + dx));
       rightPx.setValue(next);
       rCur.current = next;
-      setMaxP(toPrice(next));
+      const p = toPrice(next);
+      setMaxP(p);
+      onChange?.(toPrice(lCur.current), p);
     },
   })).current;
 
@@ -125,12 +147,10 @@ function PriceRangeSlider() {
 
   return (
     <View>
-      {/* 현재 범위 표시 */}
       <View style={{ alignItems: 'flex-end', marginBottom: 14 }}>
         <Text style={{ fontSize: 13, fontWeight: '600', color: colors.secondary }}>{fmt(minP)} ~ {fmt(maxP)}</Text>
       </View>
 
-      {/* 슬라이더 트랙 */}
       <View
         style={{ height: HANDLE_SZ, justifyContent: 'center' }}
         onLayout={e => {
@@ -143,23 +163,18 @@ function PriceRangeSlider() {
           setMaxP(MAX_PRICE);
         }}
       >
-        {/* 배경 바 */}
         <View style={{ position: 'absolute', left: 0, right: 0, height: 4, backgroundColor: colors.primary10, borderRadius: 2 }} />
-        {/* 활성 바 */}
         <Animated.View style={{ position: 'absolute', height: 4, backgroundColor: colors.secondary, borderRadius: 2, left: activeLeft, width: activeWidth }} />
-        {/* 왼쪽 핸들 */}
         <Animated.View
           {...leftPan.panHandlers}
           style={{ position: 'absolute', width: HANDLE_SZ, height: HANDLE_SZ, borderRadius: HANDLE_SZ / 2, backgroundColor: 'white', borderWidth: 2, borderColor: colors.secondary, left: leftPx }}
         />
-        {/* 오른쪽 핸들 */}
         <Animated.View
           {...rightPan.panHandlers}
           style={{ position: 'absolute', width: HANDLE_SZ, height: HANDLE_SZ, borderRadius: HANDLE_SZ / 2, backgroundColor: 'white', borderWidth: 2, borderColor: colors.secondary, left: rightPx }}
         />
       </View>
 
-      {/* 최솟값/최댓값 */}
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
         <Text style={{ fontSize: 11, color: colors.secondary50 }}>0원</Text>
         <Text style={{ fontSize: 11, color: colors.secondary50 }}>100만원</Text>
@@ -168,7 +183,7 @@ function PriceRangeSlider() {
   );
 }
 
-// ── 캘린더 ──────────────────────────────────────────
+// ── 캘린더 (표시용 — 백엔드 검색 파라미터엔 날짜가 없어 쿼리에 반영하지 않음) ──
 
 function CalendarSection() {
   const [year, setYear]   = useState(2026);
@@ -179,23 +194,14 @@ function CalendarSection() {
   const startOffset  = new Date(year, month - 1, 1).getDay();
   const prevMonthDays = new Date(year, month - 1, 0).getDate();
 
-  // 앞 빈칸을 이전 달 날짜로 채움
   type Cell = { day: number; current: boolean };
   const cells: Cell[] = [];
-  for (let i = startOffset - 1; i >= 0; i--) {
-    cells.push({ day: prevMonthDays - i, current: false });
-  }
-  for (let d = 1; d <= totalDays; d++) {
-    cells.push({ day: d, current: true });
-  }
-  // 뒤 빈칸 채우기 (7의 배수 맞춤)
+  for (let i = startOffset - 1; i >= 0; i--) cells.push({ day: prevMonthDays - i, current: false });
+  for (let d = 1; d <= totalDays; d++) cells.push({ day: d, current: true });
   const remaining = cells.length % 7 === 0 ? 0 : 7 - (cells.length % 7);
-  for (let d = 1; d <= remaining; d++) {
-    cells.push({ day: d, current: false });
-  }
+  for (let d = 1; d <= remaining; d++) cells.push({ day: d, current: false });
 
   function key(c: Cell) { return `${c.current ? 'cur' : 'other'}-${c.day}`; }
-
   function toggle(c: Cell) {
     if (!c.current) return;
     const k = `${year}-${month}-${c.day}`;
@@ -205,11 +211,7 @@ function CalendarSection() {
       return next;
     });
   }
-
-  function isSelected(c: Cell) {
-    return selected.has(`${year}-${month}-${c.day}`);
-  }
-
+  function isSelected(c: Cell) { return selected.has(`${year}-${month}-${c.day}`); }
   function prev() { if (month === 1) { setYear(y => y - 1); setMonth(12); } else setMonth(m => m - 1); }
   function next() { if (month === 12) { setYear(y => y + 1); setMonth(1); } else setMonth(m => m + 1); }
 
@@ -240,11 +242,7 @@ function CalendarSection() {
             >
               <Text style={{
                 fontSize: 13,
-                color: sel
-                  ? colors.background
-                  : cell.current
-                    ? colors.secondary
-                    : 'rgba(125,105,93,0.3)',
+                color: sel ? colors.background : cell.current ? colors.secondary : 'rgba(125,105,93,0.3)',
               }}>
                 {cell.day}
               </Text>
@@ -258,21 +256,55 @@ function CalendarSection() {
 
 // ── 메인 모달 ────────────────────────────────────────
 
-interface Props { visible: boolean; onClose: () => void; initialSection?: string; }
+interface Props {
+  visible: boolean;
+  onClose: () => void;
+  initialSection?: string;
+  initialFilters?: SearchFilters;
+  onApply?: (filters: SearchFilters) => void;
+}
 
-export default function FilterModal({ visible, onClose, initialSection }: Props) {
+export default function FilterModal({ visible, onClose, initialSection, initialFilters, onApply }: Props) {
   const sheetHeight   = useRef(new Animated.Value(0)).current;
   const currentH      = useRef(0);
   const gestureStartH = useRef(0);
   const scrollViewRef = useRef<ScrollView>(null);
   const sectionY      = useRef<Record<string, number>>({});
 
+  const { data: taxonomy } = useTaxonomy();
+  const regionItems = taxonomy?.regions ?? [];
+  const colorItems = taxonomy?.colors ?? [];
+  const moodItems = [...(taxonomy?.moods ?? []), ...(taxonomy?.seasons ?? [])];
+
+  // 적용 대상 필터 상태(단일 region, 다중 colors/moods, 소요시간 라벨, 가격)
+  const [selRegion, setSelRegion]   = useState<string | null>(null);
+  const [selColor,  setSelColor]    = useState<string[]>([]);
+  const [selMood,   setSelMood]     = useState<string[]>([]);
+  const [durLabel,  setDurLabel]    = useState<string | null>(null);
+  const priceRef = useRef<{ min: number; max: number }>({ min: 0, max: MAX_PRICE });
+
+  // 열릴 때 외부 filters로 초기화
+  useEffect(() => {
+    if (!visible) return;
+    setSelRegion(initialFilters?.region ?? null);
+    setSelColor(initialFilters?.colors ?? []);
+    setSelMood(initialFilters?.moods ?? []);
+    priceRef.current = {
+      min: initialFilters?.priceMin ?? 0,
+      max: initialFilters?.priceMax ?? MAX_PRICE,
+    };
+    const matched = DURATION_OPTS.find(
+      (o) => o.min === initialFilters?.durationMin && o.max === initialFilters?.durationMax
+    );
+    setDurLabel(matched ? matched.label : null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
+
   useEffect(() => {
     if (visible) {
       sheetHeight.setValue(0);
       currentH.current = 0;
       if (initialSection) {
-        // 높이 즉시 세팅 후 바로 해당 섹션으로 스크롤
         sheetHeight.setValue(EXPANDED_HEIGHT);
         currentH.current = EXPANDED_HEIGHT;
         requestAnimationFrame(() => {
@@ -298,7 +330,31 @@ export default function FilterModal({ visible, onClose, initialSection }: Props)
     Animated.timing(sheetHeight, { toValue: 0, duration: 220, useNativeDriver: false }).start(() => onClose());
   }
 
-  // PanResponder는 핸들 영역에만 적용
+  function buildFilters(): SearchFilters {
+    const dur = DURATION_OPTS.find((o) => o.label === durLabel);
+    const { min, max } = priceRef.current;
+    return {
+      region: selRegion ?? undefined,
+      colors: selColor.length ? selColor : undefined,
+      moods: selMood.length ? selMood : undefined,
+      durationMin: dur?.min,
+      durationMax: dur?.max,
+      priceMin: min > 0 ? min : undefined,
+      priceMax: max < MAX_PRICE ? max : undefined,
+    };
+  }
+
+  function applyAndClose() {
+    onApply?.(buildFilters());
+  }
+  function resetAll() {
+    setSelRegion(null);
+    setSelColor([]);
+    setSelMood([]);
+    setDurLabel(null);
+    priceRef.current = { min: 0, max: MAX_PRICE };
+  }
+
   const panResponder = useRef(PanResponder.create({
     onStartShouldSetPanResponder: () => true,
     onPanResponderGrant: () => {
@@ -322,52 +378,41 @@ export default function FilterModal({ visible, onClose, initialSection }: Props)
     },
   })).current;
 
-  const [selLoc,   setSelLoc]   = useState<string[]>([]);
-  const [selTime,  setSelTime]  = useState<string[]>([]);
-  const [selColor, setSelColor] = useState<string[]>([]);
-  const [selVibe,  setSelVibe]  = useState<string[]>([]);
-
-  function toggle(list: string[], setList: (v: string[]) => void, val: string) {
+  function toggleMulti(list: string[], setList: (v: string[]) => void, val: string) {
     setList(list.includes(val) ? list.filter(v => v !== val) : [...list, val]);
   }
-
-  const colorItems = [
-    { label: '화이트', color: '#FFFFFF' }, { label: '그레이', color: '#9E9E9E' },
-    { label: '블랙',   color: '#1A1A1A' }, { label: '핑크',   color: '#F9A8D4' },
-    { label: '레드',   color: '#EF4444' }, { label: '베이지', color: '#D4B896' },
-    { label: '그린',   color: '#86EFAC' }, { label: '네이비', color: '#1E3A5F' },
-  ];
+  function toggleRegion(val: string) {
+    setSelRegion(prev => (prev === val ? null : val));
+  }
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={dismiss}>
-      {/* 배경 딤 */}
       <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.35)' }}>
         <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={dismiss} />
 
-        {/* 시트 */}
         <Animated.View style={{ height: sheetHeight, backgroundColor: 'white', borderTopLeftRadius: 20, borderTopRightRadius: 20, overflow: 'hidden' }}>
-          {/* 드래그 핸들 */}
           <View style={{ height: 22, alignItems: 'center', justifyContent: 'center' }} {...panResponder.panHandlers}>
             <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: '#DDDDDD' }} />
           </View>
 
-          {/* 상단 바 */}
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, height: 44 }} {...panResponder.panHandlers}>
             <Text style={{ fontSize: 14, fontWeight: '600', color: colors.primary }}>필터</Text>
-            <TouchableOpacity onPress={dismiss} activeOpacity={0.7}>
-              <Ionicons name="close" size={24} color={colors.primary} />
+            <TouchableOpacity onPress={resetAll} activeOpacity={0.7}>
+              <Text style={{ fontSize: 13, color: colors.secondary50 }}>초기화</Text>
             </TouchableOpacity>
           </View>
 
-          {/* 내용 */}
           <ScrollView ref={scrollViewRef} showsVerticalScrollIndicator={false}>
             <View
               style={tw`px-[20px] py-[14px] gap-y-[10px]`}
               onLayout={e => { sectionY.current['region'] = e.nativeEvent.layout.y; }}
             >
               <SectionTitle>지역</SectionTitle>
-              <ChipRow items={['전체','강남','건대','명동','성수']}       selected={selLoc}   onToggle={v => toggle(selLoc,   setSelLoc,   v)} />
-              <ChipRow items={['신림','압구정','이태원','잠실','홍대']}   selected={selLoc}   onToggle={v => toggle(selLoc,   setSelLoc,   v)} />
+              {regionItems.length === 0 ? (
+                <Text style={{ fontSize: 12, color: colors.secondary50 }}>불러오는 중...</Text>
+              ) : (
+                <ChipRow items={regionItems} selected={selRegion ? [selRegion] : []} onToggle={toggleRegion} />
+              )}
             </View>
             <Divider />
             <View
@@ -375,7 +420,11 @@ export default function FilterModal({ visible, onClose, initialSection }: Props)
               onLayout={e => { sectionY.current['duration'] = e.nativeEvent.layout.y; }}
             >
               <SectionTitle>소요시간</SectionTitle>
-              <ChipRow items={['전체','1시간 이내','1-2시간','2시간+']} selected={selTime}  onToggle={v => toggle(selTime,  setSelTime,  v)} />
+              <ChipRow
+                items={DURATION_OPTS.map((o) => o.label)}
+                selected={durLabel ? [durLabel] : []}
+                onToggle={(v) => setDurLabel(prev => (prev === v ? null : v))}
+              />
             </View>
             <Divider />
             <View
@@ -391,7 +440,7 @@ export default function FilterModal({ visible, onClose, initialSection }: Props)
               onLayout={e => { sectionY.current['price'] = e.nativeEvent.layout.y; }}
             >
               <SectionTitle>가격</SectionTitle>
-              <PriceRangeSlider />
+              <PriceRangeSlider onChange={(min, max) => { priceRef.current = { min, max }; }} />
             </View>
             <Divider />
             <View
@@ -399,21 +448,44 @@ export default function FilterModal({ visible, onClose, initialSection }: Props)
               onLayout={e => { sectionY.current['color'] = e.nativeEvent.layout.y; }}
             >
               <SectionTitle>색상</SectionTitle>
-              <View style={tw`flex-row flex-wrap gap-[10px]`}>
-                {colorItems.slice(0, 4).map(c => <ColorChip key={c.label} {...c} isActive={selColor.includes(c.label)} onPress={() => toggle(selColor, setSelColor, c.label)} />)}
-              </View>
-              <View style={tw`flex-row flex-wrap gap-[10px]`}>
-                {colorItems.slice(4).map(c => <ColorChip key={c.label} {...c} isActive={selColor.includes(c.label)} onPress={() => toggle(selColor, setSelColor, c.label)} />)}
-              </View>
+              {colorItems.length === 0 ? (
+                <Text style={{ fontSize: 12, color: colors.secondary50 }}>불러오는 중...</Text>
+              ) : (
+                <View style={tw`flex-row flex-wrap gap-[10px]`}>
+                  {colorItems.map(name => (
+                    <ColorChip
+                      key={name}
+                      label={name}
+                      color={COLOR_HEX[name] ?? '#D9D9D9'}
+                      isActive={selColor.includes(name)}
+                      onPress={() => toggleMulti(selColor, setSelColor, name)}
+                    />
+                  ))}
+                </View>
+              )}
             </View>
             <Divider />
             <View style={tw`px-[20px] py-[14px] gap-y-[10px]`}>
               <SectionTitle>분위기</SectionTitle>
-              <ChipRow items={['심플','우아','키치','화려','빈티지']}   selected={selVibe}  onToggle={v => toggle(selVibe,  setSelVibe,  v)} />
-              <ChipRow items={['귀여움','봄','여름','가을','겨울']}     selected={selVibe}  onToggle={v => toggle(selVibe,  setSelVibe,  v)} />
+              {moodItems.length === 0 ? (
+                <Text style={{ fontSize: 12, color: colors.secondary50 }}>불러오는 중...</Text>
+              ) : (
+                <ChipRow items={moodItems} selected={selMood} onToggle={(v) => toggleMulti(selMood, setSelMood, v)} />
+              )}
             </View>
-            <View style={tw`pb-[40px]`} />
+            <View style={tw`pb-[20px]`} />
           </ScrollView>
+
+          {/* 적용 버튼 */}
+          <View style={{ paddingHorizontal: 20, paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#F0F0F0' }}>
+            <TouchableOpacity
+              onPress={applyAndClose}
+              activeOpacity={0.85}
+              style={{ height: 48, borderRadius: 8, backgroundColor: colors.secondary, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Text style={{ fontSize: 15, fontWeight: '700', color: colors.background }}>적용하기</Text>
+            </TouchableOpacity>
+          </View>
         </Animated.View>
       </View>
     </Modal>

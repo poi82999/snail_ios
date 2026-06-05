@@ -1,21 +1,54 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  type QueryKey,
+} from '@tanstack/react-query';
+import { getAccessToken } from '../api/authToken';
+import { fetchDesignList } from '../api/designsApi';
+import { ApiError } from '../api/errors';
+import { addFavorite, removeFavorite } from '../api/favoriteApi';
 import { Design, FilterId, HomeTab } from '../types';
-import { getMockDesigns } from '../api/mockData';
 
-// TODO: API 연결 시 아래 fetchDesigns 함수를 교체하세요
-// import axios from 'axios';
-// const BASE_URL = 'https://api.snail.com/v1';
-// async function fetchDesigns(tab: HomeTab, filters: FilterId[]): Promise<Design[]> {
-//   const { data } = await axios.get(`${BASE_URL}/designs`, {
-//     params: { tab, filters: filters.join(',') },
-//     headers: { Authorization: `Bearer ${token}` },
-//   });
-//   return data.designs;
-// }
+interface LikeToggleVariables {
+  designId: string;
+  isLiked: boolean;
+}
 
-async function fetchDesigns(tab: HomeTab, _filters: FilterId[]): Promise<Design[]> {
-  await new Promise((resolve) => setTimeout(resolve, 300));
-  return getMockDesigns(tab);
+interface LikeToggleContext {
+  previousDesigns: Array<[QueryKey, unknown]>;
+}
+
+async function fetchDesigns(tab: HomeTab, filters: FilterId[]): Promise<Design[]> {
+  return fetchDesignList(tab, filters);
+}
+
+function patchDesign(d: Design, designId: string, isLiked: boolean): Design {
+  if (d.id !== designId) return d;
+  return {
+    ...d,
+    isLiked,
+    likeCount: Math.max(0, d.likeCount + (d.isLiked === isLiked ? 0 : isLiked ? 1 : -1)),
+  };
+}
+
+// ['designs'] prefix는 단발 쿼리(Design[])와 무한 쿼리(InfiniteData<{designs:Design[]}>)를
+// 모두 매칭한다. 두 캐시 형태를 모두 안전하게 패치한다.
+function patchDesignsCache(old: unknown, designId: string, isLiked: boolean): unknown {
+  if (Array.isArray(old)) {
+    return (old as Design[]).map((d) => patchDesign(d, designId, isLiked));
+  }
+  if (old && typeof old === 'object' && 'pages' in old) {
+    const data = old as { pages: { designs: Design[] }[] };
+    return {
+      ...data,
+      pages: data.pages.map((page) => ({
+        ...page,
+        designs: page.designs.map((d) => patchDesign(d, designId, isLiked)),
+      })),
+    };
+  }
+  return old;
 }
 
 export function useDesigns(tab: HomeTab, filters: FilterId[]) {
@@ -29,21 +62,45 @@ export function useDesigns(tab: HomeTab, filters: FilterId[]) {
 export function useLikeToggle() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async ({ designId, isLiked }: { designId: string; isLiked: boolean }) => {
-      // TODO: API 연결 시 교체
-      // await axios.post(`${BASE_URL}/designs/${designId}/like`, { isLiked });
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      return { designId, isLiked };
+  return useMutation<void, ApiError, LikeToggleVariables, LikeToggleContext>({
+    mutationFn: async ({ designId, isLiked }) => {
+      // 토큰이 없으면 네트워크 요청 전에 로그인 필요 상태를 화면에 전달한다.
+      if (!getAccessToken()) {
+        throw new ApiError({
+          code: 'UNAUTHORIZED',
+          message: '로그인이 필요합니다.',
+          status: 401,
+        });
+      }
+
+      if (isLiked) {
+        await addFavorite(designId);
+        return;
+      }
+
+      await removeFavorite(designId);
     },
-    onSuccess: ({ designId, isLiked }) => {
-      queryClient.setQueriesData<Design[]>({ queryKey: ['designs'] }, (old) =>
-        old?.map((d) =>
-          d.id === designId
-            ? { ...d, isLiked, likeCount: d.likeCount + (isLiked ? 1 : -1) }
-            : d
-        )
+    onMutate: async ({ designId, isLiked }) => {
+      await queryClient.cancelQueries({ queryKey: ['designs'] });
+
+      const previousDesigns = queryClient.getQueriesData({ queryKey: ['designs'] });
+
+      // 모든 홈/검색 디자인 캐시(단발+무한)에 같은 찜 상태를 낙관적으로 반영한다.
+      queryClient.setQueriesData({ queryKey: ['designs'] }, (old) =>
+        patchDesignsCache(old, designId, isLiked)
       );
+
+      return { previousDesigns };
+    },
+    onError: (_error, _variables, context) => {
+      context?.previousDesigns.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['designs'] });
+      // 상세 화면 좋아요 상태도 서버 기준으로 다시 맞춘다.
+      queryClient.invalidateQueries({ queryKey: ['design'] });
     },
   });
 }

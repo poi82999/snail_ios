@@ -8,8 +8,9 @@ import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import tw from 'twrnc';
 import { RootStackParamList, Design } from '../types';
-import { useDesignDetail } from '../hooks/useDesignDetail';
-import { colors } from '../theme/tokens';
+import { useDesignDetail, useRelatedDesigns } from '../hooks/useDesignDetail';
+import { useLikeToggle } from '../hooks/useHome';
+import { colors, shadows } from '../theme/tokens';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DesignDetail'>;
 type DetailTab = '스네일' | '샵 후기' | '문의하기';
@@ -17,8 +18,10 @@ type DetailTab = '스네일' | '샵 후기' | '문의하기';
 export default function DesignDetailScreen({ route, navigation }: Props) {
   const { designId } = route.params;
   const { data: design, isLoading, isError, refetch } = useDesignDetail(designId);
+  const { data: relatedDesigns = [] } = useRelatedDesigns(designId);
+  const { mutate: toggleLike } = useLikeToggle();
   const [activeTab, setActiveTab] = useState<DetailTab>('스네일');
-  const [isLiked, setIsLiked] = useState(false);
+  const [likedOverride, setLikedOverride] = useState<boolean | null>(null);
 
   if (isLoading) {
     return (
@@ -40,6 +43,15 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
   }
 
   const formattedPrice = design.price.toLocaleString('ko-KR') + '원';
+
+  // 찜 상태: 낙관적 오버라이드가 있으면 우선, 없으면 서버값
+  const liked = likedOverride ?? design.isLiked;
+  const likeCount = design.likeCount + (liked === design.isLiked ? 0 : liked ? 1 : -1);
+  function onHeart() {
+    const next = !liked;
+    setLikedOverride(next);
+    toggleLike({ designId, isLiked: next });
+  }
 
   return (
     <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>
@@ -71,7 +83,7 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
         />
 
         {/* 샵 정보 */}
-        <View style={[tw`flex-row items-center justify-between px-[20px] py-[15px]`, { shadowColor: '#000', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.1, shadowRadius: 1.5, elevation: 2 }]}>
+        <View style={[tw`flex-row items-center justify-between px-[20px] py-[15px]`, shadows.subtle]}>
           <TouchableOpacity style={tw`flex-row items-center gap-[8px]`} activeOpacity={0.7}>
             <Text style={{ fontSize: 16, fontWeight: '500', color: colors.secondary }}>{design.shopName}</Text>
             <Ionicons name="chevron-forward" size={14} color={colors.secondary} />
@@ -99,35 +111,33 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
           </ScrollView>
         </View>
 
-        {/* 연관 추천 디자인 */}
-        <View style={[tw`px-[20px] py-[15px] gap-y-[12px]`, { shadowColor: '#000', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.1, shadowRadius: 1.5, elevation: 2 }]}>
-          <View style={tw`flex-row items-center justify-between`}>
-            <Text style={{ fontSize: 14, fontWeight: '600', color: colors.secondary }}>연관 추천 디자인</Text>
-            <TouchableOpacity style={tw`flex-row items-center gap-[4px]`} activeOpacity={0.7}>
-              <Text style={{ fontSize: 12, color: colors.secondary }}>전체보기</Text>
-              <Ionicons name="chevron-forward" size={12} color={colors.secondary} />
-            </TouchableOpacity>
+        {/* 연관 추천 디자인 — useRelatedDesigns(/designs/{id}/related). 없으면 섹션 숨김 */}
+        {relatedDesigns.length > 0 && (
+          <View style={[tw`px-[20px] py-[15px] gap-y-[12px]`, shadows.subtle]}>
+            <View style={tw`flex-row items-center justify-between`}>
+              <Text style={{ fontSize: 14, fontWeight: '600', color: colors.secondary }}>연관 추천 디자인</Text>
+            </View>
+            <FlatList
+              horizontal
+              data={relatedDesigns}
+              keyExtractor={item => item.id}
+              showsHorizontalScrollIndicator={false}
+              ItemSeparatorComponent={() => <View style={tw`w-[10px]`} />}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  onPress={() => navigation.replace('DesignDetail', { designId: item.id })}
+                  activeOpacity={0.8}
+                >
+                  <Image
+                    source={{ uri: item.imageUri }}
+                    style={{ width: 131, height: 164, borderRadius: 4 }}
+                    resizeMode="cover"
+                  />
+                </TouchableOpacity>
+              )}
+            />
           </View>
-          <FlatList
-            horizontal
-            data={design.relatedDesigns}
-            keyExtractor={item => item.id}
-            showsHorizontalScrollIndicator={false}
-            ItemSeparatorComponent={() => <View style={tw`w-[10px]`} />}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                onPress={() => navigation.replace('DesignDetail', { designId: item.id })}
-                activeOpacity={0.8}
-              >
-                <Image
-                  source={{ uri: item.imageUri }}
-                  style={{ width: 131, height: 164, borderRadius: 4 }}
-                  resizeMode="cover"
-                />
-              </TouchableOpacity>
-            )}
-          />
-        </View>
+        )}
 
         {/* 탭 */}
         <View style={tw`flex-row`}>
@@ -194,14 +204,14 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
       </ScrollView>
 
       {/* 하단 액션 바 */}
-      <View style={[tw`flex-row items-center px-[20px] h-[70px] gap-[12px]`, { backgroundColor: colors.background, shadowColor: '#000', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.1, shadowRadius: 1.5, elevation: 3 }]}>
+      <View style={[tw`flex-row items-center px-[20px] h-[70px] gap-[12px]`, { backgroundColor: colors.background, ...shadows.bar }]}>
         <TouchableOpacity
-          onPress={() => setIsLiked(v => !v)}
+          onPress={onHeart}
           activeOpacity={0.7}
           style={tw`items-center gap-y-[2px]`}
         >
-          <Ionicons name={isLiked ? 'heart' : 'heart-outline'} size={28} color={isLiked ? '#FF6B6B' : colors.secondary} />
-          <Text style={{ fontSize: 8, color: colors.secondary }}>{(design.likeCount + (isLiked ? 1 : 0)).toLocaleString()}</Text>
+          <Ionicons name={liked ? 'heart' : 'heart-outline'} size={28} color={liked ? '#FF6B6B' : colors.secondary} />
+          <Text style={{ fontSize: 8, color: colors.secondary }}>{likeCount.toLocaleString()}</Text>
         </TouchableOpacity>
         <TouchableOpacity activeOpacity={0.7} style={tw`items-center gap-y-[2px]`}>
           <Ionicons name="share-social-outline" size={28} color={colors.secondary} />

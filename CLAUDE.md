@@ -28,7 +28,7 @@ npx eslint . --fix
 
 - **Expo** ~56.0.5 with **React Native** 0.85.3 and **React** 19
 - **TypeScript** strict mode
-- **NativeWind v4** — 스타일링은 NativeWind className만 사용. StyleSheet.create 사용 금지
+- **twrnc** — 스타일링은 `import tw from 'twrnc'` 후 `` tw`...` `` 형식만 사용. NativeWind className / StyleSheet.create 사용 금지. 토큰은 `tailwind.config.js` 참조 (실제 코드 기준)
 - **TanStack Query v5** — 서버 상태 관리, API 호출은 모두 훅으로
 - **Axios** — API 통신
 - **React Navigation v7** — 네비게이션

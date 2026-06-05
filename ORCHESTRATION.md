@@ -1,0 +1,95 @@
+# 오케스트레이션 시스템 — Opus 사령관 / Codex 실행관
+
+이 저장소의 백엔드 접합·기능 구현은 두 AI의 분업으로 진행한다.
+
+| 역할 | 담당 | 하는 일 |
+|---|---|---|
+| **사령관** | Opus (Claude Code) | 백엔드 계약 해석 → work-order 작성 → Codex 디스패치 → diff 리뷰 → 타입체크/실행 검증 → 통합 판단 → 커밋 |
+| **실행관** | Codex CLI (gpt-5.5, reasoning=xhigh) | work-order 범위 내에서 **실제 파일 수정**. 커밋·범위 외 변경 금지 |
+
+## 디스패치 방법
+```bash
+# 사령관이 work-order를 작성한 뒤:
+scripts/codex-do.sh ops/codex/work-orders/<task>.md
+# → Codex가 코드를 수정하고, 최종 보고가 ops/codex/last-report.md 에 캡처됨
+```
+- Codex 설정: 모델 `gpt-5.5`, reasoning `xhigh`(extra high). ChatGPT 로그인 인증.
+- **샌드박스**: 이 Windows 환경에선 Codex 내장 샌드박스가 동작하지 않아 `--dangerously-bypass-approvals-and-sandbox`로 실행한다. 즉 Codex는 승인 없이 명령을 실행하므로, 아래 **안전 루프**가 유일한 통제 수단이다.
+
+## 안전 루프 (매 work-order)
+1. **브랜치**: 작업은 항상 전용 브랜치에서. `main` 직접 작업 금지.
+2. **좁은 범위**: work-order는 한 번에 하나의 이음매(seam)만. "수정 허용 파일"을 명시(`ALLOWED-FILES` 블록).
+   - `codex-do.sh`가 디스패치 직전 work-order(+brief)를 **자동 선커밋**해 baseline을 깨끗이 만든다 → verify가 Codex 변경만 본다.
+3. **자동 게이트**: Codex 실행 직후 `scripts/verify.sh <work-order>` 실행 — git 기준으로 (a) 범위 밖 변경, (b) 의존성 변경, (c) `tsc --noEmit`을 자동 검사하고 PASS/FAIL을 낸다. 그 위에 사령관이 `git diff`로 코드 품질 리뷰 + 필요시 에뮬레이터 렌더 확인.
+4. **롤백**: 범위 이탈·오작동 시 `git checkout -- <file>` 또는 `git restore`로 즉시 되돌림.
+5. **커밋**: 게이트 통과 + 사용자 승인 후에만 사령관이 커밋.
+
+```bash
+# 표준 1사이클
+scripts/codex-do.sh ops/codex/work-orders/<task>.md   # 위임
+scripts/verify.sh   ops/codex/work-orders/<task>.md   # 자동 게이트
+git diff                                              # 사령관 품질 리뷰
+```
+
+## 작업 우선순위 (백엔드 접합)
+1. axios 클라이언트 기반 (baseURL, JWT/Idempotency-Key/401 refresh 인터셉터)
+2. `openapi.json` → 타입 정합 (`src/types`)
+3. 홈/검색 디자인 목록 (`src/api`, `src/hooks/useHome` mock 제거)
+4. 디자인 상세 (`useDesignDetail`)
+5. 예약 플로우 (생성·시간/날짜 조회)
+6. 화면 상태처리: 로딩 스켈레톤 / 빈 상태 / 에러 재시도
+
+## 멀티 에이전트 (업그레이드)
+역할 다양성으로 품질↑, 병렬로 처리량↑.
+
+| 도구 | 역할 | 모델 | 비고 |
+|---|---|---|---|
+| Opus | 사령관·판정 | claude-opus-4-8 | 계획·리뷰·통합·커밋 |
+| Codex | 주 실행관 | gpt-5.5 / xhigh | 코드 수정 |
+| Gemini | 교차 리뷰어 | gemini-3.1-pro | read-only(`plan`). 실행관(`yolo`)도 가능하나 worktree 폴더 trust 필요 |
+
+### 토큰 경제 (역할 배치 원리)
+판단 밀도가 높은 일은 비싼 모델, 분량 많고 판단 적은 일은 싼 Gemini로.
+- **Opus**(최고가): 아키텍처·work-order·최종 판정만. 원자료 직접 흡입 최소화.
+- **Codex**(고가): 모호하고 어려운 이음매, 진짜 추론 코드.
+- **Gemini**(싸고 무제한·거대컨텍스트, 약한 판단): ①사전소화 브리프(큰 자료→1페이지) ②기계적 코드생성(타이트 스펙) ③와이드 탐색·픽스처·로그요약 ④교차리뷰.
+
+### 보수적 난이도 라우팅
+work-order의 `executor:` 필드로 지정. **기본 codex**, 자동 휴리스틱 없음. Gemini 실행분은
+verify + 교차리뷰 필수, 2회 실패 시 codex 에스컬레이션. (상세 규칙: work-order-template.md)
+
+### 다계정 Gemini 함대 (병렬)
+계정별 프로필로 격리 → 병렬 워커. Windows에선 `USERPROFILE`/`HOME` 오버라이드로 `~/.gemini` 분리.
+```bash
+scripts/gemini-login.sh acct2          # (사용자, 1회) 계정별 대화형 로그인+trust
+GEMINI_PROFILE=acct2 scripts/gemini-brief.sh ...    # 그 계정으로 헤드리스 실행
+GEMINI_PROFILE=acct3 scripts/gemini-review.sh ...   # 동시에 다른 계정으로
+```
+
+```bash
+# 사전소화 (큰 backend-context → 작업별 1페이지 브리프, Opus/Codex 입력 토큰 절약)
+scripts/gemini-brief.sh "<작업>" backend-context/frontend_app.ai.txt
+
+# 교차 리뷰 (Codex 변경을 Gemini가 검수 → Opus 판정)
+scripts/gemini-review.sh <work-order.md> [git-diff-인자...]
+
+# 병렬 실행 (격리 worktree에서 동시 진행, 충돌 없음)
+scripts/codex-worktree.sh <work-order.md> [codex|gemini] [name]
+#   → 이후: cd .worktrees/<name> && verify, 메인에서 git merge wt/<name>
+
+# 공유 타입 계약 재생성 (backend-context 동기화 후)
+scripts/gen-api-types.sh    # openapi.json → src/types/api.ts
+```
+
+## 파일 안내
+- `AGENTS.md` — Codex가 매 실행 시 자동 로드하는 운영 계약 (규칙의 단일 출처)
+- `CLAUDE.md` — 사령관(Opus)용 프로젝트 컨텍스트
+- `src/types/api.ts` — openapi.json에서 생성한 공유 타입 계약 (직접 수정 금지)
+- `ops/codex/work-order-template.md` — work-order 양식
+- `ops/codex/work-orders/` — 실제 발행한 work-order (감사 추적)
+- `ops/codex/reports/` — 병렬 실행 보고 (worktree별)
+- `scripts/codex-do.{sh,ps1}` — 디스패치 래퍼
+- `scripts/verify.sh` — 자동 검증 게이트
+- `scripts/gemini-review.sh` — 교차 모델 리뷰 (read-only)
+- `scripts/codex-worktree.sh` — 병렬 worktree 디스패치
+- `scripts/gen-api-types.sh` — 타입 codegen

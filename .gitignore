@@ -107,3 +107,20 @@ backend-context/
 # Misc
 *.log
 *.orig
+
+# Codex 디스패치 transient 리포트
+ops/codex/last-report.md
+
+# 병렬 실행관 worktree
+.worktrees/
+# Gemini 교차 리뷰 transient
+ops/codex/last-review.md
+# 병렬 실행 보고(transient)
+ops/codex/reports/
+.orch/reports/
+.orch/last-report.md
+.orch/last-review.md
+
+# 오케스트레이션 작업지시서/브리프 (개발 스크래치, 제품 산출물 아님)
+.orch/
+ops/codex/
