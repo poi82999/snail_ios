@@ -18,7 +18,7 @@ export type RootStackParamList = {
   };
 };
 
-export type FilterId = 'filter' | 'region' | 'duration' | 'date' | 'price' | 'color';
+export type FilterId = 'filter' | 'region' | 'duration' | 'date' | 'price' | 'color' | 'mood';
 
 export type DesignSort =
   | 'relevance'

@@ -8,4 +8,5 @@ export const FILTER_CHIPS: FilterChipItem[] = [
   { id: 'date', label: '날짜' },
   { id: 'price', label: '가격' },
   { id: 'color', label: '색상' },
+  { id: 'mood', label: '분위기' },
 ];

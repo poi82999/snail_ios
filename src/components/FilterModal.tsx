@@ -10,14 +10,20 @@ import {
   Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Svg, { Path } from 'react-native-svg';
 import tw from 'twrnc';
 import { colors } from '../theme/tokens';
+import { fontFamily } from '../theme/fonts';
 import { useTaxonomy } from '../hooks/useTaxonomy';
 import type { SearchFilters } from '../types';
+import TagChip from './TagChip';
+import ColorTagChip from './ColorTagChip';
+import CalendarDayCell from './CalendarDayCell';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const COLLAPSED_HEIGHT = SCREEN_HEIGHT * 0.55;
 const EXPANDED_HEIGHT  = SCREEN_HEIGHT * 0.92;
+const TOP_BAR_HEIGHT   = 54;
 
 // 색상 이름 → 스와치 hex (taxonomy는 이름만 주므로 표시용 매핑, 미정의는 회색 폴백)
 const COLOR_HEX: Record<string, string> = {
@@ -35,58 +41,48 @@ const DURATION_OPTS: { label: string; min?: number; max?: number }[] = [
   { label: '2시간+', min: 120 },
 ];
 
-// ── 작은 칩 컴포넌트들 ─────────────────────────────
+// ── 작은 조각들 ─────────────────────────────
+// 칩(TagChip/ColorTagChip)은 src/components/로 이미 분리됨 (Figma: Filter_pop / Filter_pop_color)
 
-function ModalChip({ label, isActive, onPress }: { label: string; isActive: boolean; onPress: () => void }) {
+function CloseIcon() {
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.7}
-      style={[tw`h-[32px] px-[16px] rounded-[16px] border items-center justify-center`,
-        { borderColor: isActive ? colors.secondary : 'rgba(125,105,93,0.3)', backgroundColor: isActive ? colors.secondary : colors.background }]}
-    >
-      <Text style={[tw`text-[14px] font-semibold`, { color: isActive ? colors.background : colors.secondary }]}>{label}</Text>
-    </TouchableOpacity>
+    <Svg width={35} height={35} viewBox="0 0 35 35" fill="none">
+      <Path d="M10 10L25 25M25 10L10 25" stroke={colors.primary} strokeWidth={1.5} strokeLinecap="round" />
+    </Svg>
   );
 }
 
-function ColorChip({ label, color, isActive, onPress }: { label: string; color: string; isActive: boolean; onPress: () => void }) {
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.7}
-      style={[tw`h-[32px] px-[16px] rounded-[16px] border flex-row items-center gap-[4px]`,
-        { borderColor: isActive ? colors.secondary : 'rgba(125,105,93,0.3)', backgroundColor: isActive ? colors.secondary : colors.background }]}
-    >
-      <View style={{ width: 15, height: 15, borderRadius: 8, backgroundColor: color, borderWidth: color === '#FFFFFF' ? 1 : 0, borderColor: '#E5E5E5' }} />
-      <Text style={[tw`text-[14px] font-semibold`, { color: isActive ? colors.background : colors.secondary }]}>{label}</Text>
-    </TouchableOpacity>
-  );
-}
-
+// Figma: Fillter(344:1091)의 섹션 구분선. 시트 폭 402 기준 양쪽 10px 인셋(382/402).
 function Divider() {
-  return <View style={{ height: 1, backgroundColor: '#E5E5E5', marginHorizontal: 10 }} />;
+  return <View style={{ height: 1, backgroundColor: colors.line, marginHorizontal: 10 }} />;
 }
 
 function SectionTitle({ children }: { children: string }) {
-  return <Text style={[tw`text-[14px] font-semibold`, { color: colors.secondary }]}>{children}</Text>;
+  return (
+    <Text style={{ fontSize: 14, lineHeight: 20, fontFamily: fontFamily.semibold, color: colors.secondary }}>
+      {children}
+    </Text>
+  );
 }
 
+// Figma: 칩 한 줄 안에서는 gap 12, 줄과 줄 사이는 gap 10 (지역/소요시간/분위기 공통)
 function ChipRow({ items, selected, onToggle }: { items: string[]; selected: string[]; onToggle: (v: string) => void }) {
   return (
-    <View style={tw`flex-row flex-wrap gap-[10px]`}>
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 10, columnGap: 12 }}>
       {items.map(item => (
-        <ModalChip key={item} label={item} isActive={selected.includes(item)} onPress={() => onToggle(item)} />
+        <TagChip key={item} label={item} isActive={selected.includes(item)} onPress={() => onToggle(item)} />
       ))}
     </View>
   );
 }
 
-// ── 가격 범위 슬라이더 ──────────────────────────────
+// ── 가격 범위 슬라이더 (Figma: PriceFilter 270:18608) ──────────────────────────────
 
-const MAX_PRICE  = 1000000;
-const HANDLE_SZ  = 22;
-const MIN_GAP    = HANDLE_SZ + 8;
+const MAX_PRICE   = 1000000;
+const TRACK_HEIGHT = 10;
+const HANDLE_W     = 30.124;
+const HANDLE_H     = 18;
+const MIN_GAP      = HANDLE_W + 8;
 
 function fmt(price: number) {
   if (price <= 0) return '0원';
@@ -108,7 +104,7 @@ function PriceRangeSlider({ onChange }: { onChange?: (min: number, max: number) 
   const [maxP, setMaxP] = useState(MAX_PRICE);
 
   function toPrice(px: number) {
-    const span = trackW.current - HANDLE_SZ;
+    const span = trackW.current - HANDLE_W;
     if (span <= 0) return 0;
     return Math.round((px / span) * MAX_PRICE / 10000) * 10000;
   }
@@ -132,7 +128,7 @@ function PriceRangeSlider({ onChange }: { onChange?: (min: number, max: number) 
     onMoveShouldSetPanResponder:  () => true,
     onPanResponderGrant: () => { rStart.current = rCur.current; },
     onPanResponderMove: (_, { dx }) => {
-      const maxPx = trackW.current - HANDLE_SZ;
+      const maxPx = trackW.current - HANDLE_W;
       const next  = Math.max(lCur.current + MIN_GAP, Math.min(maxPx, rStart.current + dx));
       rightPx.setValue(next);
       rCur.current = next;
@@ -142,48 +138,53 @@ function PriceRangeSlider({ onChange }: { onChange?: (min: number, max: number) 
     },
   })).current;
 
-  const activeLeft  = Animated.add(leftPx,  HANDLE_SZ / 2);
+  const activeLeft  = Animated.add(leftPx,  HANDLE_W / 2);
   const activeWidth = Animated.subtract(rightPx, leftPx);
 
   return (
-    <View>
-      <View style={{ alignItems: 'flex-end', marginBottom: 14 }}>
-        <Text style={{ fontSize: 13, fontWeight: '600', color: colors.secondary }}>{fmt(minP)} ~ {fmt(maxP)}</Text>
-      </View>
-
+    <View style={{ gap: 10 }}>
       <View
-        style={{ height: HANDLE_SZ, justifyContent: 'center' }}
+        style={{ height: HANDLE_H, justifyContent: 'center' }}
         onLayout={e => {
           const w = e.nativeEvent.layout.width;
           trackW.current = w;
-          const initRight = w - HANDLE_SZ;
+          const initRight = w - HANDLE_W;
           rightPx.setValue(initRight);
           rCur.current   = initRight;
           rStart.current = initRight;
           setMaxP(MAX_PRICE);
         }}
       >
-        <View style={{ position: 'absolute', left: 0, right: 0, height: 4, backgroundColor: colors.primary10, borderRadius: 2 }} />
-        <Animated.View style={{ position: 'absolute', height: 4, backgroundColor: colors.secondary, borderRadius: 2, left: activeLeft, width: activeWidth }} />
+        <View style={{ position: 'absolute', top: (HANDLE_H - TRACK_HEIGHT) / 2, left: 0, right: 0, height: TRACK_HEIGHT, backgroundColor: colors.primary10, borderRadius: 6 }} />
+        <Animated.View style={{ position: 'absolute', top: (HANDLE_H - TRACK_HEIGHT) / 2, height: TRACK_HEIGHT, backgroundColor: colors.secondary, borderRadius: 6, left: activeLeft, width: activeWidth }} />
         <Animated.View
           {...leftPan.panHandlers}
-          style={{ position: 'absolute', width: HANDLE_SZ, height: HANDLE_SZ, borderRadius: HANDLE_SZ / 2, backgroundColor: 'white', borderWidth: 2, borderColor: colors.secondary, left: leftPx }}
+          style={{
+            position: 'absolute', width: HANDLE_W, height: HANDLE_H, borderRadius: 9,
+            backgroundColor: colors.background, left: leftPx,
+            shadowColor: '#000', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.2, shadowRadius: 5, elevation: 2,
+          }}
         />
         <Animated.View
           {...rightPan.panHandlers}
-          style={{ position: 'absolute', width: HANDLE_SZ, height: HANDLE_SZ, borderRadius: HANDLE_SZ / 2, backgroundColor: 'white', borderWidth: 2, borderColor: colors.secondary, left: rightPx }}
+          style={{
+            position: 'absolute', width: HANDLE_W, height: HANDLE_H, borderRadius: 9,
+            backgroundColor: colors.background, left: rightPx,
+            shadowColor: '#000', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.2, shadowRadius: 5, elevation: 2,
+          }}
         />
       </View>
 
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
-        <Text style={{ fontSize: 11, color: colors.secondary50 }}>0원</Text>
-        <Text style={{ fontSize: 11, color: colors.secondary50 }}>100만원</Text>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+        <Text style={{ fontSize: 12, lineHeight: 16, fontFamily: fontFamily.regular, color: colors.secondary50 }}>{fmt(minP)}</Text>
+        <Text style={{ fontSize: 12, lineHeight: 16, fontFamily: fontFamily.regular, color: colors.secondary50 }}>{fmt(maxP)}</Text>
       </View>
     </View>
   );
 }
 
 // ── 캘린더 (표시용 — 백엔드 검색 파라미터엔 날짜가 없어 쿼리에 반영하지 않음) ──
+// Figma: Date(251:17363) > MonthFilter(554:5581). 요일/날짜 그리드는 CalendarDayCell 재사용.
 
 function CalendarSection() {
   const [year, setYear]   = useState(2026);
@@ -211,44 +212,40 @@ function CalendarSection() {
       return next;
     });
   }
-  function isSelected(c: Cell) { return selected.has(`${year}-${month}-${c.day}`); }
+  // 다른 달 미리보기 셀(c.current === false)은 화면에 보이는 month/year로 key를 만들면
+  // 실제 달이 다른데 day 숫자만 같은 셀이 같은 key로 잘못 매칭된다(예: 6월 그리드 끝의
+  // "7월 2일" 미리보기가 "6월 2일" 선택에 같이 켜짐) — 항상 선택 불가/비활성으로 둔다.
+  function isSelected(c: Cell) { return c.current && selected.has(`${year}-${month}-${c.day}`); }
   function prev() { if (month === 1) { setYear(y => y - 1); setMonth(12); } else setMonth(m => m - 1); }
   function next() { if (month === 12) { setYear(y => y + 1); setMonth(1); } else setMonth(m => m + 1); }
 
   return (
-    <View style={tw`gap-y-[14px]`}>
+    <View style={{ gap: 20, width: '100%' }}>
       <View style={tw`flex-row items-center justify-center gap-[20px]`}>
         <TouchableOpacity onPress={prev} activeOpacity={0.7}><Ionicons name="chevron-back" size={16} color={colors.secondary} /></TouchableOpacity>
-        <Text style={[tw`text-[14px] font-semibold`, { color: colors.secondary }]}>{year}년 {month}월</Text>
+        <Text style={{ fontSize: 14, lineHeight: 20, fontFamily: fontFamily.semibold, color: colors.secondary }}>{year}년 {month}월</Text>
         <TouchableOpacity onPress={next} activeOpacity={0.7}><Ionicons name="chevron-forward" size={16} color={colors.secondary} /></TouchableOpacity>
       </View>
-      <View style={tw`flex-row`}>
-        {['일','월','화','수','목','금','토'].map(d => (
-          <Text key={d} style={{ flex: 1, textAlign: 'center', fontSize: 13, color: colors.secondary }}>{d}</Text>
-        ))}
-      </View>
-      <View style={tw`flex-row flex-wrap`}>
-        {cells.map((cell, i) => {
-          const sel = isSelected(cell);
-          return (
-            <TouchableOpacity
+
+      <View style={{ gap: 21, alignItems: 'center', width: '100%' }}>
+        {/* Figma는 이 요일 라벨에 Inter Medium을 쓰는데, 디자인 시스템이 Pretendard 단일 폰트라
+            폰트는 Pretendard-Medium으로, 크기(14.608)만 그대로 가져온다. */}
+        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 35, width: '100%' }}>
+          {['일', '월', '화', '수', '목', '금', '토'].map(d => (
+            <Text key={d} style={{ width: 38.616, textAlign: 'center', fontSize: 14.608, fontFamily: fontFamily.medium, color: colors.secondary }}>{d}</Text>
+          ))}
+        </View>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 12 }}>
+          {cells.map((cell, i) => (
+            <CalendarDayCell
               key={`${i}-${key(cell)}`}
+              day={cell.day}
+              selected={isSelected(cell)}
+              disabled={!cell.current}
               onPress={() => toggle(cell)}
-              activeOpacity={cell.current ? 0.7 : 1}
-              style={[
-                { width: '14.28%', alignItems: 'center', paddingVertical: 7 },
-                sel ? { backgroundColor: colors.secondary, borderRadius: 20 } : undefined,
-              ]}
-            >
-              <Text style={{
-                fontSize: 13,
-                color: sel ? colors.background : cell.current ? colors.secondary : 'rgba(125,105,93,0.3)',
-              }}>
-                {cell.day}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
+            />
+          ))}
+        </View>
       </View>
     </View>
   );
@@ -347,13 +344,6 @@ export default function FilterModal({ visible, onClose, initialSection, initialF
   function applyAndClose() {
     onApply?.(buildFilters());
   }
-  function resetAll() {
-    setSelRegion(null);
-    setSelColor([]);
-    setSelMood([]);
-    setDurLabel(null);
-    priceRef.current = { min: 0, max: MAX_PRICE };
-  }
 
   const panResponder = useRef(PanResponder.create({
     onStartShouldSetPanResponder: () => true,
@@ -390,21 +380,40 @@ export default function FilterModal({ visible, onClose, initialSection, initialF
       <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.35)' }}>
         <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={dismiss} />
 
-        <Animated.View style={{ height: sheetHeight, backgroundColor: 'white', borderTopLeftRadius: 20, borderTopRightRadius: 20, overflow: 'hidden' }}>
-          <View style={{ height: 22, alignItems: 'center', justifyContent: 'center' }} {...panResponder.panHandlers}>
-            <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: '#DDDDDD' }} />
-          </View>
-
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, height: 44 }} {...panResponder.panHandlers}>
-            <Text style={{ fontSize: 14, fontWeight: '600', color: colors.primary }}>필터</Text>
-            <TouchableOpacity onPress={resetAll} activeOpacity={0.7}>
-              <Text style={{ fontSize: 13, color: colors.secondary50 }}>초기화</Text>
+        {/* Figma: Fillter(344:1091) */}
+        <Animated.View
+          style={{
+            height: sheetHeight,
+            backgroundColor: colors.background,
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            overflow: 'hidden',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.1,
+            shadowRadius: 7.559,
+            elevation: 6,
+          }}
+        >
+          {/* Top Bar(251:17323) — 헤더 전체가 드래그 핸들 역할도 겸한다 (Figma엔 별도 드래그 인디케이터 없음) */}
+          <View
+            {...panResponder.panHandlers}
+            style={[
+              tw`flex-row items-center justify-between px-[20px]`,
+              { height: TOP_BAR_HEIGHT, backgroundColor: colors.background },
+              // shadows.bar(탭바와 공유하는 토큰)는 그대로 두고, 헤더만 더 미세하게 낮춰서 적용
+              { shadowColor: '#000', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.04, shadowRadius: 1.5, elevation: 1 },
+            ]}
+          >
+            <Text style={{ fontSize: 14, lineHeight: 20, fontFamily: fontFamily.semibold, color: colors.primary }}>필터</Text>
+            <TouchableOpacity onPress={dismiss} activeOpacity={0.7}>
+              <CloseIcon />
             </TouchableOpacity>
           </View>
 
           <ScrollView ref={scrollViewRef} showsVerticalScrollIndicator={false}>
             <View
-              style={tw`px-[20px] py-[14px] gap-y-[10px]`}
+              style={{ padding: 20, gap: 10 }}
               onLayout={e => { sectionY.current['region'] = e.nativeEvent.layout.y; }}
             >
               <SectionTitle>지역</SectionTitle>
@@ -416,7 +425,7 @@ export default function FilterModal({ visible, onClose, initialSection, initialF
             </View>
             <Divider />
             <View
-              style={tw`px-[20px] py-[14px] gap-y-[10px]`}
+              style={{ padding: 20, gap: 10 }}
               onLayout={e => { sectionY.current['duration'] = e.nativeEvent.layout.y; }}
             >
               <SectionTitle>소요시간</SectionTitle>
@@ -428,7 +437,7 @@ export default function FilterModal({ visible, onClose, initialSection, initialF
             </View>
             <Divider />
             <View
-              style={tw`px-[20px] py-[14px] gap-y-[10px]`}
+              style={{ padding: 20, gap: 10 }}
               onLayout={e => { sectionY.current['date'] = e.nativeEvent.layout.y; }}
             >
               <SectionTitle>날짜</SectionTitle>
@@ -436,7 +445,7 @@ export default function FilterModal({ visible, onClose, initialSection, initialF
             </View>
             <Divider />
             <View
-              style={tw`px-[20px] py-[14px] gap-y-[10px]`}
+              style={{ padding: 20, gap: 10 }}
               onLayout={e => { sectionY.current['price'] = e.nativeEvent.layout.y; }}
             >
               <SectionTitle>가격</SectionTitle>
@@ -444,16 +453,16 @@ export default function FilterModal({ visible, onClose, initialSection, initialF
             </View>
             <Divider />
             <View
-              style={tw`px-[20px] py-[14px] gap-y-[10px]`}
+              style={{ padding: 20, gap: 10 }}
               onLayout={e => { sectionY.current['color'] = e.nativeEvent.layout.y; }}
             >
               <SectionTitle>색상</SectionTitle>
               {colorItems.length === 0 ? (
                 <Text style={{ fontSize: 12, color: colors.secondary50 }}>불러오는 중...</Text>
               ) : (
-                <View style={tw`flex-row flex-wrap gap-[10px]`}>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 10, columnGap: 10 }}>
                   {colorItems.map(name => (
-                    <ColorChip
+                    <ColorTagChip
                       key={name}
                       label={name}
                       color={COLOR_HEX[name] ?? '#D9D9D9'}
@@ -465,7 +474,10 @@ export default function FilterModal({ visible, onClose, initialSection, initialF
               )}
             </View>
             <Divider />
-            <View style={tw`px-[20px] py-[14px] gap-y-[10px]`}>
+            <View
+              style={{ padding: 20, gap: 10 }}
+              onLayout={e => { sectionY.current['mood'] = e.nativeEvent.layout.y; }}
+            >
               <SectionTitle>분위기</SectionTitle>
               {moodItems.length === 0 ? (
                 <Text style={{ fontSize: 12, color: colors.secondary50 }}>불러오는 중...</Text>
@@ -476,14 +488,14 @@ export default function FilterModal({ visible, onClose, initialSection, initialF
             <View style={tw`pb-[20px]`} />
           </ScrollView>
 
-          {/* 적용 버튼 */}
-          <View style={{ paddingHorizontal: 20, paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#F0F0F0' }}>
+          {/* 적용 바 — Figma 프레임에는 없는 영역(스크롤 콘텐츠 바깥). "초기화"는 Figma에 없어서 제거. */}
+          <View style={{ paddingHorizontal: 20, paddingVertical: 12, borderTopWidth: 1, borderTopColor: colors.line }}>
             <TouchableOpacity
               onPress={applyAndClose}
               activeOpacity={0.85}
               style={{ height: 48, borderRadius: 8, backgroundColor: colors.secondary, alignItems: 'center', justifyContent: 'center' }}
             >
-              <Text style={{ fontSize: 15, fontWeight: '700', color: colors.background }}>적용하기</Text>
+              <Text style={{ fontSize: 15, fontFamily: fontFamily.bold, color: colors.background }}>적용하기</Text>
             </TouchableOpacity>
           </View>
         </Animated.View>
