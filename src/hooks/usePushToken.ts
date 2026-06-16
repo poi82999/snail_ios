@@ -22,18 +22,18 @@ async function requestAndRegister(authToken: string): Promise<void> {
   // 실기기에서만 동작 — 시뮬레이터/에뮬레이터는 토큰 발급 불가
   if (!Device.isDevice) return;
 
-  const { status: existing } = await Notifications.getPermissionsAsync();
-  let granted = existing === 'granted';
+  const existing = await Notifications.getPermissionsAsync();
+  let granted = existing.granted;
 
   if (!granted) {
-    const { status } = await Notifications.requestPermissionsAsync({
+    const requested = await Notifications.requestPermissionsAsync({
       ios: {
         allowAlert: true,
         allowBadge: true,
         allowSound: true,
       },
     });
-    granted = status === 'granted';
+    granted = requested.granted;
   }
 
   // 사용자가 거부한 경우 조용히 종료 (재요청하지 않음)
