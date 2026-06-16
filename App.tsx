@@ -1,9 +1,11 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
+import { useFonts } from 'expo-font';
 import { NavigationContainer } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import RootNavigator from './src/navigation/RootNavigator';
 import { useAuthBootstrap } from './src/hooks/useAuth';
+import { fontAssets } from './src/theme/fonts';
 
 const queryClient = new QueryClient();
 
@@ -21,6 +23,12 @@ function AppContent() {
 }
 
 export default function App() {
+  const [fontsLoaded] = useFonts(fontAssets);
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <AppContent />

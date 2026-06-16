@@ -1,10 +1,10 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons } from '@expo/vector-icons';
 import HomeScreen from '../screens/HomeScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import PlaceholderScreen from '../screens/PlaceholderScreen';
 import SnailScreen from '../screens/SnailScreen';
+import TabBarIcon, { TAB_ICON_SIZE } from '../components/TabBarIcon';
 
 export type TabParamList = {
   홈: undefined;
@@ -15,14 +15,6 @@ export type TabParamList = {
 };
 
 const Tab = createBottomTabNavigator<TabParamList>();
-
-const TAB_ICONS: Record<string, { active: keyof typeof Ionicons.glyphMap; inactive: keyof typeof Ionicons.glyphMap }> = {
-  홈: { active: 'home', inactive: 'home-outline' },
-  스네일: { active: 'snow', inactive: 'snow-outline' },
-  주변: { active: 'location', inactive: 'location-outline' },
-  일정: { active: 'calendar', inactive: 'calendar-outline' },
-  프로필: { active: 'person', inactive: 'person-outline' },
-};
 
 export default function TabNavigator() {
   return (
@@ -45,15 +37,15 @@ export default function TabNavigator() {
         tabBarLabelStyle: {
           fontSize: 8,
           fontWeight: '500',
-          marginTop: 2,
+          marginTop: 3,
+        },
+        tabBarIconStyle: {
+          width: TAB_ICON_SIZE[route.name],
+          height: TAB_ICON_SIZE[route.name],
         },
         tabBarActiveTintColor: '#7D695D',
         tabBarInactiveTintColor: '#BBAFA8',
-        tabBarIcon: ({ focused, color, size }) => {
-          const icons = TAB_ICONS[route.name];
-          const iconName = focused ? icons.active : icons.inactive;
-          return <Ionicons name={iconName} size={35} color={color} />;
-        },
+        tabBarIcon: ({ color }) => <TabBarIcon name={route.name} color={color} />,
       })}
     >
       <Tab.Screen name="홈" component={HomeScreen} />

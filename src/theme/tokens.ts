@@ -1,3 +1,5 @@
+import { fontFamily } from './fonts';
+
 export const colors = {
   primary:     "#070705",
   primary50:   "#7E7E7D",
@@ -23,32 +25,32 @@ export const typography = {
   headingLg: {
     fontSize:   20,
     lineHeight: 28,
-    fontWeight: "700" as const,
+    fontFamily: fontFamily.bold,
   },
   headingMd: {
     fontSize:   18,
     lineHeight: 26,
-    fontWeight: "600" as const,
+    fontFamily: fontFamily.semibold,
   },
   bodyMd: {
     fontSize:   16,
     lineHeight: 24,
-    fontWeight: "500" as const,
+    fontFamily: fontFamily.medium,
   },
   bodySm: {
     fontSize:   14,
     lineHeight: 20,
-    fontWeight: "400" as const,
+    fontFamily: fontFamily.regular,
   },
   filter: {
     fontSize:   14,
     lineHeight: 20,
-    fontWeight: "600" as const,
+    fontFamily: fontFamily.semibold,
   },
   caption: {
     fontSize:   12,
     lineHeight: 16,
-    fontWeight: "400" as const,
+    fontFamily: fontFamily.regular,
   },
 } as const;
 
