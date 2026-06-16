@@ -8,6 +8,7 @@ import { RootStackParamList } from '../types';
 import { useBookingSummary } from '../hooks/useBookingSummary';
 import BookingDesignCard from '../components/BookingDesignCard';
 import BookingBottomBar from '../components/BookingBottomBar';
+import CalendarDayCell from '../components/CalendarDayCell';
 import { colors } from '../theme/tokens';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BookingDate'>;
@@ -107,23 +108,13 @@ export default function BookingDateScreen({ route, navigation }: Props) {
               const isSelected = cell.current && selectedDate === key;
               const disabled = !cell.current || isPast(cell.day);
               return (
-                <TouchableOpacity
+                <CalendarDayCell
                   key={`${i}-${cell.day}-${cell.current}`}
-                  onPress={() => !disabled && setSelectedDate(key)}
-                  activeOpacity={disabled ? 1 : 0.7}
-                  style={[
-                    { width: '14.28%', alignItems: 'center', paddingVertical: 12 },
-                    isSelected && { backgroundColor: colors.secondary, borderRadius: 22 },
-                  ]}
-                >
-                  <Text style={{
-                    fontSize: 14,
-                    fontWeight: '500',
-                    color: isSelected ? colors.background : disabled ? 'rgba(125,105,93,0.25)' : colors.secondary,
-                  }}>
-                    {cell.day}
-                  </Text>
-                </TouchableOpacity>
+                  day={cell.day}
+                  selected={isSelected}
+                  disabled={disabled}
+                  onPress={() => setSelectedDate(key)}
+                />
               );
             })}
           </View>

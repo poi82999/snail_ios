@@ -78,15 +78,6 @@ export function toDisplaySlots(slots: AvailableSlot[]): DisplaySlot[] {
   });
 }
 
-export function filterSlotsByDesigner(
-  slots: DisplaySlot[],
-  designerId?: string | null
-): DisplaySlot[] {
-  if (!designerId) return slots;
-
-  return slots.filter((slot) => slot.availableDesignerIds.includes(designerId));
-}
-
 export function groupOptionsByKind(options: DesignOption[]): GroupedOptions {
   return options.reduce<GroupedOptions>(
     (groups, option) => {
