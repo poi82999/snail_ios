@@ -30,6 +30,7 @@ import {
 } from '../hooks/useSnail';
 import { getErrorMessage } from '../api/errors';
 import { colors, shadows } from '../theme/tokens';
+import FollowButton from '../components/FollowButton';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SnapDetail'>;
 
@@ -376,24 +377,11 @@ export default function SnapDetailScreen({ route, navigation }: Props) {
               </Text>
             </View>
           </View>
-          <TouchableOpacity
+          <FollowButton
+            following={Boolean(followedOverride)}
             onPress={handleToggleFollow}
             disabled={toggleFollow.isPending}
-            activeOpacity={0.75}
-            style={[
-              tw`h-[32px] px-[14px] rounded-[16px] items-center justify-center`,
-              {
-                backgroundColor: followedOverride ? colors.secondary : colors.background,
-                borderColor: colors.secondary,
-                borderWidth: 1,
-                opacity: toggleFollow.isPending ? 0.55 : 1,
-              },
-            ]}
-          >
-            <Text style={{ color: followedOverride ? colors.background : colors.secondary, fontSize: 12, fontWeight: '700' }}>
-              {followedOverride ? '팔로잉' : '팔로우'}
-            </Text>
-          </TouchableOpacity>
+          />
         </View>
 
         {renderGallery()}
