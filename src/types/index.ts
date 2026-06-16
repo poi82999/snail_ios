@@ -27,6 +27,7 @@ export type DesignSort =
   | 'price_asc'
   | 'price_desc'
   | 'rating'
+  | 'monthly'
   | 'distance';
 
 export interface SearchFilters {
