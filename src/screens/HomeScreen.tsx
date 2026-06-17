@@ -18,6 +18,7 @@ import FilterChip from '../components/FilterChip';
 import HomeTabSelector from '../components/HomeTabSelector';
 import DesignCard from '../components/DesignCard';
 import FilterModal from '../components/FilterModal';
+import { colors } from '../theme/tokens';
 
 function SkeletonCard() {
   return (
@@ -70,7 +71,7 @@ export default function HomeScreen() {
       <View style={tw`flex-row items-center justify-between px-[16px] py-[12px]`}>
         <View style={tw`w-[80px] h-[28px] bg-[#1A1A1A] rounded-[4px]`} />
         <TouchableOpacity activeOpacity={0.7}>
-          <Ionicons name="heart-outline" size={24} color="#1A1A1A" />
+          <Ionicons name="heart" size={35} color={colors.secondary} />
         </TouchableOpacity>
       </View>
 
@@ -81,7 +82,7 @@ export default function HomeScreen() {
         style={[tw`my-[12px] mx-[16px] h-[39px] rounded-[8px] flex-row items-center justify-between px-[20px]`, { backgroundColor: 'rgba(125, 105, 93, 0.1)' }]}
       >
         <Text style={tw`text-[14px] text-[#7D695D]`}>검색어를 입력하세요</Text>
-        <Ionicons name="search" size={18} color="#7D695D" />
+        <Ionicons name="search" size={24.725} color="#7D695D" />
       </TouchableOpacity>
 
       {/* Tab Selector */}
