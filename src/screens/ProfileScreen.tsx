@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
 import { useAuth } from '../hooks/useAuth';
 import { shadows } from '../theme/tokens';
+import { fontFamily } from '../theme/fonts';
 
 const MOCK_POSTS = Array.from({ length: 9 });
 
@@ -33,7 +34,7 @@ export default function ProfileScreen() {
     <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>
       {/* Top Bar */}
       <View style={tw`flex-row items-center justify-between px-[20px] h-[54px] bg-white`}>
-        <Text style={tw`font-semibold text-[14px] text-[#6F6F6F]`}>프로필</Text>
+        <Text style={[tw`text-[14px] text-[#6F6F6F]`, { fontFamily: fontFamily.semibold }]}>프로필</Text>
         <View style={tw`flex-row items-center gap-[10px]`}>
           <TouchableOpacity activeOpacity={0.7}>
             <Ionicons name="notifications-outline" size={27} color="#6F6F6F" />
@@ -62,8 +63,8 @@ export default function ProfileScreen() {
             <View style={tw`flex-row items-center gap-[63px]`}>
               {STATS.map(({ value, label }) => (
                 <View key={label} style={tw`items-center gap-y-[9px] w-[34px]`}>
-                  <Text style={tw`font-semibold text-[18px] text-[#6F6F6F]`}>{value}</Text>
-                  <Text style={tw`font-medium text-[12px] text-[#6F6F6F]`}>{label}</Text>
+                  <Text style={[tw`text-[18px] text-[#6F6F6F]`, { fontFamily: fontFamily.semibold }]}>{value}</Text>
+                  <Text style={[tw`text-[12px] text-[#6F6F6F]`, { fontFamily: fontFamily.medium }]}>{label}</Text>
                 </View>
               ))}
             </View>
@@ -71,8 +72,8 @@ export default function ProfileScreen() {
 
           {/* Name + bio */}
           <View style={tw`px-[20px] gap-y-[9px]`}>
-            <Text style={tw`font-semibold text-[18px] text-[#6F6F6F]`}>{displayName}</Text>
-            <Text style={tw`font-medium text-[12px] text-[#6F6F6F]`}>{displayBio}</Text>
+            <Text style={[tw`text-[18px] text-[#6F6F6F]`, { fontFamily: fontFamily.semibold }]}>{displayName}</Text>
+            <Text style={[tw`text-[12px] text-[#6F6F6F]`, { fontFamily: fontFamily.medium }]}>{displayBio}</Text>
           </View>
 
           {/* Edit / Share buttons */}
@@ -83,7 +84,7 @@ export default function ProfileScreen() {
                 activeOpacity={0.7}
                 style={tw`flex-1 h-[35px] bg-[#D9D9D9] rounded-[5px] items-center justify-center`}
               >
-                <Text style={tw`font-bold text-[12px] text-[#6F6F6F]`}>{label}</Text>
+                <Text style={[tw`text-[12px] text-[#6F6F6F]`, { fontFamily: fontFamily.bold }]}>{label}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -100,7 +101,7 @@ export default function ProfileScreen() {
             {ACTIONS.map(({ icon, label }) => (
               <TouchableOpacity key={label} activeOpacity={0.7} style={tw`items-center w-[38px]`}>
                 <Ionicons name={icon} size={35} color="#6F6F6F" />
-                <Text style={tw`font-medium text-[8px] text-[#6F6F6F] text-center mt-[2px]`}>
+                <Text style={[tw`text-[8px] text-[#6F6F6F] text-center mt-[2px]`, { fontFamily: fontFamily.medium }]}>
                   {label}
                 </Text>
               </TouchableOpacity>

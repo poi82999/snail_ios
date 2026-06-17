@@ -11,6 +11,8 @@ import { RootStackParamList, Design } from '../types';
 import { useDesignDetail, useRelatedDesigns } from '../hooks/useDesignDetail';
 import { useLikeToggle } from '../hooks/useHome';
 import { colors, shadows } from '../theme/tokens';
+import Tag from '../components/Tag';
+import SegmentedTabs from '../components/SegmentedTabs';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DesignDetail'>;
 type DetailTab = '스네일' | '샵 후기' | '문의하기';
@@ -101,11 +103,9 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
             </View>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={tw`flex-row gap-[7px]`}>
+            <View style={tw`flex-row gap-[8px]`}>
               {design.tags.map(tag => (
-                <View key={tag} style={[tw`px-[10px] rounded-[12px]`, { paddingVertical: 5, backgroundColor: colors.secondary50 }]}>
-                  <Text style={{ fontSize: 12, color: colors.background }}>{tag}</Text>
-                </View>
+                <Tag key={tag} label={tag} />
               ))}
             </View>
           </ScrollView>
@@ -140,23 +140,11 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
         )}
 
         {/* 탭 */}
-        <View style={tw`flex-row`}>
-          {(['스네일', '샵 후기', '문의하기'] as DetailTab[]).map(tab => (
-            <TouchableOpacity
-              key={tab}
-              onPress={() => setActiveTab(tab)}
-              activeOpacity={0.7}
-              style={[
-                tw`flex-1 items-center py-[10px]`,
-                { backgroundColor: activeTab === tab ? colors.background : 'rgba(221,221,221,0.3)' },
-              ]}
-            >
-              <Text style={{ fontSize: 14, fontWeight: '600', color: activeTab === tab ? colors.secondary : colors.secondary50 }}>
-                {tab}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <SegmentedTabs
+          tabs={['스네일', '샵 후기', '문의하기'] as DetailTab[]}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
 
         {/* 탭 콘텐츠 */}
         {activeTab === '스네일' && (

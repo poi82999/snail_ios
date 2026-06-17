@@ -14,7 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import tw from 'twrnc';
 import SnailCard from '../components/SnailCard';
-import { useSnailFeed, useToggleSnapLike, useToggleSnapSave } from '../hooks/useSnail';
+import { useSnailFeed, useToggleSnapLike } from '../hooks/useSnail';
 import type { RootStackParamList, Snap, SnapFeedType } from '../types';
 import { colors, shadows } from '../theme/tokens';
 
@@ -108,7 +108,6 @@ export default function SnailScreen(): React.ReactElement {
     isFetchingNextPage,
   } = useSnailFeed(feedType);
   const { mutate: toggleLike } = useToggleSnapLike();
-  const { mutate: toggleSave } = useToggleSnapSave();
 
   const handleEndReached = (): void => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -121,7 +120,7 @@ export default function SnailScreen(): React.ReactElement {
       snap={item}
       onPress={() => navigation.navigate('SnapDetail', { snapId: item.id })}
       onLike={() => toggleLike(item.id)}
-      onSave={() => toggleSave(item.id)}
+      onPressTag={(designId) => navigation.navigate('DesignDetail', { designId })}
     />
   );
 

@@ -9,6 +9,7 @@ import { useBookingSummary } from '../hooks/useBookingSummary';
 import { useDisplaySlots } from '../hooks/useBooking';
 import BookingDesignCard from '../components/BookingDesignCard';
 import BookingBottomBar from '../components/BookingBottomBar';
+import ReserveTimeBar from '../components/ReserveTimeBar';
 import { colors, shadows } from '../theme/tokens';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BookingTime'>;
@@ -24,12 +25,14 @@ export default function BookingTimeScreen({ route, navigation }: Props) {
   const [selectedDesignerId, setSelectedDesignerId] = useState<string | null>(null);
   const [selectedStartAt, setSelectedStartAt] = useState<string | null>(null);
 
-  // 디자인+날짜+옵션 기준 가용 슬롯. 디자이너 선택 시 해당 디자이너 가용분만 필터링.
+  // 디자인+날짜+옵션 기준 그날 전체 슬롯(예약됨/비어있음 모두 포함). 디자이너별 가능 여부는
+  // ReserveTimeBar가 슬롯의 availableDesignerIds로 그때그때 판단 — 그래야 선택한 디자이너가
+  // 안 되는 시간을 "빈 시간"이 아니라 "예약된 시간"으로 그릴 수 있다.
   const {
     data: slots = [],
     isLoading: slotsLoading,
     isError: slotsError,
-  } = useDisplaySlots(designId, selectedDate, selectedOptionIds, selectedDesignerId);
+  } = useDisplaySlots(designId, selectedDate, selectedOptionIds);
 
   const selectedSlot = slots.find((s) => s.startAt === selectedStartAt) ?? null;
   const canBook = selectedSlot !== null;
@@ -101,7 +104,7 @@ export default function BookingTimeScreen({ route, navigation }: Props) {
           <Text style={{ fontSize: 12, color: TEXT }}>{selectedDate}</Text>
         </View>
 
-        <View style={tw`px-[16px] pb-[20px]`}>
+        <View style={tw`pb-[20px]`}>
           {slotsLoading ? (
             <View style={tw`py-[30px] items-center`}>
               <ActivityIndicator color="#7D695D" />
@@ -115,36 +118,12 @@ export default function BookingTimeScreen({ route, navigation }: Props) {
               <Text style={{ fontSize: 13, color: TEXT }}>선택한 날짜에 가능한 시간이 없어요.</Text>
             </View>
           ) : (
-            <View style={tw`flex-row flex-wrap gap-[10px]`}>
-              {slots.map((slot) => {
-                const sel = selectedStartAt === slot.startAt;
-                const disabled = !slot.isAvailable;
-                return (
-                  <TouchableOpacity
-                    key={slot.startAt}
-                    onPress={() => !disabled && setSelectedStartAt(slot.startAt)}
-                    activeOpacity={disabled ? 1 : 0.7}
-                    style={{
-                      width: 72,
-                      paddingVertical: 10,
-                      borderRadius: 8,
-                      alignItems: 'center',
-                      backgroundColor: sel ? colors.secondary : disabled ? '#F2F2F2' : colors.background,
-                      borderWidth: 1,
-                      borderColor: sel ? colors.secondary : '#E5E5E5',
-                    }}
-                  >
-                    <Text style={{
-                      fontSize: 14,
-                      fontWeight: '600',
-                      color: sel ? colors.background : disabled ? '#C9C9C9' : TEXT,
-                    }}>
-                      {slot.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+            <ReserveTimeBar
+              slots={slots}
+              selectedDesignerId={selectedDesignerId}
+              selectedStartAt={selectedStartAt}
+              onSelectSlot={(slot) => setSelectedStartAt(slot.startAt)}
+            />
           )}
         </View>
 

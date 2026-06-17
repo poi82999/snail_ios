@@ -11,6 +11,7 @@ import { useDesignDetail } from '../hooks/useDesignDetail';
 import { groupOptionsByKind } from '../api/bookingApi';
 import BookingDesignCard from '../components/BookingDesignCard';
 import BookingBottomBar from '../components/BookingBottomBar';
+import RadioOption from '../components/RadioOption';
 import { colors } from '../theme/tokens';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Booking'>;
@@ -23,36 +24,6 @@ const KIND_SECTIONS: { kind: DesignOptionKind; label: string }[] = [
   { kind: 'extend', label: '연장' },
   { kind: 'care', label: '케어' },
 ];
-
-function RadioOption({
-  label, price, selected, onPress,
-}: { label: string; price: number; selected: boolean; onPress: () => void }) {
-  const priceText = price === 0 ? '+0원' : `+${price.toLocaleString('ko-KR')}원`;
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.7}
-      style={tw`flex-row items-center px-[20px] py-[12px] gap-[18px]`}
-    >
-      {/* 라디오 버튼 */}
-      <View style={[
-        tw`w-[57px] items-center justify-center`,
-      ]}>
-        <View style={[
-          { width: 20, height: 20, borderRadius: 10, borderWidth: 1.5, borderColor: selected ? colors.secondary : TEXT, alignItems: 'center', justifyContent: 'center' },
-        ]}>
-          {selected && (
-            <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: colors.secondary }} />
-          )}
-        </View>
-      </View>
-      <View style={tw`flex-1 flex-row items-center justify-between`}>
-        <Text style={{ fontSize: 16, fontWeight: '500', color: TEXT }}>{label}</Text>
-        <Text style={{ fontSize: 16, fontWeight: '600', color: TEXT }}>{priceText}</Text>
-      </View>
-    </TouchableOpacity>
-  );
-}
 
 export default function BookingScreen({ route, navigation }: Props) {
   const { designId } = route.params;

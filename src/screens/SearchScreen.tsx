@@ -21,6 +21,7 @@ import { useLikeToggle } from '../hooks/useHome';
 import { useRecentSearches } from '../hooks/useRecentSearches';
 import FilterChip from '../components/FilterChip';
 import DesignCard from '../components/DesignCard';
+import { fontFamily } from '../theme/fonts';
 
 type SearchTab = '디자인' | '샵' | '리뷰';
 
@@ -119,10 +120,10 @@ export default function SearchScreen() {
           {/* 최근 검색어 */}
           <View style={tw`px-[22px] pt-[14px] gap-[10px]`}>
             <View style={tw`flex-row items-center justify-between`}>
-              <Text style={tw`font-semibold text-[14px] text-[#6F6F6F]`}>최근 검색어</Text>
+              <Text style={[tw`text-[14px] text-[#6F6F6F]`, { fontFamily: fontFamily.semibold }]}>최근 검색어</Text>
               {recent.length > 0 && (
                 <TouchableOpacity onPress={clear} activeOpacity={0.7}>
-                  <Text style={tw`font-medium text-[12px] text-[#6F6F6F]`}>전체 삭제</Text>
+                  <Text style={[tw`text-[12px] text-[#6F6F6F]`, { fontFamily: fontFamily.medium }]}>전체 삭제</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -139,7 +140,7 @@ export default function SearchScreen() {
                         style={tw`py-[7px] pl-[15px] pr-[6px]`}
                         activeOpacity={0.7}
                       >
-                        <Text style={tw`font-medium text-[14px] text-[#6F6F6F]`}>{tag}</Text>
+                        <Text style={[tw`text-[14px] text-[#6F6F6F]`, { fontFamily: fontFamily.medium }]}>{tag}</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         onPress={() => remove(tag)}
@@ -159,7 +160,7 @@ export default function SearchScreen() {
 
           {/* 최근 검색한 샵 */}
           <View style={tw`px-[22px] pt-[20px] gap-[10px]`}>
-            <Text style={tw`font-semibold text-[14px] text-[#6F6F6F]`}>최근 검색한 샵</Text>
+            <Text style={[tw`text-[14px] text-[#6F6F6F]`, { fontFamily: fontFamily.semibold }]}>최근 검색한 샵</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View style={tw`flex-row gap-[10px]`}>
                 {RECENT_SHOPS.map((shop) => (
@@ -169,7 +170,7 @@ export default function SearchScreen() {
                     style={tw`border border-[#D9D9D9] rounded-[16px] py-[7px] px-[15px]`}
                     activeOpacity={0.7}
                   >
-                    <Text style={tw`font-medium text-[14px] text-[#6F6F6F]`}>{shop}</Text>
+                    <Text style={[tw`text-[14px] text-[#6F6F6F]`, { fontFamily: fontFamily.medium }]}>{shop}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -178,7 +179,7 @@ export default function SearchScreen() {
 
           {/* 인기 검색어 */}
           <View style={tw`px-[22px] pt-[20px] pb-[30px] gap-[12px]`}>
-            <Text style={tw`font-bold text-[14px] text-[#6F6F6F]`}>인기 검색어</Text>
+            <Text style={[tw`text-[14px] text-[#6F6F6F]`, { fontFamily: fontFamily.bold }]}>인기 검색어</Text>
             <View style={tw`flex-row`}>
               <View style={tw`flex-1 gap-y-[15px]`}>
                 {POPULAR_SEARCHES.slice(0, 5).map((keyword, i) => (
@@ -188,8 +189,8 @@ export default function SearchScreen() {
                     style={tw`flex-row items-center gap-[17px]`}
                     activeOpacity={0.7}
                   >
-                    <Text style={tw`font-bold text-[14px] text-[#6F6F6F] w-[22px]`}>{i + 1}.</Text>
-                    <Text style={tw`font-medium text-[14px] text-[#6F6F6F] flex-1`}>{keyword}</Text>
+                    <Text style={[tw`text-[14px] text-[#6F6F6F] w-[22px]`, { fontFamily: fontFamily.bold }]}>{i + 1}.</Text>
+                    <Text style={[tw`text-[14px] text-[#6F6F6F] flex-1`, { fontFamily: fontFamily.medium }]}>{keyword}</Text>
                     <Ionicons name="caret-up" size={10} color="#6F6F6F" />
                   </TouchableOpacity>
                 ))}
@@ -202,8 +203,8 @@ export default function SearchScreen() {
                     style={tw`flex-row items-center gap-[17px]`}
                     activeOpacity={0.7}
                   >
-                    <Text style={tw`font-bold text-[14px] text-[#6F6F6F] w-[22px]`}>{i + 6}.</Text>
-                    <Text style={tw`font-medium text-[14px] text-[#6F6F6F] flex-1`}>{keyword}</Text>
+                    <Text style={[tw`text-[14px] text-[#6F6F6F] w-[22px]`, { fontFamily: fontFamily.bold }]}>{i + 6}.</Text>
+                    <Text style={[tw`text-[14px] text-[#6F6F6F] flex-1`, { fontFamily: fontFamily.medium }]}>{keyword}</Text>
                     <Ionicons name="caret-up" size={10} color="#6F6F6F" />
                   </TouchableOpacity>
                 ))}
@@ -223,9 +224,10 @@ export default function SearchScreen() {
                 activeOpacity={0.7}
               >
                 <Text
-                  style={tw`text-[14px] ${
-                    activeTab === tab ? 'font-semibold text-[#1A1A1A]' : 'font-normal text-[#6F6F6F]'
-                  }`}
+                  style={[
+                    tw`text-[14px] ${activeTab === tab ? 'text-[#1A1A1A]' : 'text-[#6F6F6F]'}`,
+                    { fontFamily: activeTab === tab ? fontFamily.semibold : fontFamily.regular },
+                  ]}
                 >
                   {tab}
                 </Text>

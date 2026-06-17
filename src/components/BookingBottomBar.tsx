@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
 import { colors, shadows } from '../theme/tokens';
+import Button from './Button';
 
 const TEXT = colors.text;
 
@@ -29,14 +30,7 @@ export default function BookingBottomBar({ ctaLabel, canProceed, onPress }: Book
         <Ionicons name="share-social-outline" size={28} color={TEXT} />
         <Text style={{ fontSize: 8, color: TEXT }}>999+</Text>
       </TouchableOpacity>
-      <TouchableOpacity
-        activeOpacity={canProceed ? 0.8 : 1}
-        disabled={!canProceed}
-        onPress={() => canProceed && onPress()}
-        style={[tw`flex-1 h-[42px] rounded-[5px] items-center justify-center`, { backgroundColor: canProceed ? colors.secondary : colors.disabled }]}
-      >
-        <Text style={{ fontSize: 14, fontWeight: '700', color: canProceed ? colors.background : TEXT }}>{ctaLabel}</Text>
-      </TouchableOpacity>
+      <Button label={ctaLabel} onPress={onPress} disabled={!canProceed} style={tw`flex-1`} />
     </View>
   );
 }

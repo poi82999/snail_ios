@@ -18,7 +18,7 @@ export type RootStackParamList = {
   };
 };
 
-export type FilterId = 'filter' | 'region' | 'duration' | 'date' | 'price' | 'color';
+export type FilterId = 'filter' | 'region' | 'duration' | 'date' | 'price' | 'color' | 'mood';
 
 export type DesignSort =
   | 'relevance'
@@ -27,6 +27,7 @@ export type DesignSort =
   | 'price_asc'
   | 'price_desc'
   | 'rating'
+  | 'monthly'
   | 'distance';
 
 export interface SearchFilters {

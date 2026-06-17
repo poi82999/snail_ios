@@ -4,7 +4,6 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   createReservation,
   fetchAvailability,
-  filterSlotsByDesigner,
   toDisplaySlots,
   type AvailabilityDate,
   type AvailabilityDesignId,
@@ -30,18 +29,19 @@ export function useAvailability(
   });
 }
 
+// 디자이너로 필터링해서 일부 슬롯을 빼지 않고 그날 전체 슬롯을 그대로 반환한다.
+// 디자이너별 가능 여부는 슬롯 자체의 availableDesignerIds로 호출 쪽(ReserveTimeBar)에서 판단 —
+// 그래야 "이 디자이너는 이 시간에 안 됨"을 빈 시간이 아니라 예약된 시간으로 그릴 수 있다.
 export function useDisplaySlots(
   designId: AvailabilityDesignId,
   date?: AvailabilityDate | null,
-  optionIds?: AvailabilityOptionIds,
-  designerId?: string | null
+  optionIds?: AvailabilityOptionIds
 ) {
   const availabilityQuery = useAvailability(designId, date, optionIds);
-  const displaySlots = useMemo<DisplaySlot[]>(() => {
-    const slots = toDisplaySlots(availabilityQuery.data ?? []);
-
-    return filterSlotsByDesigner(slots, designerId);
-  }, [availabilityQuery.data, designerId]);
+  const displaySlots = useMemo<DisplaySlot[]>(
+    () => toDisplaySlots(availabilityQuery.data ?? []),
+    [availabilityQuery.data]
+  );
 
   return {
     ...availabilityQuery,
