@@ -134,3 +134,21 @@ export interface DesignDetail extends Design {
   snailPosts: SnailPost[];
   relatedDesigns: Design[];
 }
+
+export type ReservationStatus =
+  | 'pending'
+  | 'confirmed'
+  | 'rejected'
+  | 'cancelled_by_user'
+  | 'cancelled_by_shop'
+  | 'completed'
+  | 'no_show';
+
+export interface Reservation {
+  id: string;
+  shopName: string;
+  thumbnailUri: string;
+  startAt: string; // ISO 8601 UTC
+  status: ReservationStatus;
+  designId: string;
+}
