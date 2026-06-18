@@ -12,8 +12,10 @@ import type { Snap } from '../types';
 import { colors } from '../theme/tokens';
 import { fontFamily } from '../theme/fonts';
 import AvatarPlaceholder from './AvatarPlaceholder';
+import FollowButton from './FollowButton';
 import TaggedDesignInfoCard from './TaggedDesignInfoCard';
 import { useDesignDetail } from '../hooks/useDesignDetail';
+import { useToggleFollow } from '../hooks/useSnail';
 
 interface SnailCardProps {
   snap: Snap;
@@ -80,9 +82,11 @@ function timeAgo(createdAt: string): string {
 export default function SnailCard({ snap, onPress, onLike, onPressTag }: SnailCardProps): React.ReactElement {
   const primaryImageUri = snap.images[0];
   const [showTagInfo, setShowTagInfo] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
   const { data: taggedDesign } = useDesignDetail(snap.taggedDesignId ?? '', {
     enabled: showTagInfo && Boolean(snap.taggedDesignId),
   });
+  const { mutate: toggleFollow } = useToggleFollow();
 
   const handleLikePress = (event: GestureResponderEvent): void => {
     event.stopPropagation();
@@ -104,22 +108,31 @@ export default function SnailCard({ snap, onPress, onLike, onPressTag }: SnailCa
     if (snap.taggedDesignId) onPressTag?.(snap.taggedDesignId);
   };
 
+  const handleFollowPress = (): void => {
+    toggleFollow(snap.author.id, {
+      onSuccess: (res) => setIsFollowing(res.followed),
+    });
+  };
+
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.92} style={{ width: '100%' }}>
       {/* Top */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11.611, paddingHorizontal: 16, paddingVertical: 12 }}>
-        {snap.author.profileImageUri ? (
-          <Image
-            source={{ uri: snap.author.profileImageUri }}
-            style={{ width: 35.348, height: 35.348, borderRadius: 17.674 }}
-            resizeMode="cover"
-          />
-        ) : (
-          <AvatarPlaceholder />
-        )}
-        <Text style={{ fontSize: 14, lineHeight: 20, fontFamily: fontFamily.regular, color: colors.secondary }}>
-          {snap.author.nickname}
-        </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11.611 }}>
+          {snap.author.profileImageUri ? (
+            <Image
+              source={{ uri: snap.author.profileImageUri }}
+              style={{ width: 35.348, height: 35.348, borderRadius: 17.674 }}
+              resizeMode="cover"
+            />
+          ) : (
+            <AvatarPlaceholder />
+          )}
+          <Text style={{ fontSize: 14, lineHeight: 20, fontFamily: fontFamily.regular, color: colors.secondary }}>
+            {snap.author.nickname}
+          </Text>
+        </View>
+        <FollowButton following={isFollowing} onPress={handleFollowPress} />
       </View>
 
       {/* PostImage */}
