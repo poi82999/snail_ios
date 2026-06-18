@@ -92,7 +92,7 @@ export default function HomeScreen() {
       <View style={tw`flex-row items-center justify-between px-[20px] h-[54px]`}>
         <Logo />
         <TouchableOpacity activeOpacity={0.7}>
-          <Ionicons name="heart-outline" size={35} color={colors.secondary} />
+          <Ionicons name="heart" size={35} color={colors.secondary} />
         </TouchableOpacity>
       </View>
 
@@ -103,7 +103,7 @@ export default function HomeScreen() {
         style={[tw`my-[12px] mx-[16px] h-[39px] rounded-[8px] flex-row items-center justify-between px-[20px]`, { backgroundColor: 'rgba(125, 105, 93, 0.1)' }]}
       >
         <Text style={tw`text-[14px] text-[#7D695D]`}>검색어를 입력하세요</Text>
-        <Ionicons name="search" size={18} color="#7D695D" />
+        <Ionicons name="search" size={24.725} color="#7D695D" />
       </TouchableOpacity>
 
       {/* Tab Selector */}
