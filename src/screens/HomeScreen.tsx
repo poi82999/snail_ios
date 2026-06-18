@@ -165,7 +165,7 @@ export default function HomeScreen() {
           data={cardPairs}
           keyExtractor={(_, index) => String(index)}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={tw`px-[16px] pt-[5px] pb-[20px]`}
+          contentContainerStyle={tw`pt-[5px] pb-[20px]`}
           ItemSeparatorComponent={() => <View style={tw`h-[12px]`} />}
           onEndReachedThreshold={0.5}
           onEndReached={() => {
