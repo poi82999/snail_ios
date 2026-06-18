@@ -6,6 +6,7 @@ export type RootStackParamList = {
   Main: undefined;
   Search: { initialQuery?: string } | undefined;
   DesignDetail: { designId: string };
+  ShopDetail: { shopId: string };
   SnapDetail: { snapId: string };
   Booking: { designId: string };
   BookingDate: { designId: string; selectedOptionIds: string[] };
@@ -151,4 +152,16 @@ export interface Reservation {
   startAt: string; // ISO 8601 UTC
   status: ReservationStatus;
   designId: string;
+}
+
+export interface Shop {
+  id: string;
+  name: string;
+  thumbnailUri: string;
+  rating: number;
+  reviewCount: number;
+  favoriteCount: number;
+  address: string;
+  todayHoursLabel: string; // "11:00 - 21:00" 또는 "휴무"
+  phoneNumber: string;
 }
