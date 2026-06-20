@@ -11,6 +11,7 @@ import { colors, typography } from '../theme/tokens';
 import { fontFamily } from '../theme/fonts';
 import DesignCard from '../components/DesignCard';
 import AvatarPlaceholder from '../components/AvatarPlaceholder';
+import TabBarIcon from '../components/TabBarIcon';
 import { chunkIntoPairs } from '../utils/array';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ShopDetail'>;
@@ -100,11 +101,20 @@ export default function ShopDetailScreen({ route, navigation }: Props) {
                     </View>
                   </View>
                 </View>
-                <View style={{ alignItems: 'center', width: 32 }}>
-                  <Ionicons name="heart-outline" size={35} color={colors.secondary} />
-                  <Text style={{ fontSize: 8, fontFamily: fontFamily.medium, color: colors.secondary, marginTop: 3 }}>
-                    {shop.favoriteCount}
-                  </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate('ShopSnails', { shopId })}
+                    activeOpacity={0.7}
+                    style={{ alignItems: 'center', width: 32 }}
+                  >
+                    <TabBarIcon name="스네일" color={colors.secondary} />
+                  </TouchableOpacity>
+                  <View style={{ alignItems: 'center', width: 32 }}>
+                    <Ionicons name="heart-outline" size={35} color={colors.secondary} />
+                    <Text style={{ fontSize: 8, fontFamily: fontFamily.medium, color: colors.secondary, marginTop: 3 }}>
+                      {shop.favoriteCount}
+                    </Text>
+                  </View>
                 </View>
               </View>
 

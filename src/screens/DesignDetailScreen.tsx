@@ -7,10 +7,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import tw from 'twrnc';
-import { RootStackParamList, SnailPost } from '../types';
+import { RootStackParamList, Snap } from '../types';
 import { useDesignDetail, useRelatedDesigns } from '../hooks/useDesignDetail';
 import { useLikeToggle } from '../hooks/useHome';
 import { useDesignReviews } from '../hooks/useReviews';
+import { useDesignSnails } from '../hooks/useSnail';
 import { colors, typography } from '../theme/tokens';
 import Tag from '../components/Tag';
 import SegmentedTabs from '../components/SegmentedTabs';
@@ -25,17 +26,17 @@ function Divider() {
   return <View style={{ height: 1, backgroundColor: colors.line }} />;
 }
 
-function SnailPostThumb({ post }: { post: SnailPost }) {
+function SnailPostThumb({ snap, onPress }: { snap: Snap; onPress: () => void }) {
   return (
-    <TouchableOpacity activeOpacity={0.85} style={{ width: 176, height: 176, overflow: 'hidden' }}>
-      <Image source={{ uri: post.imageUri }} style={tw`w-full h-full`} resizeMode="cover" />
-      {post.totalCount > 1 && (
+    <TouchableOpacity onPress={onPress} activeOpacity={0.85} style={{ width: 176, height: 176, overflow: 'hidden' }}>
+      <Image source={{ uri: snap.images[0] }} style={tw`w-full h-full`} resizeMode="cover" />
+      {snap.images.length > 1 && (
         <View style={{
           position: 'absolute', top: 8, right: 8,
           backgroundColor: 'rgba(0,0,0,0.45)',
           borderRadius: 10, paddingHorizontal: 7, paddingVertical: 3,
         }}>
-          <Text style={{ fontSize: 10, color: '#fff', fontWeight: '500' }}>1/{post.totalCount}</Text>
+          <Text style={{ fontSize: 10, color: '#fff', fontWeight: '500' }}>1/{snap.images.length}</Text>
         </View>
       )}
     </TouchableOpacity>
@@ -48,10 +49,11 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
   const { data: design, isLoading, isError, refetch } = useDesignDetail(designId);
   const { data: relatedDesigns = [] } = useRelatedDesigns(designId);
   const { data: reviews = [] } = useDesignReviews(designId);
+  const { snaps: snailPosts } = useDesignSnails(designId);
   const { mutate: toggleLike } = useLikeToggle();
   const [activeTab, setActiveTab] = useState<DetailTab>('스네일');
   const [likedOverride, setLikedOverride] = useState<boolean | null>(null);
-  const snailPostPairs = chunkIntoPairs(design?.snailPosts ?? []);
+  const snailPostPairs = chunkIntoPairs(snailPosts);
 
   if (isLoading) {
     return (
@@ -116,7 +118,11 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
 
         {/* 샵 정보 */}
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 15 }}>
-          <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }} activeOpacity={0.7}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('ShopDetail', { shopId: design.shopId })}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
+            activeOpacity={0.7}
+          >
             <Text style={[typography.bodyMd, { color: colors.secondary }]}>{design.shopName}</Text>
             <Ionicons name="chevron-forward" size={10} color={colors.secondary} />
           </TouchableOpacity>
@@ -185,14 +191,24 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
 
           {/* 탭 콘텐츠 */}
           {activeTab === '스네일' && (
-            <View style={{ paddingHorizontal: 20, gap: 10 }}>
-              {snailPostPairs.map(([left, right]) => (
-                <View key={left.id} style={tw`flex-row gap-[10px]`}>
-                  <SnailPostThumb post={left} />
-                  {right ? <SnailPostThumb post={right} /> : <View style={{ width: 176, height: 176 }} />}
-                </View>
-              ))}
-            </View>
+            snailPosts.length > 0 ? (
+              <View style={{ paddingHorizontal: 20, gap: 10 }}>
+                {snailPostPairs.map(([left, right]) => (
+                  <View key={left.id} style={tw`flex-row gap-[10px]`}>
+                    <SnailPostThumb snap={left} onPress={() => navigation.navigate('SnapDetail', { snapId: left.id })} />
+                    {right ? (
+                      <SnailPostThumb snap={right} onPress={() => navigation.navigate('SnapDetail', { snapId: right.id })} />
+                    ) : (
+                      <View style={{ width: 176, height: 176 }} />
+                    )}
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <View style={tw`items-center justify-center py-[60px]`}>
+                <Text style={[typography.bodySm, { color: colors.secondary50 }]}>태그된 스네일이 없어요</Text>
+              </View>
+            )
           )}
           {activeTab === '샵 후기' && (
             reviews.length > 0 ? (

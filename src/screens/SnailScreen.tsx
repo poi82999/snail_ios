@@ -33,18 +33,18 @@ function SkeletonSnapCard(): React.ReactElement {
   return (
     <View>
       <View style={tw`flex-row items-center px-[16px] py-[12px] gap-x-[11.611px]`}>
-        <View style={tw`w-[35.348px] h-[35.348px] rounded-[17.674px] bg-primary10`} />
-        <View style={tw`w-[82px] h-[14px] rounded-[4px] bg-primary10`} />
+        <View style={[tw`w-[35.348px] h-[35.348px] rounded-[17.674px]`, { backgroundColor: colors.primary10 }]} />
+        <View style={[tw`w-[82px] h-[14px] rounded-[4px]`, { backgroundColor: colors.primary10 }]} />
       </View>
-      <View style={[tw`w-full bg-primary10`, { aspectRatio: 1 }]} />
+      <View style={[tw`w-full`, { aspectRatio: 1, backgroundColor: colors.primary10 }]} />
       <View style={tw`px-[16px] py-[12px] gap-y-[8px]`}>
         <View style={tw`flex-row gap-x-[16px]`}>
-          <View style={tw`w-[40px] h-[12px] rounded-[4px] bg-primary10`} />
-          <View style={tw`w-[40px] h-[12px] rounded-[4px] bg-primary10`} />
-          <View style={tw`w-[40px] h-[12px] rounded-[4px] bg-primary10`} />
+          <View style={[tw`w-[40px] h-[12px] rounded-[4px]`, { backgroundColor: colors.primary10 }]} />
+          <View style={[tw`w-[40px] h-[12px] rounded-[4px]`, { backgroundColor: colors.primary10 }]} />
+          <View style={[tw`w-[40px] h-[12px] rounded-[4px]`, { backgroundColor: colors.primary10 }]} />
         </View>
-        <View style={tw`w-full h-[14px] rounded-[4px] bg-primary10`} />
-        <View style={tw`w-[60px] h-[12px] rounded-[4px] bg-primary10`} />
+        <View style={[tw`w-full h-[14px] rounded-[4px]`, { backgroundColor: colors.primary10 }]} />
+        <View style={[tw`w-[60px] h-[12px] rounded-[4px]`, { backgroundColor: colors.primary10 }]} />
       </View>
     </View>
   );

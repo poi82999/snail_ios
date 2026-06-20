@@ -2,8 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import tw from 'twrnc';
 import OptionSelect from './OptionSelect';
-
-const TEXT = '#6F6F6F';
+import { colors, typography } from '../theme/tokens';
 
 interface RadioOptionProps {
   label: string;
@@ -12,20 +11,21 @@ interface RadioOptionProps {
   onPress: () => void;
 }
 
+// Figma: Option 1/2/3 (344:2465 등) — Check(25px) + 32px gap + Text(라벨/가격)
 export default function RadioOption({ label, price, selected, onPress }: RadioOptionProps) {
   const priceText = price === 0 ? '+0원' : `+${price.toLocaleString('ko-KR')}원`;
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.7}
-      style={tw`flex-row items-center px-[20px] py-[12px] gap-[18px]`}
+      style={tw`flex-row items-center gap-[32px]`}
     >
-      <View style={tw`w-[57px] items-center justify-center`}>
+      <View style={tw`w-[25px] h-[25px] items-center justify-center`}>
         <OptionSelect selected={selected} />
       </View>
       <View style={tw`flex-1 flex-row items-center justify-between`}>
-        <Text style={{ fontSize: 16, fontWeight: '500', color: TEXT }}>{label}</Text>
-        <Text style={{ fontSize: 16, fontWeight: '600', color: TEXT }}>{priceText}</Text>
+        <Text style={[typography.bodySm, { color: colors.secondary }]}>{label}</Text>
+        <Text style={[typography.bodyMd, { color: colors.secondary }]}>{priceText}</Text>
       </View>
     </TouchableOpacity>
   );

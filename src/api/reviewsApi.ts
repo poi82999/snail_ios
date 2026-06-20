@@ -4,6 +4,7 @@ import type { components, paths } from '../types/api';
 type ReviewsResponse =
   paths['/api/v1/designs/{design_id}/reviews']['get']['responses'][200]['content']['application/json'];
 type ReviewPublic = components['schemas']['ReviewPublic'];
+type ReviewCreate = components['schemas']['ReviewCreate'];
 
 export interface DesignReview {
   id: string;
@@ -37,4 +38,12 @@ export async function fetchDesignReviews(designId: string): Promise<DesignReview
   );
 
   return response.data.map(mapReviewToUi);
+}
+
+export async function createReview(
+  reservationId: string,
+  payload: { rating: number; body: string }
+): Promise<void> {
+  const requestBody: ReviewCreate = { rating: payload.rating, body: payload.body };
+  await apiClient.post(`/reservations/${encodeURIComponent(reservationId)}/reviews`, requestBody);
 }

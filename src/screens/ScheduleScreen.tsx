@@ -1,12 +1,14 @@
 import React from 'react';
 import { View, Text, Image, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import tw from 'twrnc';
 import { colors, typography, shadows } from '../theme/tokens';
 import { useReservations } from '../hooks/useSchedule';
-import { Reservation, ReservationStatus } from '../types';
+import { Reservation, ReservationStatus, RootStackParamList } from '../types';
 
-const FUTURE_STATUSES: ReservationStatus[] = ['pending', 'confirmed'];
+const FUTURE_STATUSES: ReservationStatus[] = ['pending', 'payment_pending', 'confirmed'];
 const PAST_STATUSES: ReservationStatus[] = [
   'completed', 'rejected', 'cancelled_by_user', 'cancelled_by_shop', 'no_show',
 ];
@@ -36,6 +38,10 @@ function computeDday(startAt: string): string {
 
 // ─── 방문 예정 카드 ───────────────────────────────────────────────
 function FutureCard({ reservation }: { reservation: Reservation }) {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  // 사장님이 아직 확정 안 한 상태(결제 대기 포함)는 버튼을 비활성으로 표시한다.
+  const isPending = reservation.status === 'pending' || reservation.status === 'payment_pending';
+
   return (
     <View
       style={[
@@ -43,8 +49,12 @@ function FutureCard({ reservation }: { reservation: Reservation }) {
         { backgroundColor: colors.background, ...shadows.subtle },
       ]}
     >
-      {/* 정보 행 */}
-      <View style={tw`flex-row items-center gap-x-[20px] mb-[18px]`}>
+      {/* 정보 행 — 탭하면 예약 상세로 (IA_SPEC: 예약 카드 탭 → 예약 상세) */}
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={() => navigation.navigate('ReservationDetail', { reservationId: reservation.id })}
+        style={tw`flex-row items-center gap-x-[20px] mb-[18px]`}
+      >
         <Image
           source={{ uri: reservation.thumbnailUri }}
           style={tw`w-[57px] h-[57px] rounded-[10px]`}
@@ -71,14 +81,21 @@ function FutureCard({ reservation }: { reservation: Reservation }) {
             </Text>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
 
-      {/* 예약 내역 버튼 (filled) */}
+      {/* 예약 내역 버튼 (filled) — 사장님 확정 전이면 비활성 */}
       <TouchableOpacity
-        activeOpacity={0.8}
-        style={[tw`h-[35px] rounded-[5px] items-center justify-center`, { backgroundColor: colors.secondary }]}
+        activeOpacity={isPending ? 1 : 0.8}
+        disabled={isPending}
+        onPress={() => navigation.navigate('ReservationDetail', { reservationId: reservation.id })}
+        style={[
+          tw`h-[35px] rounded-[5px] items-center justify-center`,
+          { backgroundColor: isPending ? colors.primary10 : colors.secondary },
+        ]}
       >
-        <Text style={[typography.caption, { color: colors.background }]}>예약 내역</Text>
+        <Text style={[typography.caption, { color: colors.background }]}>
+          {isPending ? '예약 대기중이에요' : '예약 내역'}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -86,10 +103,16 @@ function FutureCard({ reservation }: { reservation: Reservation }) {
 
 // ─── 방문 완료 아이템 ─────────────────────────────────────────────
 function PastItem({ reservation }: { reservation: Reservation }) {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
   return (
     <View style={tw`gap-y-[15px]`}>
-      {/* 정보 행: 텍스트(좌) + 이미지(우) */}
-      <View style={tw`flex-row items-center justify-between`}>
+      {/* 정보 행: 텍스트(좌) + 이미지(우) — 탭하면 예약 상세로 */}
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={() => navigation.navigate('ReservationDetail', { reservationId: reservation.id })}
+        style={tw`flex-row items-center justify-between`}
+      >
         <View style={tw`gap-y-[5px]`}>
           <Text style={[typography.bodyMd, { color: colors.secondary }]}>
             {reservation.shopName}
@@ -103,22 +126,37 @@ function PastItem({ reservation }: { reservation: Reservation }) {
           style={tw`w-[57px] h-[57px] rounded-[10px]`}
           resizeMode="cover"
         />
-      </View>
+      </TouchableOpacity>
 
-      {/* 버튼 행 (outline × 3) */}
+      {/* 버튼 행 (outline × 3) — 리뷰 쓰기는 completed 상태만 가능 */}
       <View style={tw`flex-row gap-x-[10px]`}>
-        {(['다시 예약', '예약 내역', '리뷰 쓰기'] as const).map((label) => (
-          <TouchableOpacity
-            key={label}
-            activeOpacity={0.7}
-            style={[
-              tw`flex-1 h-[35px] rounded-[5px] items-center justify-center`,
-              { borderWidth: 1, borderColor: colors.secondary },
-            ]}
-          >
-            <Text style={[typography.caption, { color: colors.secondary }]}>{label}</Text>
-          </TouchableOpacity>
-        ))}
+        {(['다시 예약', '예약 내역', '리뷰 쓰기'] as const).map((label) => {
+          const canReview = reservation.status === 'completed';
+          const disabled = label === '리뷰 쓰기' && !canReview;
+          function onPress() {
+            if (label === '다시 예약') {
+              navigation.navigate('Booking', { designId: reservation.designId });
+            } else if (label === '예약 내역') {
+              navigation.navigate('ReservationDetail', { reservationId: reservation.id });
+            } else if (canReview) {
+              navigation.navigate('ReviewWrite', { reservationId: reservation.id });
+            }
+          }
+          return (
+            <TouchableOpacity
+              key={label}
+              activeOpacity={disabled ? 1 : 0.7}
+              disabled={disabled}
+              onPress={onPress}
+              style={[
+                tw`flex-1 h-[35px] rounded-[5px] items-center justify-center`,
+                { borderWidth: 1, borderColor: disabled ? colors.line : colors.secondary },
+              ]}
+            >
+              <Text style={[typography.caption, { color: disabled ? colors.secondary50 : colors.secondary }]}>{label}</Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
     </View>
   );
@@ -215,10 +253,12 @@ export default function ScheduleScreen() {
             <Text style={[typography.headingMd, { color: colors.secondary }]}>방문 완료</Text>
             {pastItems.length > 0 ? (
               pastItems.map((r, i) => (
-                <React.Fragment key={r.id}>
+                <View key={r.id}>
+                  {i > 0 && (
+                    <View style={{ height: 1, backgroundColor: colors.line, marginBottom: 28 }} />
+                  )}
                   <PastItem reservation={r} />
-                  <View style={{ height: 1, backgroundColor: colors.line }} />
-                </React.Fragment>
+                </View>
               ))
             ) : (
               <EmptyItem message="방문 완료된 예약이 없어요" />

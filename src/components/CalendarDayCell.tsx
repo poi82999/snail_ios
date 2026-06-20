@@ -10,23 +10,24 @@ interface CalendarDayCellProps {
   onPress?: () => void;
 }
 
-// Figma: Callender 컴포넌트(Frame 114/115/117) — 38.616px 원형 셀
+// Figma: Callender 컴포넌트(Day, 350:2867 등) — 42.606px 원형 셀
 export default function CalendarDayCell({ day, selected = false, disabled = false, onPress }: CalendarDayCellProps) {
   return (
     <TouchableOpacity
       onPress={() => !disabled && onPress?.()}
       activeOpacity={disabled ? 1 : 0.7}
-      style={{ width: '14.28%', alignItems: 'center', paddingVertical: 6 }}
+      style={{ width: '14.28%', alignItems: 'center' }}
     >
       <View
         style={[
-          { width: 38.616, height: 38.616, borderRadius: 19.308, alignItems: 'center', justifyContent: 'center' },
+          { width: 42.606, height: 42.606, borderRadius: 19.308, alignItems: 'center', justifyContent: 'center' },
           selected && { backgroundColor: colors.secondary },
         ]}
       >
         <Text
           style={{
-            fontSize: 14,
+            fontSize: 15.45,
+            lineHeight: 22.066,
             fontFamily: fontFamily.regular,
             color: selected ? colors.background : disabled ? colors.primary10 : colors.secondary,
           }}

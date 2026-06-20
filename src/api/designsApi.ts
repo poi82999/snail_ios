@@ -41,6 +41,7 @@ export function getDesignImageUri(design: DesignPublic): string {
 export function mapDesignToUi(design: DesignPublic, tab: HomeTab): Design {
   return {
     id: design.id,
+    shopId: design.shop.id,
     shopName: design.shop.name,
     location: design.shop.region ?? '',
     price: design.base_price,
