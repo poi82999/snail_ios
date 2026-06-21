@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchDesignDetail, fetchRelatedDesigns } from '../api/designDetailApi';
 
-export function useDesignDetail(id: string) {
+export function useDesignDetail(id: string, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ['design', id],
     queryFn: () => fetchDesignDetail(id),
+    enabled: options?.enabled ?? Boolean(id),
     staleTime: 1000 * 60 * 5,
   });
 }

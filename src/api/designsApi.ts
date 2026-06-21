@@ -15,8 +15,7 @@ function getSortForTab(tab: HomeTab): DesignSort {
     case '랭킹':
       return 'popular';
     case '이달의 아트':
-      // TODO: 백엔드 sort enum 확인 - 월간 아트 전용 정렬값이 없어 최신순으로 요청한다.
-      return 'latest';
+      return 'monthly';
     case '추천':
     default:
       return 'relevance';
@@ -42,6 +41,7 @@ export function getDesignImageUri(design: DesignPublic): string {
 export function mapDesignToUi(design: DesignPublic, tab: HomeTab): Design {
   return {
     id: design.id,
+    shopId: design.shop.id,
     shopName: design.shop.name,
     location: design.shop.region ?? '',
     price: design.base_price,

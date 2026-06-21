@@ -153,6 +153,7 @@ export default function BookingConfirmScreen({ route, navigation }: Props) {
       </View>
 
       <ScrollView
+        style={tw`flex-1`}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={tw`pb-[120px]`}

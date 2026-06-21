@@ -25,6 +25,8 @@ import type { ApiError } from '../api/errors';
 import type { Snap, SnapComment, SnapFeedType } from '../types';
 
 type SnailFeedQueryKey = readonly ['snails', SnapFeedType];
+type ShopSnailsQueryKey = readonly ['snails', 'shop', string];
+type DesignSnailsQueryKey = readonly ['snails', 'design', string];
 type CommentsQueryKey = readonly ['snap', string, 'comments'];
 
 type SnailFeedQueryResult = UseInfiniteQueryResult<
@@ -60,9 +62,53 @@ export function useSnailFeed(feedType: SnapFeedType): UseSnailFeedResult {
     string | null
   >({
     queryKey: ['snails', feedType],
-    queryFn: ({ pageParam }) => fetchSnails(feedType, pageParam),
+    queryFn: ({ pageParam }) => fetchSnails({ feedType, cursor: pageParam }),
     initialPageParam: null,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+  });
+
+  return {
+    ...query,
+    snaps: query.data?.pages.flatMap((page) => page.snaps) ?? [],
+    query,
+  };
+}
+
+export function useShopSnails(shopId: string): UseSnailFeedResult {
+  const query = useInfiniteQuery<
+    SnailFeedPage,
+    ApiError,
+    InfiniteData<SnailFeedPage>,
+    ShopSnailsQueryKey,
+    string | null
+  >({
+    queryKey: ['snails', 'shop', shopId],
+    queryFn: ({ pageParam }) => fetchSnails({ taggedShopId: shopId, cursor: pageParam }),
+    initialPageParam: null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    enabled: Boolean(shopId),
+  });
+
+  return {
+    ...query,
+    snaps: query.data?.pages.flatMap((page) => page.snaps) ?? [],
+    query,
+  };
+}
+
+export function useDesignSnails(designId: string): UseSnailFeedResult {
+  const query = useInfiniteQuery<
+    SnailFeedPage,
+    ApiError,
+    InfiniteData<SnailFeedPage>,
+    DesignSnailsQueryKey,
+    string | null
+  >({
+    queryKey: ['snails', 'design', designId],
+    queryFn: ({ pageParam }) => fetchSnails({ taggedDesignId: designId, cursor: pageParam }),
+    initialPageParam: null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    enabled: Boolean(designId),
   });
 
   return {

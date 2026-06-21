@@ -6,19 +6,21 @@ export type RootStackParamList = {
   Main: undefined;
   Search: { initialQuery?: string } | undefined;
   DesignDetail: { designId: string };
+  ShopDetail: { shopId: string };
+  ShopSnails: { shopId: string };
   SnapDetail: { snapId: string };
   Booking: { designId: string };
-  BookingDate: { designId: string; selectedOptionIds: string[] };
-  BookingTime: { designId: string; selectedOptionIds: string[]; selectedDate: string };
   BookingConfirm: {
     designId: string;
     startAt: string; // 슬롯 start_at(ISO 8601, UTC) 그대로
     designerId?: string | null;
     selectedOptionIds: string[];
   };
+  ReservationDetail: { reservationId: string };
+  ReviewWrite: { reservationId: string };
 };
 
-export type FilterId = 'filter' | 'region' | 'duration' | 'date' | 'price' | 'color';
+export type FilterId = 'filter' | 'region' | 'duration' | 'date' | 'price' | 'color' | 'mood';
 
 export type DesignSort =
   | 'relevance'
@@ -27,6 +29,7 @@ export type DesignSort =
   | 'price_asc'
   | 'price_desc'
   | 'rating'
+  | 'monthly'
   | 'distance';
 
 export interface SearchFilters {
@@ -56,6 +59,7 @@ export interface FilterChipItem {
 
 export interface Design {
   id: string;
+  shopId: string;
   shopName: string;
   location: string;
   price: number;
@@ -63,12 +67,6 @@ export interface Design {
   imageUri: string;
   isLiked: boolean;
   tab: HomeTab[];
-}
-
-export interface SnailPost {
-  id: string;
-  imageUri: string;
-  totalCount: number; // 해당 스네일 포스트의 총 이미지 수
 }
 
 export interface SnapAuthor {
@@ -130,6 +128,54 @@ export interface DesignDetail extends Design {
   tags: string[];
   designers: Designer[];
   options: DesignOption[];
-  snailPosts: SnailPost[];
-  relatedDesigns: Design[];
+}
+
+export type ReservationStatus =
+  | 'pending'
+  | 'payment_pending'
+  | 'confirmed'
+  | 'rejected'
+  | 'cancelled_by_user'
+  | 'cancelled_by_shop'
+  | 'completed'
+  | 'no_show';
+
+export interface Reservation {
+  id: string;
+  shopName: string;
+  thumbnailUri: string;
+  startAt: string; // ISO 8601 UTC
+  status: ReservationStatus;
+  designId: string;
+}
+
+export interface ReservationDetail {
+  id: string;
+  status: ReservationStatus;
+  startAt: string; // ISO 8601 UTC
+  endAt: string; // ISO 8601 UTC
+  userRequest: string | null;
+  rejectedReason: string | null;
+  cancelledReason: string | null;
+  shopId: string;
+  shopName: string;
+  shopThumbnailUri: string;
+  designId: string;
+  designTitle: string;
+  designPrice: number;
+  designDuration: number; // 분
+  designThumbnailUri: string;
+  designerName: string | null;
+}
+
+export interface Shop {
+  id: string;
+  name: string;
+  thumbnailUri: string;
+  rating: number;
+  reviewCount: number;
+  favoriteCount: number;
+  address: string;
+  todayHoursLabel: string; // "11:00 - 21:00" 또는 "휴무"
+  phoneNumber: string;
 }

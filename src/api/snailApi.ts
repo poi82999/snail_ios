@@ -117,17 +117,27 @@ export function mapCommentToUi(comment: CommentPublic): SnapComment {
   };
 }
 
-export async function fetchSnails(
-  feedType: SnapFeedType,
-  cursor?: string | null
-): Promise<SnailFeedPage> {
-  const params: SnailsQuery = {
-    feed_type: feedType,
-    limit: SNAP_LIST_LIMIT,
-  };
+export interface FetchSnailsOptions {
+  feedType?: SnapFeedType;
+  taggedShopId?: string;
+  taggedDesignId?: string;
+  cursor?: string | null;
+}
 
-  if (cursor !== undefined && cursor !== null) {
-    params.cursor = cursor;
+export async function fetchSnails(options: FetchSnailsOptions): Promise<SnailFeedPage> {
+  const params: SnailsQuery = { limit: SNAP_LIST_LIMIT };
+
+  if (options.feedType) {
+    params.feed_type = options.feedType;
+  }
+  if (options.taggedShopId) {
+    params.tagged_shop_id = options.taggedShopId;
+  }
+  if (options.taggedDesignId) {
+    params.tagged_design_id = options.taggedDesignId;
+  }
+  if (options.cursor !== undefined && options.cursor !== null) {
+    params.cursor = options.cursor;
   }
 
   const response = await apiClient.get<SnailsResponse>('/snails', { params });

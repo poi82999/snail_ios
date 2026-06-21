@@ -47,6 +47,7 @@ function mapOption(option: DesignOptionPublic): DesignOption {
 function mapDesignToDetail(design: DesignPublic): DesignDetail {
   return {
     id: design.id,
+    shopId: design.shop.id,
     shopName: design.shop.name,
     location: design.shop.region ?? '',
     price: design.base_price,
@@ -60,10 +61,6 @@ function mapDesignToDetail(design: DesignPublic): DesignDetail {
     options: (design.options ?? [])
       .filter((option) => option.is_active)
       .map(mapOption),
-    // TODO(프론트): 스네일 포스트 전용 엔드포인트 연동 필요
-    snailPosts: [],
-    // TODO(프론트): 연관 추천 디자인 전용 엔드포인트 연동 필요
-    relatedDesigns: [],
   };
 }
 

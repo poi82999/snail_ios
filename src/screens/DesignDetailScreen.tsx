@@ -1,27 +1,59 @@
 import React, { useState } from 'react';
 import {
   View, Text, Image, TouchableOpacity, ScrollView,
-  FlatList, ActivityIndicator,
+  FlatList, ActivityIndicator, Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import tw from 'twrnc';
-import { RootStackParamList, Design } from '../types';
+import { RootStackParamList, Snap } from '../types';
 import { useDesignDetail, useRelatedDesigns } from '../hooks/useDesignDetail';
 import { useLikeToggle } from '../hooks/useHome';
-import { colors, shadows } from '../theme/tokens';
+import { useDesignReviews } from '../hooks/useReviews';
+import { useDesignSnails } from '../hooks/useSnail';
+import { colors, typography } from '../theme/tokens';
+import Tag from '../components/Tag';
+import SegmentedTabs from '../components/SegmentedTabs';
+import ReviewCard from '../components/ReviewCard';
+import Button from '../components/Button';
+import { chunkIntoPairs } from '../utils/array';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DesignDetail'>;
 type DetailTab = '스네일' | '샵 후기' | '문의하기';
 
+function Divider() {
+  return <View style={{ height: 1, backgroundColor: colors.line }} />;
+}
+
+function SnailPostThumb({ snap, onPress }: { snap: Snap; onPress: () => void }) {
+  return (
+    <TouchableOpacity onPress={onPress} activeOpacity={0.85} style={{ width: 176, height: 176, overflow: 'hidden' }}>
+      <Image source={{ uri: snap.images[0] }} style={tw`w-full h-full`} resizeMode="cover" />
+      {snap.images.length > 1 && (
+        <View style={{
+          position: 'absolute', top: 8, right: 8,
+          backgroundColor: 'rgba(0,0,0,0.45)',
+          borderRadius: 10, paddingHorizontal: 7, paddingVertical: 3,
+        }}>
+          <Text style={{ fontSize: 10, color: '#fff', fontWeight: '500' }}>1/{snap.images.length}</Text>
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+}
+
+// Figma: Design Detail (292:18994 / 554:7205)
 export default function DesignDetailScreen({ route, navigation }: Props) {
   const { designId } = route.params;
   const { data: design, isLoading, isError, refetch } = useDesignDetail(designId);
   const { data: relatedDesigns = [] } = useRelatedDesigns(designId);
+  const { data: reviews = [] } = useDesignReviews(designId);
+  const { snaps: snailPosts } = useDesignSnails(designId);
   const { mutate: toggleLike } = useLikeToggle();
   const [activeTab, setActiveTab] = useState<DetailTab>('스네일');
   const [likedOverride, setLikedOverride] = useState<boolean | null>(null);
+  const snailPostPairs = chunkIntoPairs(snailPosts);
 
   if (isLoading) {
     return (
@@ -34,9 +66,11 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
   if (isError || !design) {
     return (
       <SafeAreaView style={tw`flex-1 bg-white items-center justify-center`} edges={['top']}>
-        <Text style={{ color: colors.secondary50, fontSize: 14 }}>불러오기에 실패했어요</Text>
-        <TouchableOpacity onPress={() => refetch()} style={tw`mt-[12px] px-[20px] py-[10px] rounded-[8px]`} activeOpacity={0.7}>
-          <Text style={{ color: colors.secondary, fontSize: 14 }}>다시 시도</Text>
+        <Text style={[typography.bodySm, { color: colors.secondary50, marginBottom: 12 }]}>
+          불러오기에 실패했어요
+        </Text>
+        <TouchableOpacity onPress={() => refetch()} style={tw`px-[20px] py-[10px] rounded-[8px]`} activeOpacity={0.7}>
+          <Text style={[typography.bodySm, { color: colors.secondary }]}>다시 시도</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -56,19 +90,19 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
   return (
     <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>
       {/* 상단 바 */}
-      <View style={tw`flex-row items-center justify-between px-[22px] h-[54px]`}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 22.313, height: 54 }}>
         <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
-          <Ionicons name="chevron-back" size={24} color={colors.primary} />
+          <Ionicons name="chevron-back" size={24} color={colors.secondary} />
         </TouchableOpacity>
-        <View style={tw`flex-row items-center gap-[10px]`}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <TouchableOpacity onPress={() => navigation.navigate('Main')} activeOpacity={0.7}>
-            <Ionicons name="home-outline" size={28} color={colors.primary} />
+            <Ionicons name="home-outline" size={35} color={colors.secondary} />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => navigation.navigate('Search')} activeOpacity={0.7}>
-            <Ionicons name="search-outline" size={28} color={colors.primary} />
+            <Ionicons name="search-outline" size={35} color={colors.secondary} />
           </TouchableOpacity>
           <TouchableOpacity activeOpacity={0.7}>
-            <Ionicons name="heart-outline" size={28} color={colors.primary} />
+            <Ionicons name="heart-outline" size={35} color={colors.secondary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -78,44 +112,52 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
         {/* 메인 이미지 */}
         <Image
           source={{ uri: design.imageUri }}
-          style={{ width: '100%', aspectRatio: 402 / 532 }}
+          style={{ width: '100%', aspectRatio: 1 }}
           resizeMode="cover"
         />
 
         {/* 샵 정보 */}
-        <View style={[tw`flex-row items-center justify-between px-[20px] py-[15px]`, shadows.subtle]}>
-          <TouchableOpacity style={tw`flex-row items-center gap-[8px]`} activeOpacity={0.7}>
-            <Text style={{ fontSize: 16, fontWeight: '500', color: colors.secondary }}>{design.shopName}</Text>
-            <Ionicons name="chevron-forward" size={14} color={colors.secondary} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 15 }}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('ShopDetail', { shopId: design.shopId })}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
+            activeOpacity={0.7}
+          >
+            <Text style={[typography.bodyMd, { color: colors.secondary }]}>{design.shopName}</Text>
+            <Ionicons name="chevron-forward" size={10} color={colors.secondary} />
           </TouchableOpacity>
-          <Text style={{ fontSize: 16, fontWeight: '500', color: colors.secondary }}>{design.location}</Text>
+          <Text style={[typography.bodyMd, { color: colors.secondary }]}>{design.location}</Text>
         </View>
+        <Divider />
 
         {/* 가격 & 태그 */}
-        <View style={tw`px-[20px] py-[15px] gap-y-[15px]`}>
+        <View style={{ padding: 20, gap: 15 }}>
           <View style={tw`flex-row items-center justify-between`}>
-            <Text style={{ fontSize: 20, fontWeight: '700', color: colors.secondary }}>{formattedPrice}</Text>
+            <Text style={[typography.headingLg, { color: colors.secondary }]}>{formattedPrice}</Text>
             <View style={tw`flex-row items-center gap-[4px]`}>
-              <Ionicons name="alarm-outline" size={18} color={colors.secondary} />
-              <Text style={{ fontSize: 12, color: colors.secondary }}>{design.duration}분</Text>
+              <Ionicons name="alarm-outline" size={20} color={colors.secondary} />
+              <Text style={[typography.caption, { color: colors.secondary }]}>{design.duration}분</Text>
             </View>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={tw`flex-row gap-[7px]`}>
+            <View style={tw`flex-row gap-[8px]`}>
               {design.tags.map(tag => (
-                <View key={tag} style={[tw`px-[10px] rounded-[12px]`, { paddingVertical: 5, backgroundColor: colors.secondary50 }]}>
-                  <Text style={{ fontSize: 12, color: colors.background }}>{tag}</Text>
-                </View>
+                <Tag key={tag} label={tag} />
               ))}
             </View>
           </ScrollView>
         </View>
+        <Divider />
 
         {/* 연관 추천 디자인 — useRelatedDesigns(/designs/{id}/related). 없으면 섹션 숨김 */}
         {relatedDesigns.length > 0 && (
-          <View style={[tw`px-[20px] py-[15px] gap-y-[12px]`, shadows.subtle]}>
+          <View style={{ padding: 20, gap: 12 }}>
             <View style={tw`flex-row items-center justify-between`}>
-              <Text style={{ fontSize: 14, fontWeight: '600', color: colors.secondary }}>연관 추천 디자인</Text>
+              <Text style={[typography.filter, { color: colors.secondary }]}>연관 추천 디자인</Text>
+              <TouchableOpacity activeOpacity={0.7} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <Text style={[typography.caption, { color: colors.secondary }]}>전체보기</Text>
+                <Ionicons name="chevron-forward" size={10} color={colors.secondary} />
+              </TouchableOpacity>
             </View>
             <FlatList
               horizontal
@@ -130,7 +172,7 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
                 >
                   <Image
                     source={{ uri: item.imageUri }}
-                    style={{ width: 131, height: 164, borderRadius: 4 }}
+                    style={{ width: 125.573, height: 125.573 }}
                     resizeMode="cover"
                   />
                 </TouchableOpacity>
@@ -140,90 +182,86 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
         )}
 
         {/* 탭 */}
-        <View style={tw`flex-row`}>
-          {(['스네일', '샵 후기', '문의하기'] as DetailTab[]).map(tab => (
-            <TouchableOpacity
-              key={tab}
-              onPress={() => setActiveTab(tab)}
-              activeOpacity={0.7}
-              style={[
-                tw`flex-1 items-center py-[10px]`,
-                { backgroundColor: activeTab === tab ? colors.background : 'rgba(221,221,221,0.3)' },
-              ]}
-            >
-              <Text style={{ fontSize: 14, fontWeight: '600', color: activeTab === tab ? colors.secondary : colors.secondary50 }}>
-                {tab}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <View style={{ gap: 24, paddingBottom: 20 }}>
+          <SegmentedTabs
+            tabs={['스네일', '샵 후기', '문의하기'] as DetailTab[]}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
 
-        {/* 탭 콘텐츠 */}
-        {activeTab === '스네일' && (
-          <View style={tw`px-[20px] py-[16px]`}>
-            <View style={tw`flex-row flex-wrap gap-[10px]`}>
-              {(design.snailPosts ?? []).map((post) => (
-                <TouchableOpacity
-                  key={post.id}
-                  activeOpacity={0.85}
-                  style={{ width: '47.5%', aspectRatio: 176 / 221, borderRadius: 4, overflow: 'hidden' }}
-                >
-                  <Image
-                    source={{ uri: post.imageUri }}
-                    style={tw`w-full h-full`}
-                    resizeMode="cover"
+          {/* 탭 콘텐츠 */}
+          {activeTab === '스네일' && (
+            snailPosts.length > 0 ? (
+              <View style={{ paddingHorizontal: 20, gap: 10 }}>
+                {snailPostPairs.map(([left, right]) => (
+                  <View key={left.id} style={tw`flex-row gap-[10px]`}>
+                    <SnailPostThumb snap={left} onPress={() => navigation.navigate('SnapDetail', { snapId: left.id })} />
+                    {right ? (
+                      <SnailPostThumb snap={right} onPress={() => navigation.navigate('SnapDetail', { snapId: right.id })} />
+                    ) : (
+                      <View style={{ width: 176, height: 176 }} />
+                    )}
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <View style={tw`items-center justify-center py-[60px]`}>
+                <Text style={[typography.bodySm, { color: colors.secondary50 }]}>태그된 스네일이 없어요</Text>
+              </View>
+            )
+          )}
+          {activeTab === '샵 후기' && (
+            reviews.length > 0 ? (
+              <View style={{ paddingHorizontal: 20, gap: 24 }}>
+                {reviews.map((review) => (
+                  <ReviewCard
+                    key={review.id}
+                    username={review.username}
+                    rating={review.rating}
+                    date={review.date}
+                    comment={review.comment}
                   />
-                  {post.totalCount > 1 && (
-                    <View style={{
-                      position: 'absolute', top: 8, right: 8,
-                      backgroundColor: 'rgba(0,0,0,0.45)',
-                      borderRadius: 10, paddingHorizontal: 7, paddingVertical: 3,
-                    }}>
-                      <Text style={{ fontSize: 10, color: '#fff', fontWeight: '500' }}>
-                        1/{post.totalCount}
-                      </Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              ))}
+                ))}
+              </View>
+            ) : (
+              <View style={tw`items-center justify-center py-[60px]`}>
+                <Text style={[typography.bodySm, { color: colors.secondary50 }]}>후기가 없어요</Text>
+              </View>
+            )
+          )}
+          {activeTab === '문의하기' && (
+            <View style={tw`items-center justify-center py-[60px]`}>
+              <Text style={[typography.bodySm, { color: colors.secondary50 }]}>준비 중</Text>
             </View>
-          </View>
-        )}
-        {activeTab === '샵 후기' && (
-          <View style={tw`items-center justify-center py-[60px]`}>
-            <Text style={{ fontSize: 14, color: colors.secondary50 }}>후기가 없어요</Text>
-          </View>
-        )}
-        {activeTab === '문의하기' && (
-          <View style={tw`items-center justify-center py-[60px]`}>
-            <Text style={{ fontSize: 14, color: colors.secondary50 }}>준비 중</Text>
-          </View>
-        )}
+          )}
+        </View>
 
         <View style={tw`h-[100px]`} />
       </ScrollView>
 
       {/* 하단 액션 바 */}
-      <View style={[tw`flex-row items-center px-[20px] h-[70px] gap-[12px]`, { backgroundColor: colors.background, ...shadows.bar }]}>
+      <View style={{
+        flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between',
+        height: 85, paddingLeft: 21, paddingRight: 10, paddingTop: 15,
+        backgroundColor: colors.background,
+        shadowColor: '#000', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.1, shadowRadius: 1.5, elevation: 3,
+      }}>
+        <TouchableOpacity onPress={onHeart} activeOpacity={0.7} style={{ width: 38, alignItems: 'center' }}>
+          <Ionicons name={liked ? 'heart' : 'heart-outline'} size={35} color={liked ? '#FF6B6B' : colors.secondary} />
+          <Text style={[typography.caption, { color: colors.secondary }]}>{likeCount.toLocaleString()}</Text>
+        </TouchableOpacity>
         <TouchableOpacity
-          onPress={onHeart}
+          onPress={() => Share.share({ message: `${design.shopName} - ${formattedPrice}` })}
           activeOpacity={0.7}
-          style={tw`items-center gap-y-[2px]`}
+          style={{ width: 38, alignItems: 'center' }}
         >
-          <Ionicons name={liked ? 'heart' : 'heart-outline'} size={28} color={liked ? '#FF6B6B' : colors.secondary} />
-          <Text style={{ fontSize: 8, color: colors.secondary }}>{likeCount.toLocaleString()}</Text>
+          <Ionicons name="share-social-outline" size={35} color={colors.secondary} />
         </TouchableOpacity>
-        <TouchableOpacity activeOpacity={0.7} style={tw`items-center gap-y-[2px]`}>
-          <Ionicons name="share-social-outline" size={28} color={colors.secondary} />
-          <Text style={{ fontSize: 8, color: colors.secondary }}>999+</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          activeOpacity={0.8}
+        <Button
+          label="예약하기"
           onPress={() => navigation.navigate('Booking', { designId })}
-          style={[tw`flex-1 h-[42px] rounded-[5px] items-center justify-center`, { backgroundColor: colors.secondary }]}
-        >
-          <Text style={{ fontSize: 14, fontWeight: '700', color: colors.background }}>예약하기</Text>
-        </TouchableOpacity>
+          style={{ width: 250 }}
+        />
       </View>
     </SafeAreaView>
   );

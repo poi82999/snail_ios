@@ -21,6 +21,8 @@ import FilterChip from '../components/FilterChip';
 import HomeTabSelector from '../components/HomeTabSelector';
 import DesignCard from '../components/DesignCard';
 import FilterModal from '../components/FilterModal';
+import Logo from '../components/Logo';
+import { colors } from '../theme/tokens';
 
 function SkeletonCard() {
   return (
@@ -87,10 +89,10 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>
       {/* Header */}
-      <View style={tw`flex-row items-center justify-between px-[16px] py-[12px]`}>
-        <View style={tw`w-[80px] h-[28px] bg-[#1A1A1A] rounded-[4px]`} />
+      <View style={tw`flex-row items-center justify-between px-[20px] h-[54px]`}>
+        <Logo />
         <TouchableOpacity activeOpacity={0.7}>
-          <Ionicons name="heart-outline" size={24} color="#1A1A1A" />
+          <Ionicons name="heart" size={35} color={colors.secondary} />
         </TouchableOpacity>
       </View>
 
@@ -101,18 +103,18 @@ export default function HomeScreen() {
         style={[tw`my-[12px] mx-[16px] h-[39px] rounded-[8px] flex-row items-center justify-between px-[20px]`, { backgroundColor: 'rgba(125, 105, 93, 0.1)' }]}
       >
         <Text style={tw`text-[14px] text-[#7D695D]`}>검색어를 입력하세요</Text>
-        <Ionicons name="search" size={18} color="#7D695D" />
+        <Ionicons name="search" size={24.725} color="#7D695D" />
       </TouchableOpacity>
 
       {/* Tab Selector */}
       <HomeTabSelector activeTab={activeTab} onTabChange={setActiveTab} />
 
       {/* Filter Chips */}
-      <View style={tw`h-[56px]`}>
+      <View style={tw`h-[44px] mt-[12px]`}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={tw`flex-row gap-x-[10px] px-[16px] py-[12px]`}
+          contentContainerStyle={tw`flex-row gap-x-[8px] px-[16px] pb-[12px]`}
         >
           {FILTER_CHIPS.map((chip) => (
             <FilterChip
@@ -136,10 +138,10 @@ export default function HomeScreen() {
       {isLoading ? (
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={tw`px-[16px] gap-y-[20px] pb-[20px]`}
+          contentContainerStyle={tw`px-[16px] pt-[5px] gap-y-[12px] pb-[20px]`}
         >
           {[0, 1, 2, 3].map((i) => (
-            <View key={i} style={tw`flex-row gap-x-[10px]`}>
+            <View key={i} style={tw`flex-row gap-x-[8px]`}>
               <SkeletonCard />
               <SkeletonCard />
             </View>
@@ -163,8 +165,8 @@ export default function HomeScreen() {
           data={cardPairs}
           keyExtractor={(_, index) => String(index)}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={tw`pb-[20px]`}
-          ItemSeparatorComponent={() => <View style={tw`h-[8px]`} />}
+          contentContainerStyle={tw`pt-[5px] pb-[20px]`}
+          ItemSeparatorComponent={() => <View style={tw`h-[12px]`} />}
           onEndReachedThreshold={0.5}
           onEndReached={() => {
             if (hasNextPage && !isFetchingNextPage) fetchNextPage();
