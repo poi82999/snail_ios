@@ -56,7 +56,8 @@ function mapDesignToDetail(design: DesignPublic): DesignDetail {
     isLiked: design.favorited_by_me ?? false,
     tab: [],
     duration: design.duration_minutes,
-    tags: design.ai_tags ?? [],
+    // owner_tags(사장님이 직접 단 태그)만 노출. AI 태그는 기획상 손님에게 노출 금지(IA_SPEC).
+    tags: design.owner_tags ?? [],
     designers: (design.designers ?? []).map(mapDesigner),
     options: (design.options ?? [])
       .filter((option) => option.is_active)

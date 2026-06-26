@@ -139,13 +139,15 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
               <Text style={[typography.caption, { color: colors.secondary }]}>{design.duration}분</Text>
             </View>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={tw`flex-row gap-[8px]`}>
-              {design.tags.map(tag => (
-                <Tag key={tag} label={tag} />
-              ))}
-            </View>
-          </ScrollView>
+          {design.tags.length > 0 && (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={tw`flex-row gap-[8px]`}>
+                {design.tags.map(tag => (
+                  <Tag key={tag} label={tag} />
+                ))}
+              </View>
+            </ScrollView>
+          )}
         </View>
         <Divider />
 
