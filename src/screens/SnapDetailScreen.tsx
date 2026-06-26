@@ -31,6 +31,7 @@ import {
 import { getErrorMessage } from '../api/errors';
 import { colors, shadows } from '../theme/tokens';
 import FollowButton from '../components/FollowButton';
+import ReportModal from '../components/ReportModal';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SnapDetail'>;
 
@@ -95,6 +96,7 @@ export default function SnapDetailScreen({ route, navigation }: Props) {
   const [commentText, setCommentText] = useState<string>('');
   const [commentError, setCommentError] = useState<string | null>(null);
   const [commentLikeOverrides, setCommentLikeOverrides] = useState<Record<string, CommentLikeOverride>>({});
+  const [reportTarget, setReportTarget] = useState<{ type: 'snap' | 'comment'; id: string } | null>(null);
 
   useEffect(() => {
     setGalleryIndex(0);
@@ -473,20 +475,29 @@ export default function SnapDetailScreen({ route, navigation }: Props) {
                   {formatRelativeTime(item.createdAt)}
                 </Text>
               </View>
-              <TouchableOpacity
-                onPress={() => handleToggleCommentLike(item)}
-                activeOpacity={0.7}
-                style={tw`flex-row items-center`}
-              >
-                <Ionicons
-                  name={commentLiked ? 'heart' : 'heart-outline'}
-                  size={18}
-                  color={commentLiked ? colors.danger : colors.secondary50}
-                />
-                <Text style={{ color: colors.secondary50, fontSize: 11, marginLeft: 3 }}>
-                  {commentLikeCount.toLocaleString('ko-KR')}
-                </Text>
-              </TouchableOpacity>
+              <View style={tw`flex-row items-center gap-[12px]`}>
+                <TouchableOpacity
+                  onPress={() => handleToggleCommentLike(item)}
+                  activeOpacity={0.7}
+                  style={tw`flex-row items-center`}
+                >
+                  <Ionicons
+                    name={commentLiked ? 'heart' : 'heart-outline'}
+                    size={18}
+                    color={commentLiked ? colors.danger : colors.secondary50}
+                  />
+                  <Text style={{ color: colors.secondary50, fontSize: 11, marginLeft: 3 }}>
+                    {commentLikeCount.toLocaleString('ko-KR')}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setReportTarget({ type: 'comment', id: item.id })}
+                  activeOpacity={0.7}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Ionicons name="ellipsis-horizontal" size={16} color={colors.secondary50} />
+                </TouchableOpacity>
+              </View>
             </View>
             <Text style={{ color: colors.text, fontSize: 14, lineHeight: 20, marginTop: 5 }}>
               {item.body}
@@ -551,7 +562,7 @@ export default function SnapDetailScreen({ route, navigation }: Props) {
         <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
           <Ionicons name="chevron-back" size={24} color={colors.primary} />
         </TouchableOpacity>
-        <TouchableOpacity activeOpacity={0.7}>
+        <TouchableOpacity activeOpacity={0.7} onPress={() => setReportTarget({ type: 'snap', id: snapId })}>
           <Ionicons name="ellipsis-horizontal" size={26} color={colors.primary} />
         </TouchableOpacity>
       </View>
@@ -623,6 +634,12 @@ export default function SnapDetailScreen({ route, navigation }: Props) {
           </View>
         </View>
       </KeyboardAvoidingView>
+      <ReportModal
+        visible={reportTarget !== null}
+        onClose={() => setReportTarget(null)}
+        targetType={reportTarget?.type === 'comment' ? 'comment' : 'snap'}
+        targetId={reportTarget?.id ?? ''}
+      />
     </SafeAreaView>
   );
 }
