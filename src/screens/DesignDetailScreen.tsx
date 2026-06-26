@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, Image, TouchableOpacity, ScrollView,
-  FlatList, ActivityIndicator, Share,
+  FlatList, ActivityIndicator, Share, TextInput, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,6 +19,7 @@ import ReviewCard from '../components/ReviewCard';
 import Button from '../components/Button';
 import { chunkIntoPairs } from '../utils/array';
 import ReportModal from '../components/ReportModal';
+import { useCreateShopInquiry } from '../hooks/useShopInquiry';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DesignDetail'>;
 type DetailTab = '스네일' | '샵 후기' | '문의하기';
@@ -55,6 +56,9 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
   const [activeTab, setActiveTab] = useState<DetailTab>('스네일');
   const [likedOverride, setLikedOverride] = useState<boolean | null>(null);
   const [reportReviewId, setReportReviewId] = useState<string | null>(null);
+  const [inquiryBody, setInquiryBody] = useState('');
+  const [inquirySent, setInquirySent] = useState(false);
+  const createInquiry = useCreateShopInquiry();
   const snailPostPairs = chunkIntoPairs(snailPosts);
 
   if (isLoading) {
@@ -236,9 +240,70 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
             )
           )}
           {activeTab === '문의하기' && (
-            <View style={tw`items-center justify-center py-[60px]`}>
-              <Text style={[typography.bodySm, { color: colors.secondary50 }]}>준비 중</Text>
-            </View>
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+              {inquirySent ? (
+                <View style={tw`items-center py-[60px] px-[20px] gap-[12px]`}>
+                  <Ionicons name="checkmark-circle" size={48} color={colors.secondary} />
+                  <Text style={[typography.bodyMd, { color: colors.secondary, textAlign: 'center' }]}>
+                    문의가 접수됐어요
+                  </Text>
+                  <Text style={[typography.bodySm, { color: colors.secondary50, textAlign: 'center' }]}>
+                    답변이 오면 알림으로 알려드릴게요
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => { setInquirySent(false); setInquiryBody(''); }}
+                    activeOpacity={0.7}
+                    style={tw`mt-[8px] px-[24px] py-[10px] rounded-[8px] border border-[#ccc]`}
+                  >
+                    <Text style={[typography.bodySm, { color: colors.secondary }]}>추가 문의하기</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={tw`px-[20px] gap-[16px] pb-[20px]`}>
+                  <Text style={[typography.filter, { color: colors.secondary }]}>샵에 문의하기</Text>
+                  <Text style={[typography.bodySm, { color: colors.secondary50 }]}>
+                    예약, 디자인, 가격 등 궁금한 점을 남겨주세요. 사장님이 직접 답변드려요.
+                  </Text>
+                  <TextInput
+                    value={inquiryBody}
+                    onChangeText={setInquiryBody}
+                    placeholder="문의 내용을 입력해주세요"
+                    placeholderTextColor={colors.secondary50}
+                    multiline
+                    maxLength={500}
+                    style={[
+                      tw`rounded-[10px] p-[16px]`,
+                      {
+                        minHeight: 140,
+                        backgroundColor: '#F7F5F3',
+                        fontSize: 14,
+                        color: colors.secondary,
+                        textAlignVertical: 'top',
+                      },
+                    ]}
+                  />
+                  <Text style={[typography.caption, { color: colors.secondary50, textAlign: 'right' }]}>
+                    {inquiryBody.length}/500
+                  </Text>
+                  <Button
+                    label={createInquiry.isPending ? '전송 중...' : '문의 보내기'}
+                    onPress={() => {
+                      if (!inquiryBody.trim() || createInquiry.isPending) return;
+                      createInquiry.mutate(
+                        { shopId: design.shopId, body: inquiryBody.trim(), designId: designId },
+                        { onSuccess: () => setInquirySent(true) }
+                      );
+                    }}
+                    style={{ opacity: inquiryBody.trim().length === 0 || createInquiry.isPending ? 0.5 : 1 }}
+                  />
+                  {createInquiry.isError && (
+                    <Text style={[typography.bodySm, { color: '#e53935', textAlign: 'center' }]}>
+                      전송에 실패했어요. 다시 시도해주세요.
+                    </Text>
+                  )}
+                </View>
+              )}
+            </KeyboardAvoidingView>
           )}
         </View>
 
