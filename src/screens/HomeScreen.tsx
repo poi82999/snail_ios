@@ -13,6 +13,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import tw from 'twrnc';
 import { useLikeToggle } from '../hooks/useHome';
+import { useNotifications } from '../hooks/useNotifications';
 import { useInfiniteDesigns } from '../hooks/useInfiniteDesigns';
 import { FILTER_CHIPS } from '../api/filterChips';
 import { FilterId, HomeTab, RootStackParamList, SearchFilters } from '../types';
@@ -63,6 +64,7 @@ export default function HomeScreen() {
     isFetchingNextPage,
   } = useInfiniteDesigns(activeTab, filters);
   const { mutate: toggleLike } = useLikeToggle();
+  const { unreadCount } = useNotifications();
 
   // 칩 활성 표시는 적용된 SearchFilters 값에서 파생한다.
   function chipActive(id: FilterId): boolean {
@@ -91,9 +93,21 @@ export default function HomeScreen() {
       {/* Header */}
       <View style={tw`flex-row items-center justify-between px-[20px] h-[54px]`}>
         <Logo />
-        <TouchableOpacity activeOpacity={0.7}>
-          <Ionicons name="heart" size={35} color={colors.secondary} />
-        </TouchableOpacity>
+        <View style={tw`flex-row items-center gap-x-[8px]`}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('Notifications')}
+            style={tw`relative`}
+          >
+            <Ionicons name="notifications-outline" size={28} color="#1A1A1A" />
+            {unreadCount > 0 && (
+              <View style={tw`absolute top-0 right-0 w-[8px] h-[8px] rounded-full bg-[#E8604C]`} />
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity activeOpacity={0.7}>
+            <Ionicons name="heart" size={35} color={colors.secondary} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Search Bar */}
