@@ -18,6 +18,7 @@ import SegmentedTabs from '../components/SegmentedTabs';
 import ReviewCard from '../components/ReviewCard';
 import Button from '../components/Button';
 import { chunkIntoPairs } from '../utils/array';
+import ReportModal from '../components/ReportModal';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DesignDetail'>;
 type DetailTab = '스네일' | '샵 후기' | '문의하기';
@@ -53,6 +54,7 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
   const { mutate: toggleLike } = useLikeToggle();
   const [activeTab, setActiveTab] = useState<DetailTab>('스네일');
   const [likedOverride, setLikedOverride] = useState<boolean | null>(null);
+  const [reportReviewId, setReportReviewId] = useState<string | null>(null);
   const snailPostPairs = chunkIntoPairs(snailPosts);
 
   if (isLoading) {
@@ -216,10 +218,12 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
                 {reviews.map((review) => (
                   <ReviewCard
                     key={review.id}
+                    id={review.id}
                     username={review.username}
                     rating={review.rating}
                     date={review.date}
                     comment={review.comment}
+                    onReport={() => setReportReviewId(review.id)}
                   />
                 ))}
               </View>
@@ -263,6 +267,12 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
           style={{ width: 250 }}
         />
       </View>
+      <ReportModal
+        visible={reportReviewId !== null}
+        onClose={() => setReportReviewId(null)}
+        targetType="review"
+        targetId={reportReviewId ?? ''}
+      />
     </SafeAreaView>
   );
 }

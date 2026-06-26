@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
 import { colors } from '../theme/tokens';
 import { fontFamily } from '../theme/fonts';
@@ -7,13 +8,15 @@ import ReviewStar from './ReviewStar';
 import AvatarPlaceholder from './AvatarPlaceholder';
 
 interface ReviewCardProps {
+  id?: string;
   username: string;
   rating: number; // 1~5
   date: string;
   comment: string;
+  onReport?: () => void;
 }
 
-export default function ReviewCard({ username, rating, date, comment }: ReviewCardProps) {
+export default function ReviewCard({ username, rating, date, comment, onReport }: ReviewCardProps) {
   return (
     <View
       style={[
@@ -29,11 +32,18 @@ export default function ReviewCard({ username, rating, date, comment }: ReviewCa
       ]}
     >
       {/* Profile */}
-      <View style={tw`flex-row items-center gap-[11.611px]`}>
-        <AvatarPlaceholder />
-        <Text style={{ fontSize: 14, lineHeight: 20, fontFamily: fontFamily.regular, color: colors.secondary }}>
-          {username}
-        </Text>
+      <View style={tw`flex-row items-center justify-between`}>
+        <View style={tw`flex-row items-center gap-[11.611px]`}>
+          <AvatarPlaceholder />
+          <Text style={{ fontSize: 14, lineHeight: 20, fontFamily: fontFamily.regular, color: colors.secondary }}>
+            {username}
+          </Text>
+        </View>
+        {onReport && (
+          <TouchableOpacity onPress={onReport} activeOpacity={0.7} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Ionicons name="ellipsis-horizontal" size={18} color={colors.secondary50} />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Rate */}

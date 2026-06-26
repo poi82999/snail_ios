@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import { View, Text, Image, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import tw from 'twrnc';
 import { useAuth } from '../hooks/useAuth';
 import { shadows } from '../theme/tokens';
 import { fontFamily } from '../theme/fonts';
+import type { RootStackParamList } from '../types';
 
 const MOCK_POSTS = Array.from({ length: 9 });
 
@@ -22,6 +25,7 @@ const ACTIONS = [
 ];
 
 export default function ProfileScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   // 로그인 세션의 실제 유저 정보를 표시한다. 통계/게시물은 전용 엔드포인트가 없어 placeholder 유지.
   const { user } = useAuth();
   const displayName = user?.nickname ?? '사용자';
@@ -99,7 +103,12 @@ export default function ProfileScreen() {
             ]}
           >
             {ACTIONS.map(({ icon, label }) => (
-              <TouchableOpacity key={label} activeOpacity={0.7} style={tw`items-center w-[38px]`}>
+              <TouchableOpacity
+                key={label}
+                activeOpacity={0.7}
+                style={tw`items-center w-[38px]`}
+                onPress={() => { if (label === '문의하기') navigation.navigate('Inquiry'); }}
+              >
                 <Ionicons name={icon} size={35} color="#6F6F6F" />
                 <Text style={[tw`text-[8px] text-[#6F6F6F] text-center mt-[2px]`, { fontFamily: fontFamily.medium }]}>
                   {label}
