@@ -3,6 +3,7 @@ export type HomeTab = '추천' | '랭킹' | '이달의 아트';
 export type SnapFeedType = 'latest' | 'ranking' | 'following';
 
 export type RootStackParamList = {
+  Login: undefined;
   Main: undefined;
   Search: { initialQuery?: string } | undefined;
   DesignDetail: { designId: string };
@@ -18,6 +19,8 @@ export type RootStackParamList = {
   };
   ReservationDetail: { reservationId: string };
   ReviewWrite: { reservationId: string };
+  Notifications: undefined;
+  Inquiry: undefined;
 };
 
 export type FilterId = 'filter' | 'region' | 'duration' | 'date' | 'price' | 'color' | 'mood';

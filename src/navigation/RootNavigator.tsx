@@ -11,12 +11,16 @@ import BookingScreen from '../screens/BookingScreen';
 import BookingConfirmScreen from '../screens/BookingConfirmScreen';
 import ReservationDetailScreen from '../screens/ReservationDetailScreen';
 import ReviewWriteScreen from '../screens/ReviewWriteScreen';
+import NotificationScreen from '../screens/NotificationScreen';
+import LoginScreen from '../screens/LoginScreen';
+import InquiryScreen from '../screens/InquiryScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Main" component={TabNavigator} />
       <Stack.Screen name="Search" component={SearchScreen} options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="DesignDetail" component={DesignDetailScreen} options={{ animation: 'slide_from_right' }} />
@@ -27,6 +31,8 @@ export default function RootNavigator() {
       <Stack.Screen name="BookingConfirm" component={BookingConfirmScreen} options={{ animation: 'fade', gestureEnabled: false }} />
       <Stack.Screen name="ReservationDetail" component={ReservationDetailScreen} options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="ReviewWrite" component={ReviewWriteScreen} options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="Notifications" component={NotificationScreen} options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="Inquiry" component={InquiryScreen} options={{ animation: 'slide_from_right' }} />
     </Stack.Navigator>
   );
 }
