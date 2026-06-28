@@ -13,6 +13,43 @@ import AvatarPlaceholder from '../components/AvatarPlaceholder';
 import Logo from '../components/Logo';
 import type { RootStackParamList } from '../types';
 
+const APP_VERSION = '1.0.0';
+
+const MENU_SECTIONS = [
+  {
+    key: '내 정보',
+    icon: 'person-outline' as const,
+    items: [
+      { label: '내 예약', screen: 'Main' as const },
+      { label: '언어', screen: null },
+    ],
+  },
+  {
+    key: '활동',
+    icon: 'document-text-outline' as const,
+    items: [
+      { label: '내가 쓴 글', screen: null },
+      { label: '보관함', screen: null },
+    ],
+  },
+  {
+    key: '고객 센터',
+    icon: 'help-circle-outline' as const,
+    items: [
+      { label: '1:1 문의', screen: 'Inquiry' as const },
+      { label: '공지사항', screen: null },
+      { label: '이용약관', screen: null },
+    ],
+  },
+  {
+    key: '알림 설정',
+    icon: 'notifications-outline' as const,
+    items: [
+      { label: '알림 설정', screen: 'Notifications' as const },
+    ],
+  },
+] as const;
+
 const MOCK_POSTS = Array.from({ length: 9 });
 
 const STATS = [
@@ -117,14 +154,38 @@ export default function ProfileScreen() {
 
         <Divider />
 
-        {/* 게시물 그리드 */}
-        <View style={tw`flex-row flex-wrap mt-[4px]`}>
-          {MOCK_POSTS.map((_, i) => (
-            <View
-              key={i}
-              style={{ width: '33.33%', aspectRatio: 1, backgroundColor: colors.disabled, borderWidth: 1, borderColor: colors.background }}
-            />
-          ))}
+        {/* 메뉴 섹션 리스트 */}
+        {MENU_SECTIONS.map((section) => (
+          <View key={section.key}>
+            {/* 섹션 헤더 */}
+            <View style={tw`flex-row items-center gap-[6px] px-[20px] pt-[20px] pb-[8px]`}>
+              <Ionicons name={section.icon} size={16} color={colors.secondary50} />
+              <Text style={{ fontSize: 13, fontFamily: fontFamily.semibold, color: colors.secondary50 }}>
+                {section.key}
+              </Text>
+            </View>
+            {/* 섹션 아이템 */}
+            {section.items.map((item, idx) => (
+              <TouchableOpacity
+                key={item.label}
+                activeOpacity={0.7}
+                onPress={() => { if (item.screen) navigation.navigate(item.screen as never); }}
+                style={tw`flex-row items-center justify-between px-[20px] h-[48px]`}
+              >
+                <Text style={[typography.bodySm, { color: colors.secondary }]}>{item.label}</Text>
+                <Ionicons name="chevron-forward" size={16} color={colors.secondary50} />
+              </TouchableOpacity>
+            ))}
+            <Divider />
+          </View>
+        ))}
+
+        {/* 앱 버전 */}
+        <View style={tw`flex-row items-center px-[20px] h-[48px]`}>
+          <Text style={{ fontSize: 13, fontFamily: fontFamily.semibold, color: colors.secondary50 }}>앱 버전</Text>
+          <Text style={{ fontSize: 13, fontFamily: fontFamily.regular, color: colors.secondary50, marginLeft: 12 }}>
+            ver {APP_VERSION}
+          </Text>
         </View>
 
         <View style={tw`h-[20px]`} />
