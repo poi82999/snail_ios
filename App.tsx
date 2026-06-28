@@ -17,6 +17,10 @@ import { useAuthBootstrap } from './src/hooks/useAuth';
 import { useRegisterPushToken } from './src/hooks/usePushToken';
 import { useNotificationObserver } from './src/hooks/useNotificationObserver';
 import { fontAssets } from './src/theme/fonts';
+import { initSentry, Sentry } from './src/config/sentry';
+
+// 크래시/에러 리포팅 초기화(앱 진입 시 1회). dev 빌드에선 비활성.
+initSentry();
 
 // 폰트 로딩 + 토큰 부트스트랩이 끝날 때까지 네이티브 스플래시를 유지한다(비로그인→로그인 깜빡임 방지).
 // 웹 등 호출 불가 환경은 무시한다.
@@ -72,7 +76,7 @@ function AppContent({ fontsReady }: { fontsReady: boolean }) {
   );
 }
 
-export default function App() {
+function App() {
   const [fontsLoaded, fontError] = useFonts(fontAssets);
   // 폰트 로드 실패 시에도 스플래시 무한 대기(영구 빈 화면)를 막기 위해 진행한다.
   const fontsReady = fontsLoaded || fontError != null;
@@ -90,3 +94,6 @@ export default function App() {
     </GestureHandlerRootView>
   );
 }
+
+// 네이티브 크래시 + 터치/내비게이션 브레드크럼 수집을 위해 루트를 Sentry로 감싼다.
+export default Sentry.wrap(App);

@@ -2,6 +2,7 @@ import React from 'react';
 import { Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
+import * as Sentry from '@sentry/react-native';
 import tw from 'twrnc';
 import { colors, typography } from '../theme/tokens';
 
@@ -38,9 +39,10 @@ function ErrorFallback({ resetErrorBoundary }: FallbackProps) {
 }
 
 function handleError(error: unknown, info: React.ErrorInfo): void {
-  // TODO(P1-Sentry): 크래시 리포팅 연동 지점. DSN 설정 후 Sentry.captureException(error)로 교체.
-  const message = error instanceof Error ? error.message : String(error);
-  console.error('[AppErrorBoundary]', message, info.componentStack);
+  // 렌더 트리에서 throw된 에러를 Sentry로 보고(컴포넌트 스택 포함).
+  Sentry.captureException(error, {
+    contexts: { react: { componentStack: info.componentStack ?? undefined } },
+  });
 }
 
 export default function AppErrorBoundary({ children }: { children: React.ReactNode }) {

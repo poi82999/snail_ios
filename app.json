@@ -19,7 +19,8 @@
         }
       ],
       "expo-splash-screen",
-      "expo-asset"
+      "expo-asset",
+      "@sentry/react-native"
     ],
     "ios": {
       "supportsTablet": true,
