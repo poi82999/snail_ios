@@ -4,10 +4,12 @@ import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, type LinkingOptions } from '@react-navigation/native';
 import { QueryClientProvider } from '@tanstack/react-query';
+import type { RootStackParamList } from './src/types';
 import RootNavigator from './src/navigation/RootNavigator';
 import { navigationRef } from './src/navigation/navigationRef';
+import { navigateToNotificationTarget } from './src/navigation/notificationRouting';
 import AppErrorBoundary from './src/components/AppErrorBoundary';
 import LoginGateModal from './src/components/LoginGateModal';
 import { queryClient } from './src/api/queryClient';
@@ -20,13 +22,31 @@ import { fontAssets } from './src/theme/fonts';
 // 웹 등 호출 불가 환경은 무시한다.
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
+// 딥링크/알림 탭으로 진입할 수 있는 화면 매핑(스킴 snail:// + 콜드스타트 URL).
+const linking: LinkingOptions<RootStackParamList> = {
+  prefixes: ['snail://'],
+  config: {
+    screens: {
+      ReservationDetail: 'reservation/:reservationId',
+      DesignDetail: 'design/:designId',
+      ShopDetail: 'shop/:shopId',
+      SnapDetail: 'snap/:snapId',
+      Notifications: 'notifications',
+    },
+  },
+};
+
 // 앱 시작 시 secure-store의 토큰을 메모리로 로드(부트스트랩)한다.
 function AppContent({ fontsReady }: { fontsReady: boolean }) {
   const { isBootstrapping } = useAuthBootstrap();
   // 로그인 세션이 활성화되면 디바이스 푸시 토큰을 자동 등록한다.
   useRegisterPushToken();
-  // 포그라운드 알림 표시 + 수신/탭 리스너 등록.
-  useNotificationObserver();
+  // 포그라운드 알림 표시 + 수신/탭 리스너 등록. 탭 시 알림 data로 해당 화면으로 이동.
+  useNotificationObserver({
+    onRespond: (response) => {
+      navigateToNotificationTarget(response.notification.request.content.data);
+    },
+  });
 
   // 폰트와 부트스트랩이 모두 끝나야 첫 화면을 그린다.
   const appReady = fontsReady && !isBootstrapping;
@@ -43,7 +63,7 @@ function AppContent({ fontsReady }: { fontsReady: boolean }) {
   }
 
   return (
-    <NavigationContainer ref={navigationRef}>
+    <NavigationContainer ref={navigationRef} linking={linking}>
       <StatusBar style="dark" />
       <RootNavigator />
       {/* 비로그인 시 게이트된 액션에서 뜨는 전역 로그인 유도 모달 */}
