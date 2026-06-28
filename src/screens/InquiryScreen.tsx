@@ -86,18 +86,16 @@ export default function InquiryScreen() {
                   onPress={() => setCategory(cat)}
                   style={[
                     tw`h-[35px] px-[14px] rounded-[5px] items-center justify-center`,
-                    {
-                      borderWidth: 1,
-                      borderColor: category === cat ? colors.secondary : colors.line,
-                      backgroundColor: category === cat ? 'rgba(125,105,93,0.08)' : 'transparent',
-                    },
+                    category === cat
+                      ? { backgroundColor: colors.secondary }
+                      : { borderWidth: 1, borderColor: colors.line },
                   ]}
                 >
                   <Text
                     style={{
                       fontSize: 13,
                       fontFamily: fontFamily.medium,
-                      color: category === cat ? colors.secondary : colors.secondary50,
+                      color: category === cat ? colors.background : colors.secondary50,
                     }}
                   >
                     {cat}

@@ -29,8 +29,8 @@ const MENU_SECTIONS = [
     icon: 'help-circle-outline' as const,
     items: [
       { label: '1:1 문의', screen: 'Inquiry' as const },
-      { label: '공지사항', screen: null },
-      { label: '이용약관', screen: null },
+      { label: '공지사항', screen: 'Notice' as const },
+      { label: '이용약관', screen: 'Terms' as const },
     ],
   },
   {
