@@ -11,11 +11,19 @@ import { colors, typography } from '../theme/tokens';
 import { fontFamily } from '../theme/fonts';
 import AvatarPlaceholder from '../components/AvatarPlaceholder';
 import Logo from '../components/Logo';
+import Button from '../components/Button';
 import type { RootStackParamList } from '../types';
 
 const APP_VERSION = '1.0.0';
 
 const MENU_SECTIONS = [
+  {
+    key: '쿠폰함',
+    icon: 'ticket-outline' as const,
+    items: [
+      { label: '쿠폰함', screen: 'Coupon' as const },
+    ],
+  },
   {
     key: '고객 센터',
     icon: 'help-circle-outline' as const,
@@ -29,7 +37,7 @@ const MENU_SECTIONS = [
     key: '알림 설정',
     icon: 'notifications-outline' as const,
     items: [
-      { label: '알림 설정', screen: 'Notifications' as const },
+      { label: '알림 설정', screen: 'NotificationSettings' as const },
     ],
   },
 ] as const;
@@ -40,12 +48,6 @@ const STATS = [
   { value: '0', label: '팔로잉' },
 ];
 
-const ACTIONS = [
-  { icon: 'ticket-outline' as const, label: '쿠폰함', screen: 'Coupon' as const },
-  { icon: 'chatbox-outline' as const, label: '문의하기', screen: 'Inquiry' as const },
-  { icon: 'heart-outline' as const, label: '좋아요', screen: null },
-  { icon: 'notifications-outline' as const, label: '알림', screen: 'Notifications' as const },
-];
 
 function Divider() {
   return <View style={{ height: 1, backgroundColor: colors.line, marginHorizontal: 20 }} />;
@@ -90,12 +92,12 @@ export default function ProfileScreen() {
             )}
             <View style={tw`flex-1 flex-row items-center justify-between`}>
               <Text style={[typography.bodyMd, { color: colors.secondary, fontFamily: fontFamily.semibold }]}>{displayName}</Text>
-              <TouchableOpacity
-                activeOpacity={0.7}
-                style={[tw`px-[16px] h-[30px] rounded-[6px] items-center justify-center`, { borderWidth: 1, borderColor: colors.line }]}
-              >
-                <Text style={[typography.caption, { color: colors.secondary }]}>수정</Text>
-              </TouchableOpacity>
+              <Button
+                label="수정"
+                variant="outline"
+                onPress={() => {}}
+                style={{ height: 30, paddingHorizontal: 16, borderRadius: 6 }}
+              />
             </View>
           </View>
 
@@ -106,30 +108,6 @@ export default function ProfileScreen() {
                 <Text style={[typography.bodySm, { color: colors.secondary, fontFamily: fontFamily.semibold }]}>{label}</Text>
                 <Text style={[typography.bodySm, { color: colors.secondary }]}>{value}</Text>
               </View>
-            ))}
-          </View>
-        </View>
-
-        <Divider />
-
-        {/* 바로가기 카드 */}
-        <View style={tw`mx-[20px] my-[16px]`}>
-          <View style={[
-            tw`bg-white rounded-[12px] flex-row items-center justify-evenly py-[16px]`,
-            { borderWidth: 1, borderColor: colors.line },
-          ]}>
-            {ACTIONS.map(({ icon, label, screen }) => (
-              <TouchableOpacity
-                key={label}
-                activeOpacity={0.7}
-                style={tw`items-center gap-y-[6px] w-[56px]`}
-                onPress={() => { if (screen) navigation.navigate(screen as never); }}
-              >
-                <View style={[tw`w-[44px] h-[44px] rounded-full items-center justify-center`, { backgroundColor: '#F7F5F3' }]}>
-                  <Ionicons name={icon} size={22} color={colors.secondary} />
-                </View>
-                <Text style={[typography.caption, { color: colors.secondary }]}>{label}</Text>
-              </TouchableOpacity>
             ))}
           </View>
         </View>

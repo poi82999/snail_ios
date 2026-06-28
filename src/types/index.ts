@@ -26,6 +26,7 @@ export type RootStackParamList = {
   ShopReviews: { shopId: string };
   ShopInquiry: { shopId: string };
   Favorites: undefined;
+  NotificationSettings: undefined;
 };
 
 export type FilterId = 'filter' | 'region' | 'duration' | 'date' | 'price' | 'color' | 'mood';
