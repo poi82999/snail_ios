@@ -18,7 +18,11 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        # npm ci 대신 npm install 사용: Windows에서 생성된 package-lock은 Linux용
+        # optional 네이티브 deps(eslint import resolver의 @emnapi/napi 바인딩 등)를
+        # 일부 누락해 npm ci(엄격 동기화 검사)가 실패한다. npm install은 누락분을
+        # 보완해 크로스플랫폼에서 안정적이다.
+        run: npm install --no-audit --no-fund
 
       - name: Type check
         run: npm run typecheck
