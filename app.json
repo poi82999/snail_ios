@@ -16,7 +16,8 @@
           "color": "#7D695D",
           "enableBackgroundRemoteNotifications": false
         }
-      ]
+      ],
+      "expo-splash-screen"
     ],
     "ios": {
       "supportsTablet": true,
