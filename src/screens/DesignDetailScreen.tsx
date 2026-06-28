@@ -108,7 +108,7 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
           <TouchableOpacity onPress={() => navigation.navigate('Search')} activeOpacity={0.7}>
             <Ionicons name="search-outline" size={28} color={colors.secondary} />
           </TouchableOpacity>
-          <TouchableOpacity activeOpacity={0.7}>
+          <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Favorites')}>
             <Ionicons name="heart-outline" size={28} color={colors.secondary} />
           </TouchableOpacity>
         </View>
