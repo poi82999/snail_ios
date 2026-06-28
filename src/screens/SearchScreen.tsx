@@ -114,6 +114,7 @@ export default function SearchScreen() {
   const resultShops = shopResults?.shops ?? [];
   const cardPairs = chunkIntoPairs(resultDesigns);
   const shopPairs = chunkIntoPairs(resultShops);
+  const designMaxPrice = resultDesigns.length > 0 ? Math.max(...resultDesigns.map(d => d.price)) : undefined;
 
   return (
     <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>
@@ -383,6 +384,7 @@ export default function SearchScreen() {
         onClose={() => setShowFilterModal(false)}
         initialSection={filterSection}
         initialFilters={filters}
+        maxPrice={designMaxPrice}
         onApply={(applied) => {
           setFilters(applied);
           setShowFilterModal(false);

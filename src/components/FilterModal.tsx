@@ -101,7 +101,7 @@ function fmtNum(price: number): string {
   return rest === 0 ? `${man}만` : price.toLocaleString('ko-KR');
 }
 
-function PriceRangeSlider({ onChange }: { onChange?: (min: number, max: number) => void }) {
+function PriceRangeSlider({ onChange, maxPrice = MAX_PRICE }: { onChange?: (min: number, max: number) => void; maxPrice?: number }) {
   const trackW   = useRef(0);
   const leftPx   = useRef(new Animated.Value(0)).current;
   const rightPx  = useRef(new Animated.Value(280)).current;
@@ -110,20 +110,20 @@ function PriceRangeSlider({ onChange }: { onChange?: (min: number, max: number) 
   const lStart   = useRef(0);
   const rStart   = useRef(280);
   const [minP, setMinP] = useState(0);
-  const [maxP, setMaxP] = useState(MAX_PRICE);
+  const [maxP, setMaxP] = useState(maxPrice);
   const [inputMin, setInputMin] = useState('');
   const [inputMax, setInputMax] = useState('');
 
   function toPrice(px: number) {
     const span = trackW.current - HANDLE_W;
     if (span <= 0) return 0;
-    return Math.round((px / span) * MAX_PRICE / 10000) * 10000;
+    return Math.round((px / span) * maxPrice / 10000) * 10000;
   }
 
   function toPixel(price: number) {
     const span = trackW.current - HANDLE_W;
     if (span <= 0) return 0;
-    return Math.round((price / MAX_PRICE) * span);
+    return Math.round((price / maxPrice) * span);
   }
 
   const leftPan = useRef(PanResponder.create({
@@ -152,7 +152,7 @@ function PriceRangeSlider({ onChange }: { onChange?: (min: number, max: number) 
       rCur.current = next;
       const p = toPrice(next);
       setMaxP(p);
-      setInputMax(p < MAX_PRICE ? p.toLocaleString('ko-KR') : '');
+      setInputMax(p < maxPrice ? p.toLocaleString('ko-KR') : '');
       onChange?.(toPrice(lCur.current), p);
     },
   })).current;
@@ -171,7 +171,7 @@ function PriceRangeSlider({ onChange }: { onChange?: (min: number, max: number) 
   function applyInputMax(text: string) {
     const raw = Number(text.replace(/,/g, '').replace(/[^0-9]/g, ''));
     if (isNaN(raw)) return;
-    const clamped = Math.min(MAX_PRICE, Math.max(toPrice(lCur.current) + 10000, raw));
+    const clamped = Math.min(maxPrice, Math.max(toPrice(lCur.current) + 10000, raw));
     const px = toPixel(clamped);
     rightPx.setValue(px);
     rCur.current = px;
@@ -196,10 +196,12 @@ function PriceRangeSlider({ onChange }: { onChange?: (min: number, max: number) 
   const inputTextStyle = {
     flex: 1,
     fontSize: 12,
+    lineHeight: 16,
     fontFamily: fontFamily.regular,
     color: colors.secondary,
     textAlign: 'right' as const,
     padding: 0,
+    includeFontPadding: false,
   };
 
   return (
@@ -218,7 +220,7 @@ function PriceRangeSlider({ onChange }: { onChange?: (min: number, max: number) 
             keyboardType="numeric"
             returnKeyType="done"
           />
-          <Text style={{ fontSize: 12, fontFamily: fontFamily.regular, color: colors.secondary, marginLeft: 2 }}>원</Text>
+          <Text style={{ fontSize: 12, lineHeight: 16, fontFamily: fontFamily.regular, color: colors.secondary, marginLeft: 6 }}>원</Text>
         </View>
         <Text style={{ fontSize: 12, color: colors.secondary50, fontFamily: fontFamily.regular }}>~</Text>
         <View style={inputBoxStyle}>
@@ -228,12 +230,12 @@ function PriceRangeSlider({ onChange }: { onChange?: (min: number, max: number) 
             onChangeText={setInputMax}
             onBlur={() => applyInputMax(inputMax)}
             onSubmitEditing={() => applyInputMax(inputMax)}
-            placeholder={fmtNum(MAX_PRICE)}
+            placeholder={fmtNum(maxPrice)}
             placeholderTextColor={colors.secondary50}
             keyboardType="numeric"
             returnKeyType="done"
           />
-          <Text style={{ fontSize: 12, fontFamily: fontFamily.regular, color: colors.secondary, marginLeft: 2 }}>원</Text>
+          <Text style={{ fontSize: 12, lineHeight: 16, fontFamily: fontFamily.regular, color: colors.secondary, marginLeft: 6 }}>원</Text>
         </View>
       </View>
 
@@ -247,7 +249,7 @@ function PriceRangeSlider({ onChange }: { onChange?: (min: number, max: number) 
           rightPx.setValue(initRight);
           rCur.current   = initRight;
           rStart.current = initRight;
-          setMaxP(MAX_PRICE);
+          setMaxP(maxPrice);
         }}
       >
         <View style={{ position: 'absolute', top: (HANDLE_H - TRACK_HEIGHT) / 2, left: 0, right: 0, height: TRACK_HEIGHT, backgroundColor: colors.primary10, borderRadius: 6 }} />
@@ -276,7 +278,7 @@ function PriceRangeSlider({ onChange }: { onChange?: (min: number, max: number) 
           <Text style={{ fontSize: 12, lineHeight: 16, fontFamily: fontFamily.regular, color: colors.secondary }}>원</Text>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Text style={{ fontSize: 12, lineHeight: 16, fontFamily: fontFamily.regular, color: maxP >= MAX_PRICE ? colors.secondary50 : colors.secondary }}>{fmtNum(maxP)}</Text>
+          <Text style={{ fontSize: 12, lineHeight: 16, fontFamily: fontFamily.regular, color: maxP >= maxPrice ? colors.secondary50 : colors.secondary }}>{fmtNum(maxP)}</Text>
           <Text style={{ fontSize: 12, lineHeight: 16, fontFamily: fontFamily.regular, color: colors.secondary }}>원</Text>
         </View>
       </View>
@@ -360,9 +362,10 @@ interface Props {
   initialSection?: string;
   initialFilters?: SearchFilters;
   onApply?: (filters: SearchFilters) => void;
+  maxPrice?: number;
 }
 
-export default function FilterModal({ visible, onClose, initialSection, initialFilters, onApply }: Props) {
+export default function FilterModal({ visible, onClose, initialSection, initialFilters, onApply, maxPrice = MAX_PRICE }: Props) {
   const sheetHeight   = useRef(new Animated.Value(0)).current;
   const currentH      = useRef(0);
   const gestureStartH = useRef(0);
@@ -379,7 +382,7 @@ export default function FilterModal({ visible, onClose, initialSection, initialF
   const [selColor,  setSelColor]    = useState<string[]>([]);
   const [selMood,   setSelMood]     = useState<string[]>([]);
   const [durLabel,  setDurLabel]    = useState<string | null>(null);
-  const priceRef = useRef<{ min: number; max: number }>({ min: 0, max: MAX_PRICE });
+  const priceRef = useRef<{ min: number; max: number }>({ min: 0, max: maxPrice });
 
   // 열릴 때 외부 filters로 초기화
   useEffect(() => {
@@ -389,7 +392,7 @@ export default function FilterModal({ visible, onClose, initialSection, initialF
     setSelMood(initialFilters?.moods ?? []);
     priceRef.current = {
       min: initialFilters?.priceMin ?? 0,
-      max: initialFilters?.priceMax ?? MAX_PRICE,
+      max: initialFilters?.priceMax ?? maxPrice,
     };
     const matched = DURATION_OPTS.find(
       (o) => o.min === initialFilters?.durationMin && o.max === initialFilters?.durationMax
@@ -438,7 +441,7 @@ export default function FilterModal({ visible, onClose, initialSection, initialF
       durationMin: dur?.min,
       durationMax: dur?.max,
       priceMin: min > 0 ? min : undefined,
-      priceMax: max < MAX_PRICE ? max : undefined,
+      priceMax: max < maxPrice ? max : undefined,
     };
   }
 
@@ -550,7 +553,7 @@ export default function FilterModal({ visible, onClose, initialSection, initialF
               onLayout={e => { sectionY.current['price'] = e.nativeEvent.layout.y; }}
             >
               <SectionTitle>가격</SectionTitle>
-              <PriceRangeSlider onChange={(min, max) => { priceRef.current = { min, max }; }} />
+              <PriceRangeSlider onChange={(min, max) => { priceRef.current = { min, max }; }} maxPrice={maxPrice} />
             </View>
             <Divider />
             <View

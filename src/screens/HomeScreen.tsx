@@ -65,6 +65,7 @@ export default function HomeScreen() {
   } = useInfiniteDesigns(activeTab, filters);
   const { mutate: toggleLike } = useLikeToggle();
   const { unreadCount } = useNotifications();
+  const designMaxPrice = designs.length > 0 ? Math.max(...designs.map(d => d.price)) : undefined;
 
   // 칩 활성 표시는 적용된 SearchFilters 값에서 파생한다.
   function chipActive(id: FilterId): boolean {
@@ -217,6 +218,7 @@ export default function HomeScreen() {
         onClose={() => setShowFilterModal(false)}
         initialSection={filterSection}
         initialFilters={filters}
+        maxPrice={designMaxPrice}
         onApply={(applied) => {
           setFilters(applied);
           setShowFilterModal(false);
