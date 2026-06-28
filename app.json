@@ -3,6 +3,7 @@
     "name": "snail-app",
     "slug": "snail-app",
     "version": "1.0.0",
+    "scheme": "snail",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",

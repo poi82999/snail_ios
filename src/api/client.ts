@@ -7,6 +7,9 @@ import axios, {
 import { API_BASE_URL } from '../config/env';
 import { clearTokens, getAccessToken, getRefreshToken, setTokens } from './authToken';
 import { ApiError, toApiError } from './errors';
+import { queryClient } from './queryClient';
+import { AUTH_SESSION_QUERY_KEY } from '../auth/sessionQueryKey';
+import { openLoginGate } from '../auth/loginGate';
 
 // 베이스 URL은 src/config/env.ts에서 플랫폼/환경별로 결정한다(재노출만).
 export { API_BASE_URL };
@@ -159,7 +162,11 @@ apiClient.interceptors.response.use(
 
       return apiClient(originalRequest);
     } catch (refreshError) {
+      // 리프레시 실패 = 세션 만료. 토큰 정리 + 세션 캐시 무효화(useAuth가 즉시 로그아웃 반영)
+      // + 로그인 게이트 오픈으로 재로그인 유도.
       clearTokens();
+      queryClient.setQueryData(AUTH_SESSION_QUERY_KEY, null);
+      openLoginGate();
       return Promise.reject(toApiError(refreshError));
     }
   }
