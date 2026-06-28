@@ -25,4 +25,21 @@ module.exports = [
       'react-hooks/set-state-in-effect': 'warn',
     },
   },
+  {
+    // 테스트 파일의 jest 전역(describe/it/expect 등)을 no-undef에서 허용.
+    files: ['**/*.test.ts', '**/*.test.tsx'],
+    languageOptions: {
+      globals: {
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        jest: 'readonly',
+      },
+    },
+  },
 ];
