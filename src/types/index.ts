@@ -21,6 +21,10 @@ export type RootStackParamList = {
   ReviewWrite: { reservationId: string };
   Notifications: undefined;
   Inquiry: undefined;
+  Coupon: undefined;
+  RelatedDesigns: { designId: string };
+  ShopReviews: { shopId: string };
+  ShopInquiry: { shopId: string };
 };
 
 export type FilterId = 'filter' | 'region' | 'duration' | 'date' | 'price' | 'color' | 'mood';
@@ -70,6 +74,13 @@ export interface Design {
   imageUri: string;
   isLiked: boolean;
   tab: HomeTab[];
+}
+
+export interface ShopSearchResult {
+  id: string;
+  name: string;
+  location: string;
+  thumbnailUri: string;
 }
 
 export interface SnapAuthor {
@@ -124,6 +135,7 @@ export interface Designer {
   position: string; // 직책/한줄소개 (없으면 '')
   profileImageUri: string; // 없으면 ''
   specialtyTags: string[];
+  durationMinutes?: number | null; // 디자이너별 소요시간 (다인샵 대응, 백엔드 미구현 시 null)
 }
 
 export interface DesignDetail extends Design {

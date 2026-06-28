@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { searchDesigns } from '../api/searchApi';
+import { searchDesigns, searchShops } from '../api/searchApi';
 import type { SearchFilters } from '../types';
 
 function hasText(value: string | undefined): boolean {
@@ -25,8 +25,16 @@ function hasActiveSearchFilters(filters: SearchFilters): boolean {
 
 export function useSearch(filters: SearchFilters) {
   return useQuery({
-    queryKey: ['search', filters],
+    queryKey: ['search', 'designs', filters],
     queryFn: () => searchDesigns(filters),
+    enabled: hasActiveSearchFilters(filters),
+  });
+}
+
+export function useSearchShops(filters: SearchFilters) {
+  return useQuery({
+    queryKey: ['search', 'shops', filters],
+    queryFn: () => searchShops(filters),
     enabled: hasActiveSearchFilters(filters),
   });
 }

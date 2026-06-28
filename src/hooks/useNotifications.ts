@@ -30,7 +30,21 @@ export function useNotifications() {
   const notifications = query.data?.pages.flatMap((p) => p.notifications) ?? [];
   const unreadCount = query.data?.pages[0]?.unreadCount ?? 0;
 
-  return { ...query, notifications, unreadCount };
+  // Hermes에서 TanStack Query v5 result 객체를 spread하면 non-enumerable 프로퍼티가
+  // 누락되는 버그가 있어 필요한 프로퍼티를 명시적으로 반환
+  return {
+    notifications,
+    unreadCount,
+    data: query.data,
+    isLoading: query.isLoading,
+    isFetching: query.isFetching,
+    isFetchingNextPage: query.isFetchingNextPage,
+    isError: query.isError,
+    error: query.error,
+    refetch: query.refetch,
+    fetchNextPage: query.fetchNextPage,
+    hasNextPage: query.hasNextPage,
+  };
 }
 
 export function useMarkNotificationRead() {

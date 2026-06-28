@@ -34,13 +34,14 @@ export const TAB_ICON_SIZE: Record<keyof TabParamList, number> = Object.fromEntr
 interface TabBarIconProps {
   name: keyof TabParamList;
   color: string;
+  size?: number;
 }
 
-export default function TabBarIcon({ name, color }: TabBarIconProps) {
+export default function TabBarIcon({ name, color, size }: TabBarIconProps) {
   const icon = ICON_PATHS[name];
-  const size = TAB_ICON_SIZE[name];
+  const renderSize = size ?? TAB_ICON_SIZE[name];
   return (
-    <Svg width={size} height={size} viewBox={icon.viewBox} fill="none">
+    <Svg width={renderSize} height={renderSize} viewBox={icon.viewBox} fill="none">
       <Path d={icon.d} fill={color} />
     </Svg>
   );

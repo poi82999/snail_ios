@@ -31,6 +31,8 @@ function mapDesigner(designer: DesignDesignerPublic): Designer {
     position: designer.position ?? '',
     profileImageUri: designer.profile_image_url ?? '',
     specialtyTags: designer.specialty_tags ?? [],
+    // 백엔드에 duration_minutes 필드가 추가되면 자동으로 반영됨
+    durationMinutes: (designer as any).duration_minutes ?? null,
   };
 }
 

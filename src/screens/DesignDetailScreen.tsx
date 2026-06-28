@@ -20,6 +20,7 @@ import Button from '../components/Button';
 import { chunkIntoPairs } from '../utils/array';
 import ReportModal from '../components/ReportModal';
 import { useCreateShopInquiry } from '../hooks/useShopInquiry';
+import { getMaxDuration } from '../utils/duration';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DesignDetail'>;
 type DetailTab = '스네일' | '샵 후기' | '문의하기';
@@ -102,13 +103,13 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
         </TouchableOpacity>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <TouchableOpacity onPress={() => navigation.navigate('Main')} activeOpacity={0.7}>
-            <Ionicons name="home-outline" size={35} color={colors.secondary} />
+            <Ionicons name="home-outline" size={28} color={colors.secondary} />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => navigation.navigate('Search')} activeOpacity={0.7}>
-            <Ionicons name="search-outline" size={35} color={colors.secondary} />
+            <Ionicons name="search-outline" size={28} color={colors.secondary} />
           </TouchableOpacity>
           <TouchableOpacity activeOpacity={0.7}>
-            <Ionicons name="heart-outline" size={35} color={colors.secondary} />
+            <Ionicons name="heart-outline" size={28} color={colors.secondary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -142,7 +143,7 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
             <Text style={[typography.headingLg, { color: colors.secondary }]}>{formattedPrice}</Text>
             <View style={tw`flex-row items-center gap-[4px]`}>
               <Ionicons name="alarm-outline" size={20} color={colors.secondary} />
-              <Text style={[typography.caption, { color: colors.secondary }]}>{design.duration}분</Text>
+              <Text style={[typography.caption, { color: colors.secondary }]}>{getMaxDuration(design)}분</Text>
             </View>
           </View>
           {design.tags.length > 0 && (
@@ -162,7 +163,11 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
           <View style={{ padding: 20, gap: 12 }}>
             <View style={tw`flex-row items-center justify-between`}>
               <Text style={[typography.filter, { color: colors.secondary }]}>연관 추천 디자인</Text>
-              <TouchableOpacity activeOpacity={0.7} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                onPress={() => navigation.navigate('RelatedDesigns', { designId })}
+              >
                 <Text style={[typography.caption, { color: colors.secondary }]}>전체보기</Text>
                 <Ionicons name="chevron-forward" size={10} color={colors.secondary} />
               </TouchableOpacity>
@@ -318,7 +323,7 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
         shadowColor: '#000', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.1, shadowRadius: 1.5, elevation: 3,
       }}>
         <TouchableOpacity onPress={onHeart} activeOpacity={0.7} style={{ width: 38, alignItems: 'center' }}>
-          <Ionicons name={liked ? 'heart' : 'heart-outline'} size={35} color={liked ? '#FF6B6B' : colors.secondary} />
+          <Ionicons name={liked ? 'heart' : 'heart-outline'} size={28} color={liked ? '#FF6B6B' : colors.secondary} />
           <Text style={[typography.caption, { color: colors.secondary }]}>{likeCount.toLocaleString()}</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -326,12 +331,12 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
           activeOpacity={0.7}
           style={{ width: 38, alignItems: 'center' }}
         >
-          <Ionicons name="share-social-outline" size={35} color={colors.secondary} />
+          <Ionicons name="share-social-outline" size={28} color={colors.secondary} />
         </TouchableOpacity>
         <Button
           label="예약하기"
           onPress={() => navigation.navigate('Booking', { designId })}
-          style={{ width: 250 }}
+          style={{ width: 250, height: 42 }}
         />
       </View>
       <ReportModal
