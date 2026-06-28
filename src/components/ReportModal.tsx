@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -29,7 +29,19 @@ export default function ReportModal({ visible, onClose, targetType, targetId }: 
   const [selectedReason, setSelectedReason] = useState<ReportReason | null>(null);
   const [detail, setDetail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState(false);
   const { mutate, isPending } = useCreateReport();
+
+  // 컴포넌트가 언마운트되지 않고 visible prop만 토글되므로, 닫힘 경로와 무관하게
+  // 닫힐 때 상태를 초기화한다(다음 신고에서 이전 완료 화면이 잔존하지 않도록).
+  useEffect(() => {
+    if (!visible) {
+      setSelectedReason(null);
+      setDetail('');
+      setSubmitted(false);
+      setSubmitError(false);
+    }
+  }, [visible]);
 
   function handleClose() {
     setSelectedReason(null);
@@ -40,10 +52,12 @@ export default function ReportModal({ visible, onClose, targetType, targetId }: 
 
   function handleSubmit() {
     if (!selectedReason) return;
+    setSubmitError(false);
     mutate(
       { targetType, targetId, reason: selectedReason, detail: detail || undefined },
       {
         onSuccess: () => setSubmitted(true),
+        onError: () => setSubmitError(true),
       }
     );
   }
@@ -139,6 +153,12 @@ export default function ReportModal({ visible, onClose, targetType, targetId }: 
                   <Text style={[tw`text-right mt-[4px] text-[12px]`, { color: colors.disabled, fontFamily: fontFamily.regular }]}>
                     {detail.length}/500
                   </Text>
+
+                  {submitError && (
+                    <Text style={[typography.bodySm, { color: colors.danger, marginTop: 8, textAlign: 'center' }]}>
+                      신고 접수에 실패했어요. 잠시 후 다시 시도해주세요.
+                    </Text>
+                  )}
 
                   {/* 제출 버튼 */}
                   <TouchableOpacity
