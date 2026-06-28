@@ -93,6 +93,12 @@ function fmt(price: number) {
   return rest === 0 ? `${man}만원` : `${price.toLocaleString('ko-KR')}원`;
 }
 
+function formatInput(text: string): string {
+  const digits = text.replace(/[^0-9]/g, '');
+  if (!digits) return '';
+  return Number(digits).toLocaleString('ko-KR');
+}
+
 function fmtNum(price: number): string {
   if (price <= 0) return '0';
   if (price >= MAX_PRICE) return '100만';
@@ -212,7 +218,7 @@ function PriceRangeSlider({ onChange, maxPrice = MAX_PRICE }: { onChange?: (min:
           <TextInput
             style={inputTextStyle}
             value={inputMin}
-            onChangeText={setInputMin}
+            onChangeText={(t) => setInputMin(formatInput(t))}
             onBlur={() => applyInputMin(inputMin)}
             onSubmitEditing={() => applyInputMin(inputMin)}
             placeholder="0"
@@ -227,7 +233,7 @@ function PriceRangeSlider({ onChange, maxPrice = MAX_PRICE }: { onChange?: (min:
           <TextInput
             style={inputTextStyle}
             value={inputMax}
-            onChangeText={setInputMax}
+            onChangeText={(t) => setInputMax(formatInput(t))}
             onBlur={() => applyInputMax(inputMax)}
             onSubmitEditing={() => applyInputMax(inputMax)}
             placeholder={fmtNum(maxPrice)}
