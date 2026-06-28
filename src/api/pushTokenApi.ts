@@ -1,7 +1,7 @@
 import apiClient from './client';
 import { toApiError } from './errors';
 
-const DEVICE_TOKEN_ENDPOINT = '/users/device-token';
+const DEVICE_TOKEN_ENDPOINT = '/me/device-tokens';
 
 export type DevicePlatform = 'ios' | 'android';
 

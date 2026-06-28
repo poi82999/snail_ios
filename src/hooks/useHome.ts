@@ -7,7 +7,7 @@ import {
 import { getAccessToken } from '../api/authToken';
 import { fetchDesignList } from '../api/designsApi';
 import { ApiError } from '../api/errors';
-import { addFavorite, removeFavorite } from '../api/favoriteApi';
+import { toggleFavorite } from '../api/favoriteApi';
 import { Design, FilterId, HomeTab } from '../types';
 
 interface LikeToggleVariables {
@@ -63,7 +63,7 @@ export function useLikeToggle() {
   const queryClient = useQueryClient();
 
   return useMutation<void, ApiError, LikeToggleVariables, LikeToggleContext>({
-    mutationFn: async ({ designId, isLiked }) => {
+    mutationFn: async ({ designId }) => {
       // 토큰이 없으면 네트워크 요청 전에 로그인 필요 상태를 화면에 전달한다.
       if (!getAccessToken()) {
         throw new ApiError({
@@ -73,12 +73,9 @@ export function useLikeToggle() {
         });
       }
 
-      if (isLiked) {
-        await addFavorite(designId);
-        return;
-      }
-
-      await removeFavorite(designId);
+      // 백엔드는 단일 POST 토글이다. isLiked는 onMutate의 낙관적 패치에만 쓰고,
+      // 실제 최종 상태는 onSettled의 invalidate로 서버 기준으로 다시 맞춘다.
+      await toggleFavorite(designId);
     },
     onMutate: async ({ designId, isLiked }) => {
       await queryClient.cancelQueries({ queryKey: ['designs'] });
