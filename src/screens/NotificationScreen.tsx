@@ -14,6 +14,8 @@ import tw from 'twrnc';
 import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead } from '../hooks/useNotifications';
 import type { NotificationPublic } from '../api/notificationApi';
 import type { RootStackParamList } from '../types';
+import { colors } from '../theme/tokens';
+import { fontFamily } from '../theme/fonts';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -112,14 +114,14 @@ export default function NotificationScreen() {
   return (
     <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>
       {/* Header */}
-      <View style={tw`flex-row items-center justify-between px-[20px] h-[54px]`}>
-        <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7} style={tw`p-[4px]`}>
-          <Ionicons name="chevron-back" size={24} color="#1A1A1A" />
+      <View style={tw`flex-row items-center px-[20px] h-[54px]`}>
+        <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7} style={tw`w-[56px]`}>
+          <Ionicons name="chevron-back" size={24} color={colors.secondary} />
         </TouchableOpacity>
-        <Text style={tw`text-[16px] font-semibold text-[#1A1A1A]`}>알림</Text>
+        <Text style={[tw`flex-1 text-center text-[16px]`, { fontFamily: fontFamily.semibold, color: colors.secondary }]}>알림</Text>
         {unreadCount > 0 ? (
-          <TouchableOpacity onPress={() => markAll()} activeOpacity={0.7}>
-            <Text style={tw`text-[13px] text-[#7D695D]`}>모두 읽음</Text>
+          <TouchableOpacity onPress={() => markAll()} activeOpacity={0.7} style={tw`w-[56px] items-end`}>
+            <Text style={[tw`text-[13px]`, { color: colors.secondary }]}>모두 읽음</Text>
           </TouchableOpacity>
         ) : (
           <View style={tw`w-[56px]`} />
