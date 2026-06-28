@@ -3,6 +3,7 @@ import {
   Modal,
   View,
   Text,
+  TextInput,
   TouchableOpacity,
   ScrollView,
   Animated,
@@ -102,11 +103,19 @@ function PriceRangeSlider({ onChange }: { onChange?: (min: number, max: number) 
   const rStart   = useRef(280);
   const [minP, setMinP] = useState(0);
   const [maxP, setMaxP] = useState(MAX_PRICE);
+  const [inputMin, setInputMin] = useState('');
+  const [inputMax, setInputMax] = useState('');
 
   function toPrice(px: number) {
     const span = trackW.current - HANDLE_W;
     if (span <= 0) return 0;
     return Math.round((px / span) * MAX_PRICE / 10000) * 10000;
+  }
+
+  function toPixel(price: number) {
+    const span = trackW.current - HANDLE_W;
+    if (span <= 0) return 0;
+    return Math.round((price / MAX_PRICE) * span);
   }
 
   const leftPan = useRef(PanResponder.create({
@@ -119,6 +128,7 @@ function PriceRangeSlider({ onChange }: { onChange?: (min: number, max: number) 
       lCur.current = next;
       const p = toPrice(next);
       setMinP(p);
+      setInputMin(p > 0 ? p.toLocaleString('ko-KR') : '');
       onChange?.(p, toPrice(rCur.current));
     },
   })).current;
@@ -134,15 +144,79 @@ function PriceRangeSlider({ onChange }: { onChange?: (min: number, max: number) 
       rCur.current = next;
       const p = toPrice(next);
       setMaxP(p);
+      setInputMax(p < MAX_PRICE ? p.toLocaleString('ko-KR') : '');
       onChange?.(toPrice(lCur.current), p);
     },
   })).current;
 
+  function applyInputMin(text: string) {
+    const raw = Number(text.replace(/,/g, '').replace(/[^0-9]/g, ''));
+    if (isNaN(raw)) return;
+    const clamped = Math.max(0, Math.min(toPrice(rCur.current) - 10000, raw));
+    const px = toPixel(clamped);
+    leftPx.setValue(px);
+    lCur.current = px;
+    setMinP(clamped);
+    onChange?.(clamped, toPrice(rCur.current));
+  }
+
+  function applyInputMax(text: string) {
+    const raw = Number(text.replace(/,/g, '').replace(/[^0-9]/g, ''));
+    if (isNaN(raw)) return;
+    const clamped = Math.min(MAX_PRICE, Math.max(toPrice(lCur.current) + 10000, raw));
+    const px = toPixel(clamped);
+    rightPx.setValue(px);
+    rCur.current = px;
+    setMaxP(clamped);
+    onChange?.(toPrice(lCur.current), clamped);
+  }
+
   const activeLeft  = Animated.add(leftPx,  HANDLE_W / 2);
   const activeWidth = Animated.subtract(rightPx, leftPx);
 
+  const inputStyle = {
+    flex: 1,
+    height: 36,
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    fontSize: 12,
+    fontFamily: fontFamily.regular,
+    color: colors.secondary,
+    textAlign: 'center' as const,
+  };
+
   return (
-    <View style={{ gap: 10 }}>
+    <View style={{ gap: 12 }}>
+      {/* 직접 입력란 */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <TextInput
+          style={inputStyle}
+          value={inputMin}
+          onChangeText={setInputMin}
+          onBlur={() => applyInputMin(inputMin)}
+          onSubmitEditing={() => applyInputMin(inputMin)}
+          placeholder="최저가"
+          placeholderTextColor={colors.secondary50}
+          keyboardType="numeric"
+          returnKeyType="done"
+        />
+        <Text style={{ fontSize: 12, color: colors.secondary50, fontFamily: fontFamily.regular }}>~</Text>
+        <TextInput
+          style={inputStyle}
+          value={inputMax}
+          onChangeText={setInputMax}
+          onBlur={() => applyInputMax(inputMax)}
+          onSubmitEditing={() => applyInputMax(inputMax)}
+          placeholder="최대가"
+          placeholderTextColor={colors.secondary50}
+          keyboardType="numeric"
+          returnKeyType="done"
+        />
+      </View>
+
+      {/* 슬라이더 */}
       <View
         style={{ height: HANDLE_H, justifyContent: 'center' }}
         onLayout={e => {
