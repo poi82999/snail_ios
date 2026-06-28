@@ -93,6 +93,14 @@ function fmt(price: number) {
   return rest === 0 ? `${man}만원` : `${price.toLocaleString('ko-KR')}원`;
 }
 
+function fmtNum(price: number): string {
+  if (price <= 0) return '0';
+  if (price >= MAX_PRICE) return '100만';
+  const man = Math.floor(price / 10000);
+  const rest = price % 10000;
+  return rest === 0 ? `${man}만` : price.toLocaleString('ko-KR');
+}
+
 function PriceRangeSlider({ onChange }: { onChange?: (min: number, max: number) => void }) {
   const trackW   = useRef(0);
   const leftPx   = useRef(new Animated.Value(0)).current;
@@ -174,46 +182,59 @@ function PriceRangeSlider({ onChange }: { onChange?: (min: number, max: number) 
   const activeLeft  = Animated.add(leftPx,  HANDLE_W / 2);
   const activeWidth = Animated.subtract(rightPx, leftPx);
 
-  const inputStyle = {
+  const inputBoxStyle = {
     flex: 1,
     height: 36,
     borderWidth: 1,
     borderColor: colors.line,
     borderRadius: 6,
     paddingHorizontal: 10,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+  };
+
+  const inputTextStyle = {
+    flex: 1,
     fontSize: 12,
     fontFamily: fontFamily.regular,
     color: colors.secondary,
-    textAlign: 'center' as const,
+    textAlign: 'right' as const,
+    padding: 0,
   };
 
   return (
     <View style={{ gap: 12 }}>
       {/* 직접 입력란 */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <TextInput
-          style={inputStyle}
-          value={inputMin}
-          onChangeText={setInputMin}
-          onBlur={() => applyInputMin(inputMin)}
-          onSubmitEditing={() => applyInputMin(inputMin)}
-          placeholder="최저가"
-          placeholderTextColor={colors.secondary50}
-          keyboardType="numeric"
-          returnKeyType="done"
-        />
+        <View style={inputBoxStyle}>
+          <TextInput
+            style={inputTextStyle}
+            value={inputMin}
+            onChangeText={setInputMin}
+            onBlur={() => applyInputMin(inputMin)}
+            onSubmitEditing={() => applyInputMin(inputMin)}
+            placeholder="0"
+            placeholderTextColor={colors.secondary50}
+            keyboardType="numeric"
+            returnKeyType="done"
+          />
+          <Text style={{ fontSize: 12, fontFamily: fontFamily.regular, color: colors.secondary, marginLeft: 2 }}>원</Text>
+        </View>
         <Text style={{ fontSize: 12, color: colors.secondary50, fontFamily: fontFamily.regular }}>~</Text>
-        <TextInput
-          style={inputStyle}
-          value={inputMax}
-          onChangeText={setInputMax}
-          onBlur={() => applyInputMax(inputMax)}
-          onSubmitEditing={() => applyInputMax(inputMax)}
-          placeholder="최대가"
-          placeholderTextColor={colors.secondary50}
-          keyboardType="numeric"
-          returnKeyType="done"
-        />
+        <View style={inputBoxStyle}>
+          <TextInput
+            style={inputTextStyle}
+            value={inputMax}
+            onChangeText={setInputMax}
+            onBlur={() => applyInputMax(inputMax)}
+            onSubmitEditing={() => applyInputMax(inputMax)}
+            placeholder={fmtNum(MAX_PRICE)}
+            placeholderTextColor={colors.secondary50}
+            keyboardType="numeric"
+            returnKeyType="done"
+          />
+          <Text style={{ fontSize: 12, fontFamily: fontFamily.regular, color: colors.secondary, marginLeft: 2 }}>원</Text>
+        </View>
       </View>
 
       {/* 슬라이더 */}
@@ -250,8 +271,14 @@ function PriceRangeSlider({ onChange }: { onChange?: (min: number, max: number) 
       </View>
 
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-        <Text style={{ fontSize: 12, lineHeight: 16, fontFamily: fontFamily.regular, color: colors.secondary50 }}>{fmt(minP)}</Text>
-        <Text style={{ fontSize: 12, lineHeight: 16, fontFamily: fontFamily.regular, color: colors.secondary50 }}>{fmt(maxP)}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={{ fontSize: 12, lineHeight: 16, fontFamily: fontFamily.regular, color: minP === 0 ? colors.secondary50 : colors.secondary }}>{fmtNum(minP)}</Text>
+          <Text style={{ fontSize: 12, lineHeight: 16, fontFamily: fontFamily.regular, color: colors.secondary }}>원</Text>
+        </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={{ fontSize: 12, lineHeight: 16, fontFamily: fontFamily.regular, color: maxP >= MAX_PRICE ? colors.secondary50 : colors.secondary }}>{fmtNum(maxP)}</Text>
+          <Text style={{ fontSize: 12, lineHeight: 16, fontFamily: fontFamily.regular, color: colors.secondary }}>원</Text>
+        </View>
       </View>
     </View>
   );
