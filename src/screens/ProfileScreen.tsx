@@ -95,7 +95,7 @@ export default function ProfileScreen() {
               <Button
                 label="수정"
                 variant="outline"
-                onPress={() => {}}
+                onPress={() => navigation.navigate('ProfileEdit')}
                 style={{ height: 30, paddingHorizontal: 16, borderRadius: 6, borderColor: 'rgba(125,105,93,0.3)', backgroundColor: colors.background }}
               />
             </View>

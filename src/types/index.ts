@@ -29,6 +29,7 @@ export type RootStackParamList = {
   NotificationSettings: undefined;
   Notice: undefined;
   Terms: undefined;
+  ProfileEdit: undefined;
 };
 
 export type FilterId = 'filter' | 'region' | 'duration' | 'date' | 'price' | 'color' | 'mood';

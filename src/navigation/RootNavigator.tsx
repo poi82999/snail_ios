@@ -22,6 +22,7 @@ import FavoritesScreen from '../screens/FavoritesScreen';
 import NotificationSettingsScreen from '../screens/NotificationSettingsScreen';
 import NoticeScreen from '../screens/NoticeScreen';
 import TermsScreen from '../screens/TermsScreen';
+import ProfileEditScreen from '../screens/ProfileEditScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -49,6 +50,7 @@ export default function RootNavigator() {
       <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="Notice" component={NoticeScreen} options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="Terms" component={TermsScreen} options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} options={{ animation: 'slide_from_right' }} />
     </Stack.Navigator>
   );
 }
