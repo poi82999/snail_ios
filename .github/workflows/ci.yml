@@ -32,3 +32,11 @@ jobs:
 
       - name: Test
         run: npm test
+
+      # 계약 drift 게이트: 커밋된 openapi.json으로 타입을 재생성했을 때 src/types/api.ts가
+      # 그대로여야 한다. 다르면 "gen:api 후 커밋 안 함" → 실패.
+      - name: Contract drift check
+        run: |
+          npm run gen:api
+          git diff --exit-code src/types/api.ts \
+            || (echo "::error::api.ts가 openapi.json과 불일치합니다. 'npm run gen:api' 후 커밋하세요." && exit 1)

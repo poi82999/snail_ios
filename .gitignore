@@ -101,8 +101,10 @@ fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
 
-# Backend API context
-backend-context/
+# Backend API context — openapi.json은 계약 drift 게이트(CI 재생성+diff)용으로 커밋,
+# 나머지 동기화 문서(*.ai.txt 등)는 무시
+backend-context/*
+!backend-context/openapi.json
 
 # Misc
 *.log
