@@ -99,13 +99,13 @@ export default function HomeScreen() {
             onPress={() => navigation.navigate('Notifications')}
             style={tw`relative`}
           >
-            <Ionicons name="notifications-outline" size={28} color="#1A1A1A" />
+            <Ionicons name="notifications-outline" size={28} color={colors.secondary} />
             {unreadCount > 0 && (
               <View style={tw`absolute top-0 right-0 w-[8px] h-[8px] rounded-full bg-[#E8604C]`} />
             )}
           </TouchableOpacity>
-          <TouchableOpacity activeOpacity={0.7}>
-            <Ionicons name="heart" size={35} color={colors.secondary} />
+          <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Favorites')}>
+            <Ionicons name="heart-outline" size={28} color={colors.secondary} />
           </TouchableOpacity>
         </View>
       </View>
