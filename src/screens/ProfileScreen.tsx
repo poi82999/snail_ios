@@ -96,7 +96,7 @@ export default function ProfileScreen() {
                 label="수정"
                 variant="outline"
                 onPress={() => {}}
-                style={{ height: 30, paddingHorizontal: 16, borderRadius: 6, borderColor: colors.secondary50 }}
+                style={{ height: 30, paddingHorizontal: 16, borderRadius: 6, borderColor: 'rgba(125,105,93,0.3)' }}
               />
             </View>
           </View>
