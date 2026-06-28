@@ -17,6 +17,8 @@ import { useSnailFeed, useToggleSnapLike } from '../hooks/useSnail';
 import type { RootStackParamList, Snap, SnapFeedType } from '../types';
 import { colors, typography } from '../theme/tokens';
 import { fontFamily } from '../theme/fonts';
+import ErrorState from '../components/state/ErrorState';
+import EmptyState from '../components/state/EmptyState';
 
 interface FeedTab {
   label: string;
@@ -56,38 +58,6 @@ function LoadingState(): React.ReactElement {
       {[0, 1, 2].map((item) => (
         <SkeletonSnapCard key={item} />
       ))}
-    </View>
-  );
-}
-
-function EmptyState(): React.ReactElement {
-  return (
-    <View style={tw`flex-1 items-center justify-center py-[60px]`}>
-      <Ionicons name="snow-outline" size={48} color={colors.disabled} />
-      <Text style={[typography.bodySm, { color: colors.secondary50, marginTop: 16 }]}>
-        첫 스네일을 올려보세요
-      </Text>
-    </View>
-  );
-}
-
-interface ErrorStateProps {
-  onRetry: () => void;
-}
-
-function ErrorState({ onRetry }: ErrorStateProps): React.ReactElement {
-  return (
-    <View style={tw`flex-1 items-center justify-center`}>
-      <Text style={[typography.bodySm, { color: colors.secondary50, marginBottom: 12 }]}>
-        불러오기에 실패했어요
-      </Text>
-      <TouchableOpacity
-        onPress={onRetry}
-        activeOpacity={0.7}
-        style={[tw`px-[20px] h-[42px] rounded-[5px] items-center justify-center`, { backgroundColor: colors.secondary }]}
-      >
-        <Text style={[typography.bodySm, { color: colors.background }]}>다시 시도</Text>
-      </TouchableOpacity>
     </View>
   );
 }
@@ -172,7 +142,7 @@ export default function SnailScreen(): React.ReactElement {
       ) : isError ? (
         <ErrorState onRetry={() => refetch()} />
       ) : snaps.length === 0 ? (
-        <EmptyState />
+        <EmptyState icon="snow-outline" title="첫 스네일을 올려보세요" />
       ) : (
         <FlatList
           data={snaps}
