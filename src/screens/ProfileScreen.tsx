@@ -6,27 +6,32 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import tw from 'twrnc';
 import { useAuth } from '../hooks/useAuth';
-import { shadows } from '../theme/tokens';
+import { colors, typography } from '../theme/tokens';
 import { fontFamily } from '../theme/fonts';
+import AvatarPlaceholder from '../components/AvatarPlaceholder';
 import type { RootStackParamList } from '../types';
 
 const MOCK_POSTS = Array.from({ length: 9 });
 
 const STATS = [
-  { value: '00', label: '게시물' },
-  { value: '00', label: '팔로워' },
-  { value: '00', label: '팔로잉' },
+  { value: '0', label: '게시물' },
+  { value: '0', label: '팔로워' },
+  { value: '0', label: '팔로잉' },
 ];
 
 const ACTIONS = [
-  { icon: 'ticket-outline' as const, label: '쿠폰함' },
-  { icon: 'chatbox-outline' as const, label: '문의하기' },
-  { icon: 'heart-outline' as const, label: '좋아요' },
+  { icon: 'ticket-outline' as const, label: '쿠폰함', screen: null },
+  { icon: 'chatbox-outline' as const, label: '문의하기', screen: 'Inquiry' as const },
+  { icon: 'heart-outline' as const, label: '좋아요', screen: null },
+  { icon: 'notifications-outline' as const, label: '알림', screen: 'Notifications' as const },
 ];
+
+function Divider() {
+  return <View style={{ height: 1, backgroundColor: colors.line, marginHorizontal: 20 }} />;
+}
 
 export default function ProfileScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  // 로그인 세션의 실제 유저 정보를 표시한다. 통계/게시물은 전용 엔드포인트가 없어 placeholder 유지.
   const { user } = useAuth();
   const displayName = user?.nickname ?? '사용자';
   const displayBio = user?.bio ?? '안녕하세요 자기소개입니다';
@@ -36,103 +41,94 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>
-      {/* Top Bar */}
-      <View style={tw`flex-row items-center justify-between px-[20px] h-[54px] bg-white`}>
-        <Text style={[tw`text-[14px] text-[#6F6F6F]`, { fontFamily: fontFamily.semibold }]}>프로필</Text>
-        <View style={tw`flex-row items-center gap-[10px]`}>
-          <TouchableOpacity activeOpacity={0.7}>
-            <Ionicons name="notifications-outline" size={27} color="#6F6F6F" />
-          </TouchableOpacity>
-          <TouchableOpacity activeOpacity={0.7}>
-            <Ionicons name="settings-outline" size={27} color="#6F6F6F" />
-          </TouchableOpacity>
-        </View>
+      {/* 헤더 */}
+      <View style={{
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+        paddingHorizontal: 20, height: 54,
+      }}>
+        <Text style={[typography.filter, { color: colors.secondary }]}>프로필</Text>
+        <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Notifications')}>
+          <Ionicons name="notifications-outline" size={26} color={colors.secondary} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* My Profile */}
-        <View style={tw`py-[20px] gap-y-[15px]`}>
-          {/* Profile image + stats */}
-          <View style={tw`flex-row items-center px-[20px] gap-[40px]`}>
+        {/* 프로필 영역 */}
+        <View style={tw`px-[20px] pt-[16px] pb-[24px] gap-y-[20px]`}>
+          {/* 아바타 + 통계 */}
+          <View style={tw`flex-row items-center gap-[32px]`}>
             {showAvatar ? (
-              <Image
-                source={{ uri: avatarUri! }}
-                style={tw`w-[59px] h-[59px] rounded-full`}
-                resizeMode="cover"
-                onError={() => setAvatarError(true)}
-              />
+              <Image source={{ uri: avatarUri! }} style={tw`w-[72px] h-[72px] rounded-full`} resizeMode="cover" onError={() => setAvatarError(true)} />
             ) : (
-              <View style={tw`w-[59px] h-[59px] rounded-full bg-[#D9D9D9]`} />
+              <AvatarPlaceholder size={72} />
             )}
-            <View style={tw`flex-row items-center gap-[63px]`}>
+            <View style={tw`flex-1 flex-row justify-around`}>
               {STATS.map(({ value, label }) => (
-                <View key={label} style={tw`items-center gap-y-[9px] w-[34px]`}>
-                  <Text style={[tw`text-[18px] text-[#6F6F6F]`, { fontFamily: fontFamily.semibold }]}>{value}</Text>
-                  <Text style={[tw`text-[12px] text-[#6F6F6F]`, { fontFamily: fontFamily.medium }]}>{label}</Text>
+                <View key={label} style={tw`items-center gap-y-[6px]`}>
+                  <Text style={[typography.headingMd, { color: colors.secondary }]}>{value}</Text>
+                  <Text style={[typography.caption, { color: colors.secondary50 }]}>{label}</Text>
                 </View>
               ))}
             </View>
           </View>
 
-          {/* Name + bio */}
-          <View style={tw`px-[20px] gap-y-[9px]`}>
-            <Text style={[tw`text-[18px] text-[#6F6F6F]`, { fontFamily: fontFamily.semibold }]}>{displayName}</Text>
-            <Text style={[tw`text-[12px] text-[#6F6F6F]`, { fontFamily: fontFamily.medium }]}>{displayBio}</Text>
+          {/* 이름 + 소개 */}
+          <View style={tw`gap-y-[6px]`}>
+            <Text style={[typography.bodyMd, { color: colors.secondary }]}>{displayName}</Text>
+            <Text style={[typography.bodySm, { color: colors.secondary50 }]}>{displayBio}</Text>
           </View>
 
-          {/* Edit / Share buttons */}
-          <View style={tw`flex-row px-[20px] gap-[26px]`}>
+          {/* 수정 / 공유 버튼 */}
+          <View style={tw`flex-row gap-[12px]`}>
             {['프로필 수정', '프로필 공유'].map((label) => (
               <TouchableOpacity
                 key={label}
                 activeOpacity={0.7}
-                style={tw`flex-1 h-[35px] bg-[#D9D9D9] rounded-[5px] items-center justify-center`}
+                style={[tw`flex-1 h-[36px] rounded-[8px] items-center justify-center`, { backgroundColor: colors.disabled }]}
               >
-                <Text style={[tw`text-[12px] text-[#6F6F6F]`, { fontFamily: fontFamily.bold }]}>{label}</Text>
+                <Text style={[typography.caption, { color: colors.secondary, fontFamily: fontFamily.semibold }]}>{label}</Text>
               </TouchableOpacity>
             ))}
           </View>
         </View>
 
-        {/* Action shortcuts card */}
-        <View style={tw`px-[10px] pb-[5px]`}>
-          <View
-            style={[
-              tw`bg-white rounded-[10px] h-[84px] flex-row items-center justify-evenly px-[20px]`,
-              shadows.bar,
-            ]}
-          >
-            {ACTIONS.map(({ icon, label }) => (
+        <Divider />
+
+        {/* 바로가기 카드 */}
+        <View style={tw`mx-[20px] my-[16px]`}>
+          <View style={[
+            tw`bg-white rounded-[12px] flex-row items-center justify-evenly py-[16px]`,
+            { borderWidth: 1, borderColor: colors.line },
+          ]}>
+            {ACTIONS.map(({ icon, label, screen }) => (
               <TouchableOpacity
                 key={label}
                 activeOpacity={0.7}
-                style={tw`items-center w-[38px]`}
-                onPress={() => { if (label === '문의하기') navigation.navigate('Inquiry'); }}
+                style={tw`items-center gap-y-[6px] w-[56px]`}
+                onPress={() => { if (screen) navigation.navigate(screen as never); }}
               >
-                <Ionicons name={icon} size={35} color="#6F6F6F" />
-                <Text style={[tw`text-[8px] text-[#6F6F6F] text-center mt-[2px]`, { fontFamily: fontFamily.medium }]}>
-                  {label}
-                </Text>
+                <View style={[tw`w-[44px] h-[44px] rounded-full items-center justify-center`, { backgroundColor: '#F7F5F3' }]}>
+                  <Ionicons name={icon} size={22} color={colors.secondary} />
+                </View>
+                <Text style={[typography.caption, { color: colors.secondary }]}>{label}</Text>
               </TouchableOpacity>
             ))}
           </View>
         </View>
 
-        {/* Post grid 3×3 */}
-        <View style={tw`flex-row flex-wrap mt-[5px]`}>
+        <Divider />
+
+        {/* 게시물 그리드 */}
+        <View style={tw`flex-row flex-wrap mt-[4px]`}>
           {MOCK_POSTS.map((_, i) => (
             <View
               key={i}
-              style={{
-                width: '33.33%',
-                aspectRatio: 1,
-                backgroundColor: '#D9D9D9',
-                borderWidth: 1,
-                borderColor: 'white',
-              }}
+              style={{ width: '33.33%', aspectRatio: 1, backgroundColor: colors.disabled, borderWidth: 1, borderColor: colors.background }}
             />
           ))}
         </View>
+
+        <View style={tw`h-[20px]`} />
       </ScrollView>
     </SafeAreaView>
   );
