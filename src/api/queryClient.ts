@@ -1,4 +1,5 @@
 import { MutationCache, QueryClient } from '@tanstack/react-query';
+import * as Sentry from '@sentry/react-native';
 import type { ApiError } from './errors';
 import { openLoginGate } from '../auth/loginGate';
 
@@ -20,6 +21,15 @@ const mutationCache = new MutationCache({
     const apiError = error as ApiError | undefined;
     if (apiError?.code === 'UNAUTHORIZED' || apiError?.status === 401) {
       openLoginGate();
+      return;
+    }
+    // 5xx·네트워크/원인불명만 Sentry로 보고(4xx 비즈니스 오류는 노이즈라 제외).
+    // requestId 태그로 백엔드 로그와 상관관계를 잇는다.
+    const status = apiError?.status;
+    if (status === undefined || status >= 500) {
+      Sentry.captureException(error, {
+        tags: { api_code: apiError?.code, request_id: apiError?.requestId },
+      });
     }
   },
 });
