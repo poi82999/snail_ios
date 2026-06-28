@@ -17,22 +17,6 @@ const APP_VERSION = '1.0.0';
 
 const MENU_SECTIONS = [
   {
-    key: '내 정보',
-    icon: 'person-outline' as const,
-    items: [
-      { label: '내 예약', screen: 'Main' as const },
-      { label: '언어', screen: null },
-    ],
-  },
-  {
-    key: '활동',
-    icon: 'document-text-outline' as const,
-    items: [
-      { label: '내가 쓴 글', screen: null },
-      { label: '보관함', screen: null },
-    ],
-  },
-  {
     key: '고객 센터',
     icon: 'help-circle-outline' as const,
     items: [
@@ -49,8 +33,6 @@ const MENU_SECTIONS = [
     ],
   },
 ] as const;
-
-const MOCK_POSTS = Array.from({ length: 9 });
 
 const STATS = [
   { value: '0', label: '게시글' },
@@ -165,7 +147,7 @@ export default function ProfileScreen() {
               </Text>
             </View>
             {/* 섹션 아이템 */}
-            {section.items.map((item, idx) => (
+            {section.items.map((item) => (
               <TouchableOpacity
                 key={item.label}
                 activeOpacity={0.7}
