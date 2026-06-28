@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, ScrollView, ActivityIndicator, Linking, Alert } from 'react-native';
+import { View, Text, Image, TouchableOpacity, ScrollView, Linking, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -10,6 +10,8 @@ import { useShopDetail } from '../hooks/useShop';
 import { getErrorMessage } from '../api/errors';
 import { colors, typography, shadows } from '../theme/tokens';
 import Button from '../components/Button';
+import LoadingState from '../components/state/LoadingState';
+import ErrorState from '../components/state/ErrorState';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ReservationDetail'>;
 
@@ -75,21 +77,16 @@ export default function ReservationDetailScreen({ route, navigation }: Props) {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={tw`flex-1 bg-white items-center justify-center`} edges={['top']}>
-        <ActivityIndicator color={colors.secondary} />
+      <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>
+        <LoadingState />
       </SafeAreaView>
     );
   }
 
   if (isError || !reservation) {
     return (
-      <SafeAreaView style={tw`flex-1 bg-white items-center justify-center`} edges={['top']}>
-        <Text style={[typography.bodySm, { color: colors.secondary50, marginBottom: 12 }]}>
-          불러오기에 실패했어요
-        </Text>
-        <TouchableOpacity onPress={() => refetch()} style={tw`px-[20px] py-[10px] rounded-[8px]`} activeOpacity={0.7}>
-          <Text style={[typography.bodySm, { color: colors.secondary }]}>다시 시도</Text>
-        </TouchableOpacity>
+      <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>
+        <ErrorState onRetry={() => refetch()} />
       </SafeAreaView>
     );
   }
