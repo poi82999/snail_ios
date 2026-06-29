@@ -131,6 +131,26 @@ export interface LoginParams {
   password: string;
 }
 
+type UserUpdateRequest = components['schemas']['UserUpdate'];
+
+export interface UpdateMeParams {
+  nickname?: string;
+  bio?: string | null;
+}
+
+export async function updateMe(params: UpdateMeParams): Promise<UserMe> {
+  try {
+    const body: UserUpdateRequest = {
+      nickname: params.nickname ?? null,
+      bio: params.bio ?? null,
+    };
+    const response = await apiClient.patch<UserMe>('/me', body);
+    return response.data;
+  } catch (error) {
+    throw toApiError(error);
+  }
+}
+
 export async function loginUser(params: LoginParams): Promise<UserMe> {
   try {
     const body: UserLoginRequest = {
