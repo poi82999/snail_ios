@@ -7,7 +7,7 @@ import {
 import { getAccessToken } from '../api/authToken';
 import { fetchDesignList } from '../api/designsApi';
 import { ApiError } from '../api/errors';
-import { addFavorite, removeFavorite } from '../api/favoriteApi';
+import { toggleFavorite } from '../api/favoriteApi';
 import { Design, FilterId, HomeTab } from '../types';
 
 interface LikeToggleVariables {
@@ -64,8 +64,7 @@ export function useLikeToggle() {
   const queryClient = useQueryClient();
 
   return useMutation<void, ApiError, LikeToggleVariables, LikeToggleContext>({
-    mutationFn: async ({ designId, isLiked }) => {
-      // 토큰이 없으면 네트워크 요청 전에 로그인 필요 상태를 화면에 전달한다.
+    mutationFn: async ({ designId }) => {
       if (!getAccessToken()) {
         throw new ApiError({
           code: 'UNAUTHORIZED',
@@ -73,13 +72,7 @@ export function useLikeToggle() {
           status: 401,
         });
       }
-
-      if (isLiked) {
-        await addFavorite(designId);
-        return;
-      }
-
-      await removeFavorite(designId);
+      await toggleFavorite(designId);
     },
     onMutate: async ({ designId, isLiked }) => {
       await queryClient.cancelQueries({ queryKey: ['designs'] });

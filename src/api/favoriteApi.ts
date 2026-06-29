@@ -36,22 +36,19 @@ export async function fetchFavoriteShops(cursor?: string): Promise<{ shops: Shop
   };
 }
 
-function getFavoritePath(designId: string): string {
-  return `/designs/${encodeURIComponent(designId)}/favorite`;
-}
-
-export async function addFavorite(designId: string): Promise<void> {
+export async function toggleFavorite(designId: string): Promise<{ liked: boolean; likeCount: number }> {
   try {
-    await apiClient.post(getFavoritePath(designId));
+    const res = await apiClient.post(
+      `/designs/${encodeURIComponent(designId)}/favorite`,
+      null,
+      { headers: { 'Idempotency-Key': `fav-${designId}-${Date.now()}` } }
+    );
+    return { liked: res.data.liked, likeCount: res.data.like_count };
   } catch (error) {
     throw toApiError(error);
   }
 }
 
-export async function removeFavorite(designId: string): Promise<void> {
-  try {
-    await apiClient.delete(getFavoritePath(designId));
-  } catch (error) {
-    throw toApiError(error);
-  }
-}
+// 하위 호환 유지
+export const addFavorite = (designId: string) => toggleFavorite(designId);
+export const removeFavorite = (designId: string) => toggleFavorite(designId);
