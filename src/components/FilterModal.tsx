@@ -107,7 +107,8 @@ function fmtNum(price: number): string {
   return rest === 0 ? `${man}만` : price.toLocaleString('ko-KR');
 }
 
-function PriceRangeSlider({ onChange, maxPrice = MAX_PRICE }: { onChange?: (min: number, max: number) => void; maxPrice?: number }) {
+function PriceRangeSlider({ onChange, maxPrice = MAX_PRICE, initialMin = 0, initialMax }: { onChange?: (min: number, max: number) => void; maxPrice?: number; initialMin?: number; initialMax?: number }) {
+  const effectiveInitMax = initialMax ?? maxPrice;
   const trackW   = useRef(0);
   const leftPx   = useRef(new Animated.Value(0)).current;
   const rightPx  = useRef(new Animated.Value(280)).current;
@@ -115,10 +116,10 @@ function PriceRangeSlider({ onChange, maxPrice = MAX_PRICE }: { onChange?: (min:
   const rCur     = useRef(280);
   const lStart   = useRef(0);
   const rStart   = useRef(280);
-  const [minP, setMinP] = useState(0);
-  const [maxP, setMaxP] = useState(maxPrice);
-  const [inputMin, setInputMin] = useState('');
-  const [inputMax, setInputMax] = useState('');
+  const [minP, setMinP] = useState(initialMin);
+  const [maxP, setMaxP] = useState(effectiveInitMax);
+  const [inputMin, setInputMin] = useState(initialMin > 0 ? initialMin.toLocaleString('ko-KR') : '');
+  const [inputMax, setInputMax] = useState(effectiveInitMax < maxPrice ? effectiveInitMax.toLocaleString('ko-KR') : '');
 
   function toPrice(px: number) {
     const span = trackW.current - HANDLE_W;
@@ -251,11 +252,17 @@ function PriceRangeSlider({ onChange, maxPrice = MAX_PRICE }: { onChange?: (min:
         onLayout={e => {
           const w = e.nativeEvent.layout.width;
           trackW.current = w;
-          const initRight = w - HANDLE_W;
+          const span = w - HANDLE_W;
+          const initLeft  = Math.round((initialMin / maxPrice) * span);
+          const initRight = Math.round((effectiveInitMax / maxPrice) * span);
+          leftPx.setValue(initLeft);
+          lCur.current   = initLeft;
+          lStart.current = initLeft;
           rightPx.setValue(initRight);
           rCur.current   = initRight;
           rStart.current = initRight;
-          setMaxP(maxPrice);
+          setMinP(initialMin);
+          setMaxP(effectiveInitMax);
         }}
       >
         <View style={{ position: 'absolute', top: (HANDLE_H - TRACK_HEIGHT) / 2, left: 0, right: 0, height: TRACK_HEIGHT, backgroundColor: colors.primary10, borderRadius: 6 }} />
@@ -559,7 +566,12 @@ export default function FilterModal({ visible, onClose, initialSection, initialF
               onLayout={e => { sectionY.current['price'] = e.nativeEvent.layout.y; }}
             >
               <SectionTitle>가격</SectionTitle>
-              <PriceRangeSlider onChange={(min, max) => { priceRef.current = { min, max }; }} maxPrice={maxPrice} />
+              <PriceRangeSlider
+                onChange={(min, max) => { priceRef.current = { min, max }; }}
+                maxPrice={maxPrice}
+                initialMin={initialFilters?.priceMin ?? 0}
+                initialMax={initialFilters?.priceMax ?? maxPrice}
+              />
             </View>
             <Divider />
             <View
