@@ -138,10 +138,11 @@ function PriceRangeSlider({ onChange, maxPrice = MAX_PRICE, initialMin = 0, init
     onMoveShouldSetPanResponder:  () => true,
     onPanResponderGrant: () => { lStart.current = lCur.current; },
     onPanResponderMove: (_, { dx }) => {
-      const next = Math.max(0, Math.min(rCur.current - MIN_GAP, lStart.current + dx));
-      leftPx.setValue(next);
-      lCur.current = next;
-      const p = toPrice(next);
+      const raw  = Math.max(0, Math.min(rCur.current - MIN_GAP, lStart.current + dx));
+      const p    = toPrice(raw);
+      const snap = toPixel(p);
+      leftPx.setValue(snap);
+      lCur.current = snap;
       setMinP(p);
       setInputMin(p > 0 ? p.toLocaleString('ko-KR') : '');
       onChange?.(p, toPrice(rCur.current));
@@ -154,10 +155,11 @@ function PriceRangeSlider({ onChange, maxPrice = MAX_PRICE, initialMin = 0, init
     onPanResponderGrant: () => { rStart.current = rCur.current; },
     onPanResponderMove: (_, { dx }) => {
       const maxPx = trackW.current - HANDLE_W;
-      const next  = Math.max(lCur.current + MIN_GAP, Math.min(maxPx, rStart.current + dx));
-      rightPx.setValue(next);
-      rCur.current = next;
-      const p = toPrice(next);
+      const raw   = Math.max(lCur.current + MIN_GAP, Math.min(maxPx, rStart.current + dx));
+      const p     = toPrice(raw);
+      const snap  = toPixel(p);
+      rightPx.setValue(snap);
+      rCur.current = snap;
       setMaxP(p);
       setInputMax(p < maxPrice ? p.toLocaleString('ko-KR') : '');
       onChange?.(toPrice(lCur.current), p);
