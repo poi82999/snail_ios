@@ -124,7 +124,7 @@ function PriceRangeSlider({ onChange, maxPrice = MAX_PRICE, initialMin = 0, init
   function toPrice(px: number) {
     const span = trackW.current - HANDLE_W;
     if (span <= 0) return 0;
-    return Math.round((px / span) * maxPrice / 10000) * 10000;
+    return Math.round((px / span) * maxPrice / 5000) * 5000;
   }
 
   function toPixel(price: number) {
