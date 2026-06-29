@@ -160,8 +160,8 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
 
         {/* 연관 추천 디자인 — useRelatedDesigns(/designs/{id}/related). 없으면 섹션 숨김 */}
         {relatedDesigns.length > 0 && (
-          <View style={{ padding: 20, gap: 12 }}>
-            <View style={tw`flex-row items-center justify-between`}>
+          <View style={{ gap: 12, paddingTop: 20, paddingBottom: 20 }}>
+            <View style={tw`flex-row items-center justify-between px-[20px]`}>
               <Text style={[typography.filter, { color: colors.secondary }]}>연관 추천 디자인</Text>
               <TouchableOpacity
                 activeOpacity={0.7}
@@ -177,6 +177,7 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
               data={relatedDesigns}
               keyExtractor={item => item.id}
               showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingLeft: 20 }}
               ItemSeparatorComponent={() => <View style={tw`w-[10px]`} />}
               renderItem={({ item }) => (
                 <TouchableOpacity
