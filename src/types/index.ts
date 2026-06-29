@@ -4,6 +4,7 @@ export type SnapFeedType = 'latest' | 'ranking' | 'following';
 
 export type RootStackParamList = {
   Login: undefined;
+  Register: undefined;
   Main: undefined;
   Search: { initialQuery?: string } | undefined;
   DesignDetail: { designId: string };

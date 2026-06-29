@@ -1,67 +1,159 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+  StyleSheet,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import tw from 'twrnc';
 import Logo from '../components/Logo';
-import Button from '../components/Button';
-import { colors } from '../theme/tokens';
+import { colors, typography } from '../theme/tokens';
 import { fontFamily } from '../theme/fonts';
+import { useEmailLogin } from '../hooks/useAuth';
+import { getErrorMessage } from '../api/errorMessages';
 import type { RootStackParamList } from '../types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 export default function LoginScreen() {
   const navigation = useNavigation<Nav>();
+  const { mutate: login, isPending } = useEmailLogin();
 
-  function goToMain() {
-    navigation.replace('Main');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [error, setError] = useState('');
+
+  function handleLogin() {
+    if (!email.trim() || !password) {
+      setError('이메일과 비밀번호를 입력해주세요.');
+      return;
+    }
+    setError('');
+    login(
+      { email: email.trim(), password },
+      {
+        onSuccess: () => navigation.replace('Main'),
+        onError: (err) => setError(getErrorMessage(err)),
+      }
+    );
   }
 
   return (
     <View style={styles.root}>
-      {/* 배경: 어두운 브라운 베이스 + 세미 투명 오버레이 */}
       <View style={[StyleSheet.absoluteFill, styles.overlay]} />
 
       <SafeAreaView style={tw`flex-1`} edges={['top', 'bottom']}>
-        {/* 로고 — 화면 세로 중앙 */}
-        <View style={tw`flex-1 items-center justify-center`}>
-          {/* Figma 수치: 프레임 402px 기준 로고 폭 약 139px */}
-          <Logo color="white" width={139} />
-        </View>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={tw`flex-1`}>
+          {/* 로고 */}
+          <View style={tw`flex-1 items-center justify-center`}>
+            <Logo color="white" width={139} />
+          </View>
 
-        {/* 하단 버튼 영역 */}
-        {/* Figma: 버튼 top 752, 높이 42 → 프레임 874 기준 아래 여백 80px */}
-        {/* SafeAreaView bottom edge 적용 후 추가 패딩 46px */}
-        <View style={tw`px-[19px] pb-[46px]`}>
-          <Button
-            label="Google 계정으로 로그인"
-            onPress={goToMain}
-            style={{ backgroundColor: colors.primary }}
-          />
-          {/* Figma: 버튼 하단~텍스트 간격 17px */}
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={goToMain}
-            style={tw`mt-[17px] items-center`}
-          >
-            <Text style={{ fontSize: 14, lineHeight: 20, fontFamily: fontFamily.regular, color: colors.primary10 }}>
-              비회원으로 계속하기
-            </Text>
-          </TouchableOpacity>
-        </View>
+          {/* 입력 + 버튼 */}
+          <View style={tw`px-[24px] pb-[40px] gap-y-[12px]`}>
+            {/* 이메일 */}
+            <View
+              style={[
+                tw`flex-row items-center h-[48px] px-[16px] rounded-[10px]`,
+                { backgroundColor: 'rgba(255,255,255,0.12)' },
+              ]}
+            >
+              <TextInput
+                style={[tw`flex-1`, { fontFamily: fontFamily.regular, fontSize: 14, color: colors.background }]}
+                value={email}
+                onChangeText={setEmail}
+                placeholder="이메일"
+                placeholderTextColor="rgba(255,255,255,0.45)"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+
+            {/* 비밀번호 */}
+            <View
+              style={[
+                tw`flex-row items-center h-[48px] px-[16px] rounded-[10px]`,
+                { backgroundColor: 'rgba(255,255,255,0.12)' },
+              ]}
+            >
+              <TextInput
+                style={[tw`flex-1`, { fontFamily: fontFamily.regular, fontSize: 14, color: colors.background }]}
+                value={password}
+                onChangeText={setPassword}
+                placeholder="비밀번호"
+                placeholderTextColor="rgba(255,255,255,0.45)"
+                secureTextEntry={!showPw}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              <TouchableOpacity onPress={() => setShowPw(p => !p)} activeOpacity={0.7}>
+                <Ionicons name={showPw ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.6)" />
+              </TouchableOpacity>
+            </View>
+
+            {error ? (
+              <Text style={[typography.caption, { color: '#FF9999', textAlign: 'center' }]}>{error}</Text>
+            ) : null}
+
+            {/* 로그인 버튼 */}
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={handleLogin}
+              disabled={isPending}
+              style={[
+                tw`h-[52px] rounded-[10px] items-center justify-center mt-[4px]`,
+                { backgroundColor: colors.secondary },
+              ]}
+            >
+              {isPending ? (
+                <ActivityIndicator color={colors.background} />
+              ) : (
+                <Text style={{ fontFamily: fontFamily.semibold, fontSize: 16, color: colors.background }}>
+                  로그인
+                </Text>
+              )}
+            </TouchableOpacity>
+
+            {/* 회원가입 링크 */}
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate('Register')}
+              style={tw`items-center mt-[4px]`}
+            >
+              <Text style={{ fontSize: 14, fontFamily: fontFamily.regular, color: 'rgba(255,255,255,0.6)' }}>
+                아직 계정이 없으신가요?{'  '}
+                <Text style={{ color: colors.background, fontFamily: fontFamily.semibold }}>회원가입</Text>
+              </Text>
+            </TouchableOpacity>
+
+            {/* 비회원 */}
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => navigation.replace('Main')}
+              style={tw`items-center mt-[4px]`}
+            >
+              <Text style={{ fontSize: 14, fontFamily: fontFamily.regular, color: 'rgba(255,255,255,0.4)' }}>
+                비회원으로 계속하기
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: '#1A1208',
-  },
-  overlay: {
-    backgroundColor: 'rgba(125, 105, 93, 0.7)',
-  },
+  root: { flex: 1, backgroundColor: '#1A1208' },
+  overlay: { backgroundColor: 'rgba(125, 105, 93, 0.7)' },
 });

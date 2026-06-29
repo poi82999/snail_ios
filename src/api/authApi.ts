@@ -93,3 +93,57 @@ export async function fetchMe(): Promise<UserMe> {
 export async function signOut(): Promise<void> {
   clearTokens();
 }
+
+type UserRegisterRequest = components['schemas']['UserRegisterRequest'];
+type UserLoginRequest = components['schemas']['UserLoginRequest'];
+type AuthResponse = { tokens: TokenPair; user: UserMe };
+
+export interface RegisterParams {
+  email: string;
+  password: string;
+  nickname: string;
+  phoneNumber?: string;
+}
+
+export async function registerUser(params: RegisterParams): Promise<UserMe> {
+  try {
+    const body: UserRegisterRequest = {
+      email: params.email,
+      password: params.password,
+      nickname: params.nickname,
+      phone_number: params.phoneNumber ?? null,
+      accepted_terms_version: '1.0',
+      accepted_privacy_version: '1.0',
+    };
+    const response = await apiClient.post<AuthResponse>('/auth/register', body);
+    setTokens({
+      access: response.data.tokens.access_token,
+      refresh: response.data.tokens.refresh_token,
+    });
+    return response.data.user;
+  } catch (error) {
+    throw toApiError(error);
+  }
+}
+
+export interface LoginParams {
+  email: string;
+  password: string;
+}
+
+export async function loginUser(params: LoginParams): Promise<UserMe> {
+  try {
+    const body: UserLoginRequest = {
+      email: params.email,
+      password: params.password,
+    };
+    const response = await apiClient.post<AuthResponse>('/auth/login', body);
+    setTokens({
+      access: response.data.tokens.access_token,
+      refresh: response.data.tokens.refresh_token,
+    });
+    return response.data.user;
+  } catch (error) {
+    throw toApiError(error);
+  }
+}
