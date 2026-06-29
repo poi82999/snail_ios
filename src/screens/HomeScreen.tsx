@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   ScrollView,
@@ -65,7 +65,15 @@ export default function HomeScreen() {
   } = useInfiniteDesigns(activeTab, filters);
   const { mutate: toggleLike } = useLikeToggle();
   const { unreadCount } = useNotifications();
-  const designMaxPrice = designs.length > 0 ? Math.max(...designs.map(d => d.price)) : undefined;
+
+  // 필터 적용 후에도 전체 데이터 기준 최대가를 유지 (한번 본 최대값은 줄어들지 않음)
+  const [peakMaxPrice, setPeakMaxPrice] = useState<number | undefined>();
+  useEffect(() => {
+    if (designs.length > 0) {
+      const cur = Math.max(...designs.map(d => d.price));
+      setPeakMaxPrice(prev => prev === undefined ? cur : Math.max(prev, cur));
+    }
+  }, [designs]);
 
   // 칩 활성 표시는 적용된 SearchFilters 값에서 파생한다.
   function chipActive(id: FilterId): boolean {
@@ -218,7 +226,7 @@ export default function HomeScreen() {
         onClose={() => setShowFilterModal(false)}
         initialSection={filterSection}
         initialFilters={filters}
-        maxPrice={designMaxPrice}
+        maxPrice={peakMaxPrice}
         onApply={(applied) => {
           setFilters(applied);
           setShowFilterModal(false);

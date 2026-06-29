@@ -114,7 +114,14 @@ export default function SearchScreen() {
   const resultShops = shopResults?.shops ?? [];
   const cardPairs = chunkIntoPairs(resultDesigns);
   const shopPairs = chunkIntoPairs(resultShops);
-  const designMaxPrice = resultDesigns.length > 0 ? Math.max(...resultDesigns.map(d => d.price)) : undefined;
+
+  const [peakMaxPrice, setPeakMaxPrice] = useState<number | undefined>();
+  useEffect(() => {
+    if (resultDesigns.length > 0) {
+      const cur = Math.max(...resultDesigns.map(d => d.price));
+      setPeakMaxPrice(prev => prev === undefined ? cur : Math.max(prev, cur));
+    }
+  }, [resultDesigns]);
 
   return (
     <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>
@@ -384,7 +391,7 @@ export default function SearchScreen() {
         onClose={() => setShowFilterModal(false)}
         initialSection={filterSection}
         initialFilters={filters}
-        maxPrice={designMaxPrice}
+        maxPrice={peakMaxPrice}
         onApply={(applied) => {
           setFilters(applied);
           setShowFilterModal(false);
