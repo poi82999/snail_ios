@@ -124,7 +124,18 @@ export default function RegisterScreen() {
           if (err.code === 'EMAIL_TAKEN') setFieldErrors(p => ({ ...p, email: msg }));
           else if (err.code === 'NICKNAME_TAKEN') setFieldErrors(p => ({ ...p, nickname: msg }));
           else if (err.code === 'INVALID_PASSWORD_POLICY') setFieldErrors(p => ({ ...p, password: msg }));
-          else setGlobalError(msg);
+          else if (err.fieldErrors) {
+            // 백엔드 VALIDATION_ERROR의 field_errors를 폼 필드에 매핑 (phone_number→phone)
+            const fe = err.fieldErrors;
+            setFieldErrors(p => ({
+              ...p,
+              ...(fe.email && { email: fe.email }),
+              ...(fe.password && { password: fe.password }),
+              ...(fe.nickname && { nickname: fe.nickname }),
+              ...(fe.phone_number && { phone: fe.phone_number }),
+            }));
+            setGlobalError('입력값을 확인해주세요.');
+          } else setGlobalError(msg);
         },
       }
     );
