@@ -41,7 +41,7 @@ export const ERROR_MESSAGES: Record<string, string> = {
   USER_NOT_FOUND: '사용자를 찾을 수 없습니다.',
   NICKNAME_TAKEN: '이미 사용 중인 닉네임입니다.',
   EMAIL_TAKEN: '이미 사용 중인 이메일입니다.',
-  INVALID_CREDENTIALS: '이메일 또는 비밀번호가 올바르지 않습니다.',
+  INVALID_CREDENTIALS: '이메일 또는 비밀번호가 일치하지 않아요.',
   INVALID_PASSWORD_POLICY: '비밀번호는 8자 이상, 대문자·소문자·숫자를 모두 포함해야 합니다.',
   UPLOAD_TOO_LARGE: '파일 크기는 최대 10MB까지 가능합니다.',
   UNSUPPORTED_MEDIA_TYPE: '지원하지 않는 파일 형식입니다.',

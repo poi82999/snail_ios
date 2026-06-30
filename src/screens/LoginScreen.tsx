@@ -42,7 +42,13 @@ export default function LoginScreen() {
       { email: email.trim(), password },
       {
         onSuccess: () => navigation.replace('Main'),
-        onError: (err) => setError(getErrorMessage(err)),
+        onError: (err) => {
+          if (err.status === 401 || err.code === 'INVALID_CREDENTIALS') {
+            setError('이메일 또는 비밀번호가 일치하지 않아요.');
+          } else {
+            setError(getErrorMessage(err));
+          }
+        },
       }
     );
   }
