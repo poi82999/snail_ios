@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, Image, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, Image, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import tw from 'twrnc';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth, useSignOut } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
 import { colors, typography } from '../theme/tokens';
 import { fontFamily } from '../theme/fonts';
@@ -56,7 +56,17 @@ function Divider() {
 export default function ProfileScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { user } = useAuth();
+  const { mutate: signOut, isPending: isSigningOut } = useSignOut();
   const { unreadCount } = useNotifications();
+
+  function handleLogout() {
+    signOut(undefined, {
+      onSettled: () => {
+        // flat stack이라 인증 분기가 없으므로 스택을 비우고 Login으로 보낸다.
+        navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+      },
+    });
+  }
   const displayName = user?.nickname ?? '사용자';
   const avatarUri = user?.profile_image_url ?? null;
   const [avatarError, setAvatarError] = useState(false);
@@ -147,6 +157,23 @@ export default function ProfileScreen() {
             ver {APP_VERSION}
           </Text>
         </View>
+
+        <Divider />
+
+        {/* 로그아웃 */}
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={handleLogout}
+          disabled={isSigningOut}
+          style={tw`flex-row items-center justify-between px-[20px] h-[48px]`}
+        >
+          <Text style={[typography.bodySm, { color: colors.secondary50 }]}>로그아웃</Text>
+          {isSigningOut ? (
+            <ActivityIndicator size="small" color={colors.secondary50} />
+          ) : (
+            <Ionicons name="log-out-outline" size={18} color={colors.secondary50} />
+          )}
+        </TouchableOpacity>
 
         <View style={tw`h-[20px]`} />
       </ScrollView>
