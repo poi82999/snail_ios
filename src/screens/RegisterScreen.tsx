@@ -105,6 +105,9 @@ export default function RegisterScreen() {
     else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(password))
       errs.password = '8자 이상, 대문자·소문자·숫자를 모두 포함해야 합니다.';
     if (!nickname.trim()) errs.nickname = '닉네임을 입력해주세요.';
+    if (!phone.trim()) errs.phone = '전화번호를 입력해주세요.';
+    else if (!/^01[016789]-?\d{3,4}-?\d{4}$/.test(phone.replace(/\s/g, '')))
+      errs.phone = '올바른 전화번호 형식이 아닙니다.';
     setFieldErrors(errs);
     return Object.keys(errs).length === 0;
   }
@@ -176,11 +179,12 @@ export default function RegisterScreen() {
               error={fieldErrors.nickname}
             />
             <Field
-              label="전화번호 (선택)"
+              label="전화번호"
               value={phone}
               onChangeText={setPhone}
               placeholder="010-0000-0000"
               keyboardType="phone-pad"
+              error={fieldErrors.phone}
             />
 
             {globalError ? (
