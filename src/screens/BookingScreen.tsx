@@ -13,6 +13,7 @@ import CalendarDayCell from '../components/CalendarDayCell';
 import DesignerOption from '../components/DesignerOption';
 import ReserveTimeBar from '../components/ReserveTimeBar';
 import Button from '../components/Button';
+import { getMaxDuration } from '../utils/duration';
 import { colors, shadows, typography } from '../theme/tokens';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Booking'>;
@@ -56,7 +57,7 @@ export default function BookingScreen({ route, navigation }: Props) {
   const extraPrice = pickedOptions.reduce((s, o) => s + o.priceDelta, 0);
   const extraDuration = pickedOptions.reduce((s, o) => s + o.durationDelta, 0);
   const totalPrice = (design?.price ?? 0) + extraPrice;
-  const totalDuration = (design?.duration ?? 0) + extraDuration;
+  const totalDuration = (design ? getMaxDuration(design) : 0) + extraDuration;
   const selectedOptionIds = pickedOptions.map((o) => o.id);
 
   const visibleSections = KIND_SECTIONS.filter((s) => grouped[s.kind].length > 0);

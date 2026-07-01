@@ -6,7 +6,12 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import tw from 'twrnc';
 import { colors, typography, shadows } from '../theme/tokens';
 import { useReservations } from '../hooks/useSchedule';
+import { useNotifications } from '../hooks/useNotifications';
+import { useAuth } from '../hooks/useAuth';
+import GuestEmptyState from '../components/GuestEmptyState';
 import { Reservation, ReservationStatus, RootStackParamList } from '../types';
+import { Ionicons } from '@expo/vector-icons';
+import Logo from '../components/Logo';
 
 const FUTURE_STATUSES: ReservationStatus[] = ['pending', 'payment_pending', 'confirmed'];
 const PAST_STATUSES: ReservationStatus[] = [
@@ -211,16 +216,42 @@ function EmptyItem({ message }: { message: string }) {
 
 // ─── 메인 화면 ────────────────────────────────────────────────────
 export default function ScheduleScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { isAuthenticated } = useAuth();
   const { data: reservations, isLoading, isError, refetch } = useReservations();
+  const { unreadCount } = useNotifications();
 
   const futureItems = (reservations ?? []).filter((r) => FUTURE_STATUSES.includes(r.status));
   const pastItems = (reservations ?? []).filter((r) => PAST_STATUSES.includes(r.status));
 
+  // 비회원: 헤더만 유지하고 로그인 유도 빈 상태
+  if (!isAuthenticated) {
+    return (
+      <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>
+        <View style={tw`flex-row items-center justify-between px-[20px] h-[54px]`}>
+          <Logo />
+        </View>
+        <GuestEmptyState message="로그인하고 예약 일정을 확인해보세요" />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>
       {/* 헤더 */}
-      <View style={tw`h-[54px] px-[20px] justify-center`}>
-        <Text style={[typography.headingLg, { color: colors.secondary }]}>일정</Text>
+      <View style={tw`flex-row items-center justify-between px-[20px] h-[54px]`}>
+        <Logo />
+        <View style={tw`flex-row items-center gap-x-[8px]`}>
+          <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Notifications')} style={tw`relative`}>
+            <Ionicons name="notifications-outline" size={28} color={colors.secondary} />
+            {unreadCount > 0 && (
+              <View style={tw`absolute top-0 right-0 w-[8px] h-[8px] rounded-full bg-[#E8604C]`} />
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity activeOpacity={0.7}>
+            <Ionicons name="heart-outline" size={28} color={colors.secondary} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {isLoading ? (

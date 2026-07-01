@@ -9,7 +9,7 @@ import { clearTokens, getAccessToken, getRefreshToken, setTokens } from './authT
 import { ApiError, toApiError } from './errors';
 import { queryClient } from './queryClient';
 import { AUTH_SESSION_QUERY_KEY } from '../auth/sessionQueryKey';
-import { openLoginGate } from '../auth/loginGate';
+import { promptLoginGate } from '../navigation/navigationRef';
 
 // 베이스 URL은 src/config/env.ts에서 플랫폼/환경별로 결정한다(재노출만).
 export { API_BASE_URL };
@@ -163,10 +163,10 @@ apiClient.interceptors.response.use(
       return apiClient(originalRequest);
     } catch (refreshError) {
       // 리프레시 실패 = 세션 만료. 토큰 정리 + 세션 캐시 무효화(useAuth가 즉시 로그아웃 반영)
-      // + 로그인 게이트 오픈으로 재로그인 유도.
+      // + 로그인 유도 화면으로 재로그인 유도.
       clearTokens();
       queryClient.setQueryData(AUTH_SESSION_QUERY_KEY, null);
-      openLoginGate();
+      promptLoginGate('세션이 만료되었어요. 다시 로그인해주세요.');
       return Promise.reject(toApiError(refreshError));
     }
   }

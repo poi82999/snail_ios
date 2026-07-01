@@ -8,6 +8,7 @@ import { getAccessToken } from '../api/authToken';
 import { fetchDesignList } from '../api/designsApi';
 import { ApiError } from '../api/errors';
 import { toggleFavorite } from '../api/favoriteApi';
+import { useRequireAuth } from './useRequireAuth';
 import { Design, FilterId, HomeTab } from '../types';
 
 interface LikeToggleVariables {
@@ -17,6 +18,7 @@ interface LikeToggleVariables {
 
 interface LikeToggleContext {
   previousDesigns: Array<[QueryKey, unknown]>;
+  previousShopDesigns: Array<[QueryKey, unknown]>;
 }
 
 async function fetchDesigns(tab: HomeTab, filters: FilterId[]): Promise<Design[]> {
@@ -79,25 +81,52 @@ export function useLikeToggle() {
     },
     onMutate: async ({ designId, isLiked }) => {
       await queryClient.cancelQueries({ queryKey: ['designs'] });
+      await queryClient.cancelQueries({ queryKey: ['shop'] });
 
       const previousDesigns = queryClient.getQueriesData({ queryKey: ['designs'] });
+      const previousShopDesigns = queryClient.getQueriesData({ queryKey: ['shop'] });
 
-      // 모든 홈/검색 디자인 캐시(단발+무한)에 같은 찜 상태를 낙관적으로 반영한다.
+      // 홈/검색 디자인 캐시 낙관적 반영
       queryClient.setQueriesData({ queryKey: ['designs'] }, (old) =>
         patchDesignsCache(old, designId, isLiked)
       );
+      // 샵 상세 디자인 캐시 낙관적 반영
+      queryClient.setQueriesData({ queryKey: ['shop'] }, (old) =>
+        patchDesignsCache(old, designId, isLiked)
+      );
 
-      return { previousDesigns };
+      return { previousDesigns, previousShopDesigns };
     },
     onError: (_error, _variables, context) => {
       context?.previousDesigns.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
+      context?.previousShopDesigns.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['designs'] });
-      // 상세 화면 좋아요 상태도 서버 기준으로 다시 맞춘다.
       queryClient.invalidateQueries({ queryKey: ['design'] });
+      queryClient.invalidateQueries({ queryKey: ['shop'] });
     },
   });
+}
+
+const LIKE_LOGIN_MESSAGE = '로그인하고 마음에 드는 디자인을 찜해보세요';
+
+/**
+ * 비회원 게이팅이 적용된 찜 토글.
+ * 로그인 상태면 실제 토글을 실행하고, 비회원이면 로그인 유도 모달을 띄운다.
+ * 호출부 시그니처는 useLikeToggle().mutate와 동일: toggleLike({ designId, isLiked }).
+ */
+export function useGuardedLikeToggle() {
+  const { mutate } = useLikeToggle();
+  const { requireAuth } = useRequireAuth();
+
+  function toggleLike(variables: LikeToggleVariables): void {
+    requireAuth(() => mutate(variables), LIKE_LOGIN_MESSAGE);
+  }
+
+  return { toggleLike };
 }
