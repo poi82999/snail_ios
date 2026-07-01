@@ -7,7 +7,8 @@ import {
 import { getAccessToken } from '../api/authToken';
 import { fetchDesignList } from '../api/designsApi';
 import { ApiError } from '../api/errors';
-import { addFavorite, removeFavorite } from '../api/favoriteApi';
+import { toggleFavorite } from '../api/favoriteApi';
+import { useRequireAuth } from './useRequireAuth';
 import { Design, FilterId, HomeTab } from '../types';
 
 interface LikeToggleVariables {
@@ -64,8 +65,7 @@ export function useLikeToggle() {
   const queryClient = useQueryClient();
 
   return useMutation<void, ApiError, LikeToggleVariables, LikeToggleContext>({
-    mutationFn: async ({ designId, isLiked }) => {
-      // 토큰이 없으면 네트워크 요청 전에 로그인 필요 상태를 화면에 전달한다.
+    mutationFn: async ({ designId }) => {
       if (!getAccessToken()) {
         throw new ApiError({
           code: 'UNAUTHORIZED',
@@ -73,13 +73,7 @@ export function useLikeToggle() {
           status: 401,
         });
       }
-
-      if (isLiked) {
-        await addFavorite(designId);
-        return;
-      }
-
-      await removeFavorite(designId);
+      await toggleFavorite(designId);
     },
     onMutate: async ({ designId, isLiked }) => {
       await queryClient.cancelQueries({ queryKey: ['designs'] });
@@ -113,4 +107,22 @@ export function useLikeToggle() {
       queryClient.invalidateQueries({ queryKey: ['shop'] });
     },
   });
+}
+
+const LIKE_LOGIN_MESSAGE = '로그인하고 마음에 드는 디자인을 찜해보세요';
+
+/**
+ * 비회원 게이팅이 적용된 찜 토글.
+ * 로그인 상태면 실제 토글을 실행하고, 비회원이면 로그인 유도 모달을 띄운다.
+ * 호출부 시그니처는 useLikeToggle().mutate와 동일: toggleLike({ designId, isLiked }).
+ */
+export function useGuardedLikeToggle() {
+  const { mutate } = useLikeToggle();
+  const { requireAuth } = useRequireAuth();
+
+  function toggleLike(variables: LikeToggleVariables): void {
+    requireAuth(() => mutate(variables), LIKE_LOGIN_MESSAGE);
+  }
+
+  return { toggleLike };
 }

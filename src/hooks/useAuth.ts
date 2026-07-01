@@ -6,7 +6,13 @@ import {
   fetchMe,
   signInWithApple,
   signOut,
+  registerUser,
+  loginUser,
+  updateMe,
   type AppleSignInParams,
+  type RegisterParams,
+  type LoginParams,
+  type UpdateMeParams,
   type UserMe,
 } from '../api/authApi';
 import { getAccessToken, loadPersistedTokens } from '../api/authToken';
@@ -76,6 +82,39 @@ export function useAuth(): AuthState {
     isAuthenticated: user !== null,
     isLoading: session.isLoading,
   };
+}
+
+export function useRegister() {
+  const queryClient = useQueryClient();
+
+  return useMutation<UserMe, ApiError, RegisterParams>({
+    mutationFn: registerUser,
+    onSuccess: (user) => {
+      queryClient.setQueryData(AUTH_SESSION_QUERY_KEY, user);
+    },
+  });
+}
+
+export function useUpdateMe() {
+  const queryClient = useQueryClient();
+
+  return useMutation<UserMe, ApiError, UpdateMeParams>({
+    mutationFn: updateMe,
+    onSuccess: (user) => {
+      queryClient.setQueryData(AUTH_SESSION_QUERY_KEY, user);
+    },
+  });
+}
+
+export function useEmailLogin() {
+  const queryClient = useQueryClient();
+
+  return useMutation<UserMe, ApiError, LoginParams>({
+    mutationFn: loginUser,
+    onSuccess: (user) => {
+      queryClient.setQueryData(AUTH_SESSION_QUERY_KEY, user);
+    },
+  });
 }
 
 // DEV 전용 자동 로그인에 쓸 시드 유저(로컬/스테이징 테스트용).

@@ -6,7 +6,8 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import tw from 'twrnc';
 import { RootStackParamList } from '../types';
 import { useShopDesigns, useShopDetail } from '../hooks/useShop';
-import { useLikeToggle } from '../hooks/useHome';
+import { useGuardedLikeToggle } from '../hooks/useHome';
+import { useRequireAuth } from '../hooks/useRequireAuth';
 import { colors, typography } from '../theme/tokens';
 import { fontFamily } from '../theme/fonts';
 import DesignCard from '../components/DesignCard';
@@ -21,7 +22,8 @@ export default function ShopDetailScreen({ route, navigation }: Props) {
   const { shopId } = route.params;
   const { data: shop, isLoading, isError, refetch } = useShopDetail(shopId);
   const { data: designs = [], isLoading: isDesignsLoading } = useShopDesigns(shopId);
-  const { mutate: toggleLike } = useLikeToggle();
+  const { toggleLike } = useGuardedLikeToggle();
+  const { requireAuth } = useRequireAuth();
   const designPairs = chunkIntoPairs(designs);
   const [isShopFavorited, setIsShopFavorited] = useState(false);
   const [shopFavoriteCount, setShopFavoriteCount] = useState<number | null>(null);
@@ -117,14 +119,14 @@ export default function ShopDetailScreen({ route, navigation }: Props) {
                   </TouchableOpacity>
                   <TouchableOpacity
                     activeOpacity={0.7}
-                    onPress={() => {
+                    onPress={() => requireAuth(() => {
                       const next = !isShopFavorited;
                       setIsShopFavorited(next);
                       setShopFavoriteCount((prev) => {
                         const base = prev ?? shop.favoriteCount;
                         return next ? base + 1 : base - 1;
                       });
-                    }}
+                    }, '로그인하고 마음에 드는 샵을 찜해보세요')}
                     style={{ alignItems: 'center', width: 32 }}
                   >
                     <Ionicons
@@ -163,7 +165,7 @@ export default function ShopDetailScreen({ route, navigation }: Props) {
               <View style={{ paddingHorizontal: 20 }}>
                 <TouchableOpacity
                   activeOpacity={0.8}
-                  onPress={() => navigation.navigate('ShopInquiry', { shopId })}
+                  onPress={() => requireAuth(() => navigation.navigate('ShopInquiry', { shopId }), '로그인하고 문의를 남겨보세요')}
                   style={{ height: 35, borderRadius: 5, backgroundColor: colors.secondary, alignItems: 'center', justifyContent: 'center' }}
                 >
                   <Text style={[typography.caption, { color: colors.background }]}>문의하기</Text>

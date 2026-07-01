@@ -1,4 +1,5 @@
 import axios, { type AxiosError } from 'axios';
+import { ERROR_MESSAGES } from './errorMessages';
 
 export interface ApiErrorBody {
   code: string;
@@ -54,9 +55,16 @@ function parseApiErrorResponse(data: unknown): ApiErrorResponse | null {
   if (!isRecord(data) || !isRecord(data.error)) return null;
 
   const code = data.error.code;
-  const message = data.error.message;
 
-  if (typeof code !== 'string' || typeof message !== 'string') return null;
+  if (typeof code !== 'string') return null;
+
+  // 백엔드가 message 없이 code만 보내는 경우가 있어(예: IDEMPOTENCY_KEY_REQUIRED,
+  // VALIDATION_ERROR), code 기준으로 메시지를 보강해 에러 코드를 잃지 않도록 한다.
+  const rawMessage = data.error.message;
+  const message =
+    typeof rawMessage === 'string' && rawMessage.trim().length > 0
+      ? rawMessage
+      : ERROR_MESSAGES[code] ?? '요청 처리 중 오류가 발생했습니다.';
 
   const fieldErrors = isFieldErrors(data.error.field_errors)
     ? data.error.field_errors

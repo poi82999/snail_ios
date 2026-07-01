@@ -40,6 +40,16 @@ export async function fetchDesignReviews(designId: string): Promise<DesignReview
   return response.data.map(mapReviewToUi);
 }
 
+type ShopReviewsResponse =
+  paths['/api/v1/shops/{shop_id}/reviews']['get']['responses'][200]['content']['application/json'];
+
+export async function fetchShopReviews(shopId: string): Promise<DesignReview[]> {
+  const response = await apiClient.get<ShopReviewsResponse>(
+    `/shops/${encodeURIComponent(shopId)}/reviews`
+  );
+  return response.data.map(mapReviewToUi);
+}
+
 export async function createReview(
   reservationId: string,
   payload: { rating: number; body: string }

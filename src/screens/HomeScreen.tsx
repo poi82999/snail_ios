@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   ScrollView,
@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import tw from 'twrnc';
-import { useLikeToggle } from '../hooks/useHome';
+import { useGuardedLikeToggle } from '../hooks/useHome';
 import { useNotifications } from '../hooks/useNotifications';
 import { useInfiniteDesigns } from '../hooks/useInfiniteDesigns';
 import { FILTER_CHIPS } from '../api/filterChips';
@@ -63,8 +63,17 @@ export default function HomeScreen() {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteDesigns(activeTab, filters);
-  const { mutate: toggleLike } = useLikeToggle();
+  const { toggleLike } = useGuardedLikeToggle();
   const { unreadCount } = useNotifications();
+
+  // 필터 적용 후에도 전체 데이터 기준 최대가를 유지 (한번 본 최대값은 줄어들지 않음)
+  const [peakMaxPrice, setPeakMaxPrice] = useState<number | undefined>();
+  useEffect(() => {
+    if (designs.length > 0) {
+      const cur = Math.max(...designs.map(d => d.price));
+      setPeakMaxPrice(prev => prev === undefined ? cur : Math.max(prev, cur));
+    }
+  }, [designs]);
 
   // 칩 활성 표시는 적용된 SearchFilters 값에서 파생한다.
   function chipActive(id: FilterId): boolean {
@@ -99,13 +108,13 @@ export default function HomeScreen() {
             onPress={() => navigation.navigate('Notifications')}
             style={tw`relative`}
           >
-            <Ionicons name="notifications-outline" size={28} color="#1A1A1A" />
+            <Ionicons name="notifications-outline" size={28} color={colors.secondary} />
             {unreadCount > 0 && (
               <View style={tw`absolute top-0 right-0 w-[8px] h-[8px] rounded-full bg-[#E8604C]`} />
             )}
           </TouchableOpacity>
-          <TouchableOpacity activeOpacity={0.7}>
-            <Ionicons name="heart" size={35} color={colors.secondary} />
+          <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Favorites')}>
+            <Ionicons name="heart-outline" size={28} color={colors.secondary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -217,6 +226,7 @@ export default function HomeScreen() {
         onClose={() => setShowFilterModal(false)}
         initialSection={filterSection}
         initialFilters={filters}
+        maxPrice={peakMaxPrice}
         onApply={(applied) => {
           setFilters(applied);
           setShowFilterModal(false);

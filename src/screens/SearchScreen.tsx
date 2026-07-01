@@ -17,7 +17,7 @@ import { FilterId, RootStackParamList, SearchFilters } from '../types';
 import { chunkIntoPairs } from '../utils/array';
 import { FILTER_CHIPS } from '../api/filterChips';
 import { useSearch, useSearchShops } from '../hooks/useSearch';
-import { useLikeToggle } from '../hooks/useHome';
+import { useGuardedLikeToggle } from '../hooks/useHome';
 import { useRecentSearches } from '../hooks/useRecentSearches';
 import FilterChip from '../components/FilterChip';
 import FilterModal from '../components/FilterModal';
@@ -56,7 +56,7 @@ export default function SearchScreen() {
     }
   }
   const { recent, add, remove, clear } = useRecentSearches();
-  const { mutate: toggleLike } = useLikeToggle();
+  const { toggleLike } = useGuardedLikeToggle();
 
   useEffect(() => {
     const timer = setTimeout(() => inputRef.current?.focus(), 100);
@@ -114,6 +114,14 @@ export default function SearchScreen() {
   const resultShops = shopResults?.shops ?? [];
   const cardPairs = chunkIntoPairs(resultDesigns);
   const shopPairs = chunkIntoPairs(resultShops);
+
+  const [peakMaxPrice, setPeakMaxPrice] = useState<number | undefined>();
+  useEffect(() => {
+    if (resultDesigns.length > 0) {
+      const cur = Math.max(...resultDesigns.map(d => d.price));
+      setPeakMaxPrice(prev => prev === undefined ? cur : Math.max(prev, cur));
+    }
+  }, [resultDesigns]);
 
   return (
     <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>
@@ -383,6 +391,7 @@ export default function SearchScreen() {
         onClose={() => setShowFilterModal(false)}
         initialSection={filterSection}
         initialFilters={filters}
+        maxPrice={peakMaxPrice}
         onApply={(applied) => {
           setFilters(applied);
           setShowFilterModal(false);

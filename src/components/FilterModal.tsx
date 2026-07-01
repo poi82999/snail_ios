@@ -3,6 +3,7 @@ import {
   Modal,
   View,
   Text,
+  TextInput,
   TouchableOpacity,
   ScrollView,
   Animated,
@@ -92,7 +93,22 @@ function fmt(price: number) {
   return rest === 0 ? `${man}만원` : `${price.toLocaleString('ko-KR')}원`;
 }
 
-function PriceRangeSlider({ onChange }: { onChange?: (min: number, max: number) => void }) {
+function formatInput(text: string): string {
+  const digits = text.replace(/[^0-9]/g, '');
+  if (!digits) return '';
+  return Number(digits).toLocaleString('ko-KR');
+}
+
+function fmtNum(price: number): string {
+  if (price <= 0) return '0';
+  if (price >= MAX_PRICE) return '100만';
+  const man = Math.floor(price / 10000);
+  const rest = price % 10000;
+  return rest === 0 ? `${man}만` : price.toLocaleString('ko-KR');
+}
+
+function PriceRangeSlider({ onChange, maxPrice = MAX_PRICE, initialMin = 0, initialMax }: { onChange?: (min: number, max: number) => void; maxPrice?: number; initialMin?: number; initialMax?: number }) {
+  const effectiveInitMax = initialMax ?? maxPrice;
   const trackW   = useRef(0);
   const leftPx   = useRef(new Animated.Value(0)).current;
   const rightPx  = useRef(new Animated.Value(280)).current;
@@ -100,13 +116,21 @@ function PriceRangeSlider({ onChange }: { onChange?: (min: number, max: number) 
   const rCur     = useRef(280);
   const lStart   = useRef(0);
   const rStart   = useRef(280);
-  const [minP, setMinP] = useState(0);
-  const [maxP, setMaxP] = useState(MAX_PRICE);
+  const [minP, setMinP] = useState(initialMin);
+  const [maxP, setMaxP] = useState(effectiveInitMax);
+  const [inputMin, setInputMin] = useState(initialMin > 0 ? initialMin.toLocaleString('ko-KR') : '');
+  const [inputMax, setInputMax] = useState(effectiveInitMax < maxPrice ? effectiveInitMax.toLocaleString('ko-KR') : '');
 
   function toPrice(px: number) {
     const span = trackW.current - HANDLE_W;
     if (span <= 0) return 0;
-    return Math.round((px / span) * MAX_PRICE / 10000) * 10000;
+    return Math.round((px / span) * maxPrice / 5000) * 5000;
+  }
+
+  function toPixel(price: number) {
+    const span = trackW.current - HANDLE_W;
+    if (span <= 0) return 0;
+    return Math.round((price / maxPrice) * span);
   }
 
   const leftPan = useRef(PanResponder.create({
@@ -114,11 +138,13 @@ function PriceRangeSlider({ onChange }: { onChange?: (min: number, max: number) 
     onMoveShouldSetPanResponder:  () => true,
     onPanResponderGrant: () => { lStart.current = lCur.current; },
     onPanResponderMove: (_, { dx }) => {
-      const next = Math.max(0, Math.min(rCur.current - MIN_GAP, lStart.current + dx));
-      leftPx.setValue(next);
-      lCur.current = next;
-      const p = toPrice(next);
+      const raw  = Math.max(0, Math.min(rCur.current - MIN_GAP, lStart.current + dx));
+      const p    = toPrice(raw);
+      const snap = toPixel(p);
+      leftPx.setValue(snap);
+      lCur.current = snap;
       setMinP(p);
+      setInputMin(p > 0 ? p.toLocaleString('ko-KR') : '');
       onChange?.(p, toPrice(rCur.current));
     },
   })).current;
@@ -129,30 +155,116 @@ function PriceRangeSlider({ onChange }: { onChange?: (min: number, max: number) 
     onPanResponderGrant: () => { rStart.current = rCur.current; },
     onPanResponderMove: (_, { dx }) => {
       const maxPx = trackW.current - HANDLE_W;
-      const next  = Math.max(lCur.current + MIN_GAP, Math.min(maxPx, rStart.current + dx));
-      rightPx.setValue(next);
-      rCur.current = next;
-      const p = toPrice(next);
+      const raw   = Math.max(lCur.current + MIN_GAP, Math.min(maxPx, rStart.current + dx));
+      const p     = toPrice(raw);
+      const snap  = toPixel(p);
+      rightPx.setValue(snap);
+      rCur.current = snap;
       setMaxP(p);
+      setInputMax(p < maxPrice ? p.toLocaleString('ko-KR') : '');
       onChange?.(toPrice(lCur.current), p);
     },
   })).current;
 
+  function applyInputMin(text: string) {
+    const raw = Number(text.replace(/,/g, '').replace(/[^0-9]/g, ''));
+    if (isNaN(raw)) return;
+    const clamped = Math.max(0, Math.min(toPrice(rCur.current) - 10000, raw));
+    const px = toPixel(clamped);
+    leftPx.setValue(px);
+    lCur.current = px;
+    setMinP(clamped);
+    onChange?.(clamped, toPrice(rCur.current));
+  }
+
+  function applyInputMax(text: string) {
+    const raw = Number(text.replace(/,/g, '').replace(/[^0-9]/g, ''));
+    if (isNaN(raw)) return;
+    const clamped = Math.min(maxPrice, Math.max(toPrice(lCur.current) + 10000, raw));
+    const px = toPixel(clamped);
+    rightPx.setValue(px);
+    rCur.current = px;
+    setMaxP(clamped);
+    onChange?.(toPrice(lCur.current), clamped);
+  }
+
   const activeLeft  = Animated.add(leftPx,  HANDLE_W / 2);
   const activeWidth = Animated.subtract(rightPx, leftPx);
 
+  const inputBoxStyle = {
+    flex: 1,
+    height: 36,
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+  };
+
+  const inputTextStyle = {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 16,
+    fontFamily: fontFamily.regular,
+    color: colors.secondary,
+    textAlign: 'right' as const,
+    padding: 0,
+    includeFontPadding: false,
+  };
+
   return (
-    <View style={{ gap: 10 }}>
+    <View style={{ gap: 12 }}>
+      {/* 직접 입력란 */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <View style={inputBoxStyle}>
+          <TextInput
+            style={inputTextStyle}
+            value={inputMin}
+            onChangeText={(t) => setInputMin(formatInput(t))}
+            onBlur={() => applyInputMin(inputMin)}
+            onSubmitEditing={() => applyInputMin(inputMin)}
+            placeholder="0"
+            placeholderTextColor={colors.secondary50}
+            keyboardType="numeric"
+            returnKeyType="done"
+          />
+          <Text style={{ fontSize: 12, lineHeight: 16, fontFamily: fontFamily.regular, color: colors.secondary, marginLeft: 6 }}>원</Text>
+        </View>
+        <Text style={{ fontSize: 12, color: colors.secondary50, fontFamily: fontFamily.regular }}>~</Text>
+        <View style={inputBoxStyle}>
+          <TextInput
+            style={inputTextStyle}
+            value={inputMax}
+            onChangeText={(t) => setInputMax(formatInput(t))}
+            onBlur={() => applyInputMax(inputMax)}
+            onSubmitEditing={() => applyInputMax(inputMax)}
+            placeholder={fmtNum(maxPrice)}
+            placeholderTextColor={colors.secondary50}
+            keyboardType="numeric"
+            returnKeyType="done"
+          />
+          <Text style={{ fontSize: 12, lineHeight: 16, fontFamily: fontFamily.regular, color: colors.secondary, marginLeft: 6 }}>원</Text>
+        </View>
+      </View>
+
+      {/* 슬라이더 */}
       <View
         style={{ height: HANDLE_H, justifyContent: 'center' }}
         onLayout={e => {
           const w = e.nativeEvent.layout.width;
           trackW.current = w;
-          const initRight = w - HANDLE_W;
+          const span = w - HANDLE_W;
+          const initLeft  = Math.round((initialMin / maxPrice) * span);
+          const initRight = Math.round((effectiveInitMax / maxPrice) * span);
+          leftPx.setValue(initLeft);
+          lCur.current   = initLeft;
+          lStart.current = initLeft;
           rightPx.setValue(initRight);
           rCur.current   = initRight;
           rStart.current = initRight;
-          setMaxP(MAX_PRICE);
+          setMinP(initialMin);
+          setMaxP(effectiveInitMax);
         }}
       >
         <View style={{ position: 'absolute', top: (HANDLE_H - TRACK_HEIGHT) / 2, left: 0, right: 0, height: TRACK_HEIGHT, backgroundColor: colors.primary10, borderRadius: 6 }} />
@@ -176,8 +288,14 @@ function PriceRangeSlider({ onChange }: { onChange?: (min: number, max: number) 
       </View>
 
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-        <Text style={{ fontSize: 12, lineHeight: 16, fontFamily: fontFamily.regular, color: colors.secondary50 }}>{fmt(minP)}</Text>
-        <Text style={{ fontSize: 12, lineHeight: 16, fontFamily: fontFamily.regular, color: colors.secondary50 }}>{fmt(maxP)}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={{ fontSize: 12, lineHeight: 16, fontFamily: fontFamily.regular, color: minP === 0 ? colors.secondary50 : colors.secondary }}>{fmtNum(minP)}</Text>
+          <Text style={{ fontSize: 12, lineHeight: 16, fontFamily: fontFamily.regular, color: colors.secondary }}>원</Text>
+        </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={{ fontSize: 12, lineHeight: 16, fontFamily: fontFamily.regular, color: maxP >= maxPrice ? colors.secondary50 : colors.secondary }}>{fmtNum(maxP)}</Text>
+          <Text style={{ fontSize: 12, lineHeight: 16, fontFamily: fontFamily.regular, color: colors.secondary }}>원</Text>
+        </View>
       </View>
     </View>
   );
@@ -259,9 +377,10 @@ interface Props {
   initialSection?: string;
   initialFilters?: SearchFilters;
   onApply?: (filters: SearchFilters) => void;
+  maxPrice?: number;
 }
 
-export default function FilterModal({ visible, onClose, initialSection, initialFilters, onApply }: Props) {
+export default function FilterModal({ visible, onClose, initialSection, initialFilters, onApply, maxPrice = MAX_PRICE }: Props) {
   const sheetHeight   = useRef(new Animated.Value(0)).current;
   const currentH      = useRef(0);
   const gestureStartH = useRef(0);
@@ -278,7 +397,7 @@ export default function FilterModal({ visible, onClose, initialSection, initialF
   const [selColor,  setSelColor]    = useState<string[]>([]);
   const [selMood,   setSelMood]     = useState<string[]>([]);
   const [durLabel,  setDurLabel]    = useState<string | null>(null);
-  const priceRef = useRef<{ min: number; max: number }>({ min: 0, max: MAX_PRICE });
+  const priceRef = useRef<{ min: number; max: number }>({ min: 0, max: maxPrice });
 
   // 열릴 때 외부 filters로 초기화
   useEffect(() => {
@@ -288,7 +407,7 @@ export default function FilterModal({ visible, onClose, initialSection, initialF
     setSelMood(initialFilters?.moods ?? []);
     priceRef.current = {
       min: initialFilters?.priceMin ?? 0,
-      max: initialFilters?.priceMax ?? MAX_PRICE,
+      max: initialFilters?.priceMax ?? maxPrice,
     };
     const matched = DURATION_OPTS.find(
       (o) => o.min === initialFilters?.durationMin && o.max === initialFilters?.durationMax
@@ -337,7 +456,7 @@ export default function FilterModal({ visible, onClose, initialSection, initialF
       durationMin: dur?.min,
       durationMax: dur?.max,
       priceMin: min > 0 ? min : undefined,
-      priceMax: max < MAX_PRICE ? max : undefined,
+      priceMax: max < maxPrice ? max : undefined,
     };
   }
 
@@ -449,7 +568,12 @@ export default function FilterModal({ visible, onClose, initialSection, initialF
               onLayout={e => { sectionY.current['price'] = e.nativeEvent.layout.y; }}
             >
               <SectionTitle>가격</SectionTitle>
-              <PriceRangeSlider onChange={(min, max) => { priceRef.current = { min, max }; }} />
+              <PriceRangeSlider
+                onChange={(min, max) => { priceRef.current = { min, max }; }}
+                maxPrice={maxPrice}
+                initialMin={initialFilters?.priceMin ?? 0}
+                initialMax={initialFilters?.priceMax ?? maxPrice}
+              />
             </View>
             <Divider />
             <View
