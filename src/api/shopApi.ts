@@ -1,13 +1,15 @@
 import apiClient from './client';
-import { isDesignPublic, mapDesignToUi } from './designsApi';
+import { mapDesignToUi } from './designsApi';
 import type { Design, Shop } from '../types';
 import type { components, paths } from '../types/api';
 
 type ShopDetailResponse =
   paths['/api/v1/shops/{shop_id}']['get']['responses'][200]['content']['application/json'];
-type DesignsQuery = NonNullable<paths['/api/v1/designs']['get']['parameters']['query']>;
-type DesignsResponse =
-  paths['/api/v1/designs']['get']['responses'][200]['content']['application/json'];
+type ShopDesignsQuery = NonNullable<
+  paths['/api/v1/shops/{shop_id}/designs']['get']['parameters']['query']
+>;
+type ShopDesignsResponse =
+  paths['/api/v1/shops/{shop_id}/designs']['get']['responses'][200]['content']['application/json'];
 type ShopPublic = components['schemas']['ShopPublic'];
 
 const SHOP_DESIGN_LIST_LIMIT = 50;
@@ -54,14 +56,12 @@ export async function fetchShopDetail(shopId: string): Promise<Shop> {
   return mapShopToUi(response.data);
 }
 
-// 샵 단위 디자인 목록 전용 엔드포인트가 아직 없어, 검색 결과를 shop.id로 클라이언트에서 필터링한다.
-// TODO(백엔드): GET /shops/{shop_id}/designs 추가되면 이 필터링을 제거하고 교체.
 export async function fetchShopDesigns(shopId: string): Promise<Design[]> {
-  const params: DesignsQuery = { sort: 'latest', limit: SHOP_DESIGN_LIST_LIMIT };
-  const response = await apiClient.get<DesignsResponse>('/designs', { params });
+  const params: ShopDesignsQuery = { sort: 'latest', limit: SHOP_DESIGN_LIST_LIMIT };
+  const response = await apiClient.get<ShopDesignsResponse>(
+    `/shops/${encodeURIComponent(shopId)}/designs`,
+    { params }
+  );
 
-  return response.data.items
-    .filter(isDesignPublic)
-    .filter((item) => item.shop.id === shopId)
-    .map((item) => mapDesignToUi(item, '추천'));
+  return response.data.items.map((item) => mapDesignToUi(item, '추천'));
 }
