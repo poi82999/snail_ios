@@ -8,6 +8,7 @@ import { getAccessToken } from '../api/authToken';
 import { fetchDesignList } from '../api/designsApi';
 import { ApiError } from '../api/errors';
 import { toggleFavorite } from '../api/favoriteApi';
+import { useRequireAuth } from './useRequireAuth';
 import { Design, FilterId, HomeTab } from '../types';
 
 interface LikeToggleVariables {
@@ -106,4 +107,22 @@ export function useLikeToggle() {
       queryClient.invalidateQueries({ queryKey: ['shop'] });
     },
   });
+}
+
+const LIKE_LOGIN_MESSAGE = '로그인하고 마음에 드는 디자인을 찜해보세요';
+
+/**
+ * 비회원 게이팅이 적용된 찜 토글.
+ * 로그인 상태면 실제 토글을 실행하고, 비회원이면 로그인 유도 모달을 띄운다.
+ * 호출부 시그니처는 useLikeToggle().mutate와 동일: toggleLike({ designId, isLiked }).
+ */
+export function useGuardedLikeToggle() {
+  const { mutate } = useLikeToggle();
+  const { requireAuth } = useRequireAuth();
+
+  function toggleLike(variables: LikeToggleVariables): void {
+    requireAuth(() => mutate(variables), LIKE_LOGIN_MESSAGE);
+  }
+
+  return { toggleLike };
 }
