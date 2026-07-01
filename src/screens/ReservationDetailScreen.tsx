@@ -173,7 +173,14 @@ export default function ReservationDetailScreen({ route, navigation }: Props) {
           </View>
           <View style={tw`flex-row gap-x-[10px]`}>
             <TouchableOpacity
-              onPress={() => shop?.address && Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shop.address)}`)}
+              onPress={() => {
+                if (!shop?.address) return;
+                const query = encodeURIComponent(shop.address);
+                // 네이버지도 앱 우선, 미설치 시 웹으로 폴백
+                const appUrl = `nmap://search?query=${query}&appname=com.snail.app`;
+                const webUrl = `https://map.naver.com/v5/search/${query}`;
+                Linking.openURL(appUrl).catch(() => Linking.openURL(webUrl));
+              }}
               activeOpacity={0.7}
               style={[tw`flex-1 h-[35px] rounded-[5px] items-center justify-center`, { borderWidth: 1, borderColor: colors.secondary }]}
             >
