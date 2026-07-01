@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
+import { isRunningInExpoGo } from 'expo';
 import { useMutation } from '@tanstack/react-query';
-import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 
 import { registerDeviceToken, type DevicePlatform } from '../api/pushTokenApi';
@@ -9,8 +9,17 @@ import type { ApiError } from '../api/errors';
 import { useAuth } from './useAuth';
 
 async function acquireDevicePushToken(): Promise<{ token: string; platform: DevicePlatform } | null> {
+  // Expo Go(SDK 53+)에서는 원격 푸시가 expo-notifications에서 제거되어, 모듈을 import(require)하는 것만으로
+  // Android에서 throw한다(내부 DevicePushTokenAutoRegistration.fx 사이드이펙트가 addPushTokenListener 호출).
+  // 따라서 Expo Go에서는 아예 로드하지 않고 조용히 건너뛴다(토큰 발급·등록은 개발/프로덕션 빌드에서만 동작).
+  if (isRunningInExpoGo()) return null;
+
   // 실기기에서만 동작 — 시뮬레이터/에뮬레이터는 토큰 발급 불가
   if (!Device.isDevice) return null;
+
+  // 위 가드를 통과한 환경(개발/프로덕션 빌드)에서만 지연 로드한다. 정적 import는 Expo Go 크래시를 유발한다.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- 지연 로드가 목적(정적 import 금지)
+  const Notifications = require('expo-notifications') as typeof import('expo-notifications');
 
   const existing = await Notifications.getPermissionsAsync();
   let granted = existing.granted;
