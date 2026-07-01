@@ -5,7 +5,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import PlaceholderScreen from '../screens/PlaceholderScreen';
 import SnailScreen from '../screens/SnailScreen';
 import ScheduleScreen from '../screens/ScheduleScreen';
-import TabBarIcon, { TAB_ICON_SIZE } from '../components/TabBarIcon';
+import TabBarIcon from '../components/TabBarIcon';
 
 export type TabParamList = {
   홈: undefined;

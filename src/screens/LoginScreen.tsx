@@ -7,7 +7,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -54,8 +53,9 @@ export default function LoginScreen() {
   }
 
   return (
-    <View style={styles.root}>
-      <View style={[StyleSheet.absoluteFill, styles.overlay]} />
+    <View style={tw`flex-1 bg-[#1A1208]`}>
+      {/* 어두운 브라운 베이스 위 세미 투명 오버레이 */}
+      <View style={[tw`absolute inset-0`, { backgroundColor: 'rgba(125, 105, 93, 0.7)' }]} />
 
       <SafeAreaView style={tw`flex-1`} edges={['top', 'bottom']}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={tw`flex-1`}>
@@ -158,8 +158,3 @@ export default function LoginScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#1A1208' },
-  overlay: { backgroundColor: 'rgba(125, 105, 93, 0.7)' },
-});

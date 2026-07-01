@@ -1,4 +1,6 @@
-import axios, {
+import {
+  create,
+  isAxiosError,
   type AxiosInstance,
   type AxiosResponse,
   type InternalAxiosRequestConfig,
@@ -38,11 +40,11 @@ type RefreshTokenResponse = BackendTokenPair | WrappedTokenPairResponse;
 
 let refreshPromise: Promise<BackendTokenPair> | null = null;
 
-export const apiClient: AxiosInstance = axios.create({
+const apiClient: AxiosInstance = create({
   baseURL: API_BASE_URL,
 });
 
-const refreshClient: AxiosInstance = axios.create({
+const refreshClient: AxiosInstance = create({
   baseURL: API_BASE_URL,
 });
 
@@ -141,7 +143,7 @@ apiClient.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error: unknown) => {
     const apiError = toApiError(error);
-    const originalRequest = axios.isAxiosError(error)
+    const originalRequest = isAxiosError(error)
       ? (error.config as RetryableRequestConfig | undefined)
       : undefined;
 

@@ -1,9 +1,8 @@
 import apiClient from './client';
-import type { components, paths } from '../types/api';
+import type { components } from '../types/api';
 
 type NotificationListResponse = components['schemas']['UserNotificationListResponse'];
 type NotificationPublic = components['schemas']['UserNotificationPublic'];
-type MarkReadOperation = paths['/api/v1/me/notifications/{notification_id}/read']['post'];
 
 export type { NotificationPublic };
 

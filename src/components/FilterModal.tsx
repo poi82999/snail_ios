@@ -85,14 +85,6 @@ const HANDLE_W     = 30.124;
 const HANDLE_H     = 18;
 const MIN_GAP      = HANDLE_W + 8;
 
-function fmt(price: number) {
-  if (price <= 0) return '0원';
-  if (price >= MAX_PRICE) return '100만원';
-  const man = Math.floor(price / 10000);
-  const rest = price % 10000;
-  return rest === 0 ? `${man}만원` : `${price.toLocaleString('ko-KR')}원`;
-}
-
 function formatInput(text: string): string {
   const digits = text.replace(/[^0-9]/g, '');
   if (!digits) return '';
@@ -326,7 +318,8 @@ function CalendarSection() {
     const k = `${year}-${month}-${c.day}`;
     setSelected(prev => {
       const next = new Set(prev);
-      next.has(k) ? next.delete(k) : next.add(k);
+      if (next.has(k)) next.delete(k);
+      else next.add(k);
       return next;
     });
   }

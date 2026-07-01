@@ -17,8 +17,8 @@ interface LikeToggleVariables {
 }
 
 interface LikeToggleContext {
-  previousDesigns: Array<[QueryKey, unknown]>;
-  previousShopDesigns: Array<[QueryKey, unknown]>;
+  previousDesigns: [QueryKey, unknown][];
+  previousShopDesigns: [QueryKey, unknown][];
 }
 
 async function fetchDesigns(tab: HomeTab, filters: FilterId[]): Promise<Design[]> {

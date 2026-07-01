@@ -1,4 +1,4 @@
-import axios, { type AxiosError } from 'axios';
+import { isAxiosError, type AxiosError } from 'axios';
 import { ERROR_MESSAGES } from './errorMessages';
 
 export interface ApiErrorBody {
@@ -107,7 +107,7 @@ function fromAxiosError(error: AxiosError<unknown>): ApiError {
 export function toApiError(error: unknown): ApiError {
   if (error instanceof ApiError) return error;
 
-  if (axios.isAxiosError<unknown>(error)) {
+  if (isAxiosError<unknown>(error)) {
     return fromAxiosError(error);
   }
 
