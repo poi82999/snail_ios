@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, Image, TouchableOpacity, ScrollView,
-  FlatList, ActivityIndicator, Share, TextInput, KeyboardAvoidingView, Platform,
+  FlatList, Share, TextInput, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +20,8 @@ import ReviewCard from '../components/ReviewCard';
 import Button from '../components/Button';
 import { chunkIntoPairs } from '../utils/array';
 import ReportModal from '../components/ReportModal';
+import LoadingState from '../components/state/LoadingState';
+import ErrorState from '../components/state/ErrorState';
 import { useCreateShopInquiry } from '../hooks/useShopInquiry';
 import { getMaxDuration } from '../utils/duration';
 
@@ -66,21 +68,16 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={tw`flex-1 bg-white items-center justify-center`} edges={['top']}>
-        <ActivityIndicator color={colors.secondary} />
+      <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>
+        <LoadingState />
       </SafeAreaView>
     );
   }
 
   if (isError || !design) {
     return (
-      <SafeAreaView style={tw`flex-1 bg-white items-center justify-center`} edges={['top']}>
-        <Text style={[typography.bodySm, { color: colors.secondary50, marginBottom: 12 }]}>
-          불러오기에 실패했어요
-        </Text>
-        <TouchableOpacity onPress={() => refetch()} style={tw`px-[20px] py-[10px] rounded-[8px]`} activeOpacity={0.7}>
-          <Text style={[typography.bodySm, { color: colors.secondary }]}>다시 시도</Text>
-        </TouchableOpacity>
+      <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>
+        <ErrorState onRetry={() => refetch()} />
       </SafeAreaView>
     );
   }

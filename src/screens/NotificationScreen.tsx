@@ -15,6 +15,7 @@ import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead 
 import { useAuth } from '../hooks/useAuth';
 import GuestEmptyState from '../components/GuestEmptyState';
 import type { NotificationPublic } from '../api/notificationApi';
+import { navigateToNotificationTarget } from '../navigation/notificationRouting';
 import type { RootStackParamList } from '../types';
 import { colors } from '../theme/tokens';
 import { fontFamily } from '../theme/fonts';
@@ -30,17 +31,6 @@ function relativeTime(iso: string): string {
   if (hr < 24) return `${hr}시간 전`;
   const day = Math.floor(hr / 24);
   return `${day}일 전`;
-}
-
-function useNotificationNavigation() {
-  const navigation = useNavigation<Nav>();
-
-  return (item: NotificationPublic) => {
-    if (item.resource_type === 'reservation' && item.resource_id) {
-      navigation.navigate('ReservationDetail', { reservationId: item.resource_id });
-    }
-    // inquiry 알림은 아직 화면 미구현 — 탭 시 아무 동작 없음
-  };
 }
 
 function NotificationItem({
@@ -91,7 +81,6 @@ function EmptyState() {
 
 export default function NotificationScreen() {
   const navigation = useNavigation<Nav>();
-  const navigate = useNotificationNavigation();
   const { isAuthenticated } = useAuth();
   const { mutate: markRead } = useMarkNotificationRead();
   const { mutate: markAll } = useMarkAllNotificationsRead();
@@ -111,7 +100,8 @@ export default function NotificationScreen() {
     if (!item.read_at) {
       markRead(item.id);
     }
-    navigate(item);
+    // 푸시 진입과 동일한 단일 라우팅 규약 사용(reservation/design/shop/snap/snail).
+    navigateToNotificationTarget(item);
   }
 
   // 비회원: 헤더만 유지하고 로그인 유도 빈 상태

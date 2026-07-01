@@ -14,6 +14,8 @@ import DesignCard from '../components/DesignCard';
 import AvatarPlaceholder from '../components/AvatarPlaceholder';
 import TabBarIcon from '../components/TabBarIcon';
 import { chunkIntoPairs } from '../utils/array';
+import LoadingState from '../components/state/LoadingState';
+import ErrorState from '../components/state/ErrorState';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ShopDetail'>;
 
@@ -30,25 +32,16 @@ export default function ShopDetailScreen({ route, navigation }: Props) {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={tw`flex-1 bg-white items-center justify-center`} edges={['top']}>
-        <ActivityIndicator color={colors.secondary} />
+      <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>
+        <LoadingState />
       </SafeAreaView>
     );
   }
 
   if (isError || !shop) {
     return (
-      <SafeAreaView style={tw`flex-1 bg-white items-center justify-center`} edges={['top']}>
-        <Text style={[typography.bodySm, { color: colors.secondary50, marginBottom: 12 }]}>
-          불러오기에 실패했어요
-        </Text>
-        <TouchableOpacity
-          onPress={() => refetch()}
-          activeOpacity={0.7}
-          style={[tw`px-[20px] h-[42px] rounded-[5px] items-center justify-center`, { backgroundColor: colors.secondary }]}
-        >
-          <Text style={[typography.bodySm, { color: colors.background }]}>다시 시도</Text>
-        </TouchableOpacity>
+      <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>
+        <ErrorState onRetry={() => refetch()} />
       </SafeAreaView>
     );
   }

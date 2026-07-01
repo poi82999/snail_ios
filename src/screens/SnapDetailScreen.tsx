@@ -29,6 +29,8 @@ import {
   useToggleSnapSave,
 } from '../hooks/useSnail';
 import { getErrorMessage } from '../api/errors';
+import LoadingState from '../components/state/LoadingState';
+import ErrorState from '../components/state/ErrorState';
 import { colors, shadows } from '../theme/tokens';
 import FollowButton from '../components/FollowButton';
 import ReportModal from '../components/ReportModal';
@@ -110,23 +112,16 @@ export default function SnapDetailScreen({ route, navigation }: Props) {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={tw`flex-1 bg-white items-center justify-center`} edges={['top']}>
-        <ActivityIndicator color={colors.secondary} />
+      <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>
+        <LoadingState />
       </SafeAreaView>
     );
   }
 
   if (isError || !snap) {
     return (
-      <SafeAreaView style={tw`flex-1 bg-white items-center justify-center`} edges={['top']}>
-        <Text style={{ color: colors.secondary50, fontSize: 14 }}>불러오기에 실패했어요</Text>
-        <TouchableOpacity
-          onPress={() => refetch()}
-          style={tw`mt-[12px] px-[20px] py-[10px] rounded-[8px]`}
-          activeOpacity={0.7}
-        >
-          <Text style={{ color: colors.secondary, fontSize: 14 }}>다시 시도</Text>
-        </TouchableOpacity>
+      <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>
+        <ErrorState onRetry={() => refetch()} />
       </SafeAreaView>
     );
   }

@@ -17,8 +17,7 @@ import {
 } from '../api/authApi';
 import { getAccessToken, loadPersistedTokens } from '../api/authToken';
 import type { ApiError } from '../api/errors';
-
-const AUTH_SESSION_QUERY_KEY = ['auth', 'session'] as const;
+import { AUTH_SESSION_QUERY_KEY } from '../auth/sessionQueryKey';
 
 let authBootstrapPromise: Promise<boolean> | null = null;
 

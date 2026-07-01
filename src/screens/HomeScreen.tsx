@@ -18,6 +18,8 @@ import { useInfiniteDesigns } from '../hooks/useInfiniteDesigns';
 import { FILTER_CHIPS } from '../api/filterChips';
 import { FilterId, HomeTab, RootStackParamList, SearchFilters } from '../types';
 import { chunkIntoPairs } from '../utils/array';
+import ErrorState from '../components/state/ErrorState';
+import EmptyState from '../components/state/EmptyState';
 import FilterChip from '../components/FilterChip';
 import HomeTabSelector from '../components/HomeTabSelector';
 import DesignCard from '../components/DesignCard';
@@ -33,16 +35,6 @@ function SkeletonCard() {
         <View style={tw`h-[12px] w-[80px] bg-[#D9D9D9] rounded-[4px]`} />
         <View style={tw`h-[18px] w-[100px] bg-[#D9D9D9] rounded-[4px]`} />
       </View>
-    </View>
-  );
-}
-
-function EmptyState() {
-  return (
-    <View style={tw`flex-1 items-center justify-center py-[60px]`}>
-      <Ionicons name="search-outline" size={48} color="#D9D9D9" />
-      <Text style={tw`mt-[16px] text-[14px] text-[#6F6F6F]`}>디자인이 없어요</Text>
-      <Text style={tw`mt-[4px] text-[12px] text-[#D9D9D9]`}>다른 탭을 선택해보세요</Text>
     </View>
   );
 }
@@ -171,18 +163,13 @@ export default function HomeScreen() {
           ))}
         </ScrollView>
       ) : isError ? (
-        <View style={tw`flex-1 items-center justify-center`}>
-          <Text style={tw`text-[14px] text-[#6F6F6F] mb-[12px]`}>불러오기에 실패했어요</Text>
-          <TouchableOpacity
-            onPress={() => refetch()}
-            activeOpacity={0.7}
-            style={tw`px-[20px] py-[10px] rounded-[8px] bg-[#1A1A1A]`}
-          >
-            <Text style={tw`text-white text-[14px]`}>다시 시도</Text>
-          </TouchableOpacity>
-        </View>
+        <ErrorState onRetry={() => refetch()} />
       ) : designs.length === 0 ? (
-        <EmptyState />
+        <EmptyState
+          icon="search-outline"
+          title="디자인이 없어요"
+          description="다른 탭을 선택해보세요"
+        />
       ) : (
         <FlatList
           data={cardPairs}

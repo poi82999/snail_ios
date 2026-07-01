@@ -13,6 +13,8 @@ OUT="src/types/api.ts"
 [ -f "$SRC" ] || { echo "OpenAPI 스펙이 없습니다: $SRC (scripts/sync-backend-docs로 먼저 동기화)" >&2; exit 1; }
 
 echo ">> $SRC → $OUT 생성 중..."
-npx --yes openapi-typescript "$SRC" -o "$OUT"
+# 버전을 고정해 호출 — 계약 drift 게이트가 결정론적이 되도록.
+# (로컬 devDep으로는 못 넣음: openapi-typescript 7.x는 typescript ^5 peer 요구, 본 프로젝트는 ts 6)
+npx --yes openapi-typescript@7.13.0 "$SRC" -o "$OUT"
 echo ">> 완료. 타입 검증:"
 npx tsc --noEmit && echo "✓ tsc 통과"

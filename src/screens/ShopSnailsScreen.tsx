@@ -6,7 +6,10 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import tw from 'twrnc';
 import { RootStackParamList, Snap } from '../types';
 import { useShopSnails } from '../hooks/useSnail';
-import { colors, typography } from '../theme/tokens';
+import { colors } from '../theme/tokens';
+import LoadingState from '../components/state/LoadingState';
+import ErrorState from '../components/state/ErrorState';
+import EmptyState from '../components/state/EmptyState';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ShopSnails'>;
 
@@ -37,20 +40,11 @@ export default function ShopSnailsScreen({ route, navigation }: Props) {
       </View>
 
       {isLoading ? (
-        <View style={tw`flex-1 items-center justify-center`}>
-          <ActivityIndicator color={colors.secondary} />
-        </View>
+        <LoadingState />
       ) : isError ? (
-        <View style={tw`flex-1 items-center justify-center gap-y-[12px]`}>
-          <Text style={[typography.bodySm, { color: colors.secondary50 }]}>불러오기에 실패했어요</Text>
-          <TouchableOpacity onPress={() => refetch()} style={tw`px-[20px] py-[10px] rounded-[8px]`} activeOpacity={0.7}>
-            <Text style={[typography.bodySm, { color: colors.secondary }]}>다시 시도</Text>
-          </TouchableOpacity>
-        </View>
+        <ErrorState onRetry={() => refetch()} />
       ) : snaps.length === 0 ? (
-        <View style={tw`flex-1 items-center justify-center`}>
-          <Text style={[typography.bodySm, { color: colors.secondary50 }]}>아직 등록된 스네일이 없어요</Text>
-        </View>
+        <EmptyState title="아직 등록된 스네일이 없어요" />
       ) : (
         <FlatList
           data={snaps}

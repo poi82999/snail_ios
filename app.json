@@ -3,6 +3,7 @@
     "name": "snail-app",
     "slug": "snail-app",
     "version": "1.0.0",
+    "scheme": "snail",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -16,7 +17,10 @@
           "color": "#7D695D",
           "enableBackgroundRemoteNotifications": false
         }
-      ]
+      ],
+      "expo-splash-screen",
+      "expo-asset",
+      "@sentry/react-native"
     ],
     "ios": {
       "supportsTablet": true,

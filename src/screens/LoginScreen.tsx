@@ -15,9 +15,10 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import tw from 'twrnc';
 import Logo from '../components/Logo';
+import Button from '../components/Button';
 import { colors, typography } from '../theme/tokens';
 import { fontFamily } from '../theme/fonts';
-import { useEmailLogin } from '../hooks/useAuth';
+import { useEmailLogin, useDevLogin } from '../hooks/useAuth';
 import { getErrorMessage } from '../api/errorMessages';
 import type { RootStackParamList } from '../types';
 
@@ -25,23 +26,28 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 export default function LoginScreen() {
   const navigation = useNavigation<Nav>();
-  const { mutate: login, isPending } = useEmailLogin();
+  const { mutate: emailLogin, isPending: isEmailPending } = useEmailLogin();
+  const { mutate: devLogin, isPending: isDevPending } = useDevLogin();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState('');
 
-  function handleLogin() {
+  function goToMain() {
+    navigation.replace('Main');
+  }
+
+  function handleEmailLogin() {
     if (!email.trim() || !password) {
       setError('이메일과 비밀번호를 입력해주세요.');
       return;
     }
     setError('');
-    login(
+    emailLogin(
       { email: email.trim(), password },
       {
-        onSuccess: () => navigation.replace('Main'),
+        onSuccess: goToMain,
         onError: (err) => {
           if (err.status === 401 || err.code === 'INVALID_CREDENTIALS') {
             setError('이메일 또는 비밀번호가 일치하지 않아요.');
@@ -51,6 +57,16 @@ export default function LoginScreen() {
         },
       }
     );
+  }
+
+  // 운영 Google/Apple OAuth는 provider 자격증명 + 네이티브 모듈 도입 후 연결한다.
+  // 그 전까지는 백엔드 dev-login으로 실제 토큰을 발급받아 인증을 완성한다.
+  function handleGoogleLogin() {
+    setError('');
+    devLogin(undefined, {
+      onSuccess: goToMain,
+      onError: (err) => setError(getErrorMessage(err)),
+    });
   }
 
   return (
@@ -111,17 +127,17 @@ export default function LoginScreen() {
               <Text style={[typography.caption, { color: '#FF9999', textAlign: 'center' }]}>{error}</Text>
             ) : null}
 
-            {/* 로그인 버튼 */}
+            {/* 이메일 로그인 버튼 */}
             <TouchableOpacity
               activeOpacity={0.85}
-              onPress={handleLogin}
-              disabled={isPending}
+              onPress={handleEmailLogin}
+              disabled={isEmailPending}
               style={[
                 tw`h-[52px] rounded-[10px] items-center justify-center mt-[4px]`,
                 { backgroundColor: colors.secondary },
               ]}
             >
-              {isPending ? (
+              {isEmailPending ? (
                 <ActivityIndicator color={colors.background} />
               ) : (
                 <Text style={{ fontFamily: fontFamily.semibold, fontSize: 16, color: colors.background }}>
@@ -129,6 +145,14 @@ export default function LoginScreen() {
                 </Text>
               )}
             </TouchableOpacity>
+
+            {/* Google 로그인 (임시: 백엔드 dev-login) */}
+            <Button
+              label={isDevPending ? '로그인 중…' : 'Google 계정으로 로그인'}
+              onPress={handleGoogleLogin}
+              disabled={isDevPending}
+              style={{ backgroundColor: colors.primary }}
+            />
 
             {/* 회원가입 링크 */}
             <TouchableOpacity
@@ -145,7 +169,7 @@ export default function LoginScreen() {
             {/* 비회원 */}
             <TouchableOpacity
               activeOpacity={0.7}
-              onPress={() => navigation.replace('Main')}
+              onPress={goToMain}
               style={tw`items-center mt-[4px]`}
             >
               <Text style={{ fontSize: 14, fontFamily: fontFamily.regular, color: 'rgba(255,255,255,0.4)' }}>

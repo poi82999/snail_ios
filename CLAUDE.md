@@ -18,10 +18,13 @@ npm run ios
 npm run web
 
 # Type check
-npx tsc --noEmit
+npm run typecheck   # tsc --noEmit
 
-# Lint
-npx eslint . --fix
+# Lint (eslint-config-expo, flat config — CI 게이트)
+npm run lint        # 검사. 자동수정: npm run lint:fix
+
+# Format (Prettier)
+npm run format      # 검사. 적용: npm run format:write
 ```
 
 ## Stack

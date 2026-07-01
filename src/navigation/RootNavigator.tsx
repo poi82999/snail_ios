@@ -14,7 +14,6 @@ import ReviewWriteScreen from '../screens/ReviewWriteScreen';
 import NotificationScreen from '../screens/NotificationScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
-import LoginPromptScreen from '../screens/LoginPromptScreen';
 import InquiryScreen from '../screens/InquiryScreen';
 import CouponScreen from '../screens/CouponScreen';
 import RelatedDesignsScreen from '../screens/RelatedDesignsScreen';
@@ -33,11 +32,6 @@ export default function RootNavigator() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} options={{ animation: 'slide_from_right' }} />
-      <Stack.Screen
-        name="LoginPrompt"
-        component={LoginPromptScreen}
-        options={{ presentation: 'transparentModal', animation: 'slide_from_bottom' }}
-      />
       <Stack.Screen name="Main" component={TabNavigator} />
       <Stack.Screen name="Search" component={SearchScreen} options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="DesignDetail" component={DesignDetailScreen} options={{ animation: 'slide_from_right' }} />
