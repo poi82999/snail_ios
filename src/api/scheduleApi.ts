@@ -1,5 +1,5 @@
 import { Reservation, ReservationDetail } from '../types';
-import { apiClient } from './client';
+import apiClient from './client';
 import type { components, paths } from '../types/api';
 
 type ReservationsResponse =

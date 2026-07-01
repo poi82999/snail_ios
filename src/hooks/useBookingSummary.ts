@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useDesignDetail } from './useDesignDetail';
+import { getMaxDuration } from '../utils/duration';
 import type { DesignDetail, DesignOption } from '../types';
 
 export interface BookingSummary {
@@ -32,7 +33,7 @@ export function useBookingSummary(designId: string, selectedOptionIds: string[])
       extraPrice,
       extraDuration,
       totalPrice: (design?.price ?? 0) + extraPrice,
-      totalDuration: (design?.duration ?? 0) + extraDuration,
+      totalDuration: (design ? getMaxDuration(design) : 0) + extraDuration,
     };
     // selectedOptionIds는 key로 안정 비교
     // eslint-disable-next-line react-hooks/exhaustive-deps

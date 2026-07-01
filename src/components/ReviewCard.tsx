@@ -14,19 +14,19 @@ interface ReviewCardProps {
   date: string;
   comment: string;
   onReport?: () => void;
+  shadow?: boolean;
 }
 
-export default function ReviewCard({ username, rating, date, comment, onReport }: ReviewCardProps) {
+export default function ReviewCard({ username, rating, date, comment, onReport, shadow = true }: ReviewCardProps) {
   return (
     <View
       style={[
         tw`bg-white rounded-[10px] px-[20px] pt-[20px] pb-[28px] gap-y-[16px] w-full`,
-        {
+        shadow && {
           shadowColor: '#000',
           shadowOffset: { width: 0, height: 0 },
           shadowOpacity: 0.1,
           shadowRadius: 3,
-          // Android elevation은 Figma의 옅은 블러와 렌더링 모델이 달라 과해 보임 — 생략
           elevation: 0,
         },
       ]}

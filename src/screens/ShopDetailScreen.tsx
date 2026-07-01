@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ActivityIndicator, FlatList, Image, Linking, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,7 +6,8 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import tw from 'twrnc';
 import { RootStackParamList } from '../types';
 import { useShopDesigns, useShopDetail } from '../hooks/useShop';
-import { useLikeToggle } from '../hooks/useHome';
+import { useGuardedLikeToggle } from '../hooks/useHome';
+import { useRequireAuth } from '../hooks/useRequireAuth';
 import { colors, typography } from '../theme/tokens';
 import { fontFamily } from '../theme/fonts';
 import DesignCard from '../components/DesignCard';
@@ -23,8 +24,11 @@ export default function ShopDetailScreen({ route, navigation }: Props) {
   const { shopId } = route.params;
   const { data: shop, isLoading, isError, refetch } = useShopDetail(shopId);
   const { data: designs = [], isLoading: isDesignsLoading } = useShopDesigns(shopId);
-  const { mutate: toggleLike } = useLikeToggle();
+  const { toggleLike } = useGuardedLikeToggle();
+  const { requireAuth } = useRequireAuth();
   const designPairs = chunkIntoPairs(designs);
+  const [isShopFavorited, setIsShopFavorited] = useState(false);
+  const [shopFavoriteCount, setShopFavoriteCount] = useState<number | null>(null);
 
   if (isLoading) {
     return (
@@ -87,10 +91,14 @@ export default function ShopDetailScreen({ route, navigation }: Props) {
                         <Ionicons name="star" size={16} color={colors.secondary} />
                         <Text style={[typography.bodySm, { color: colors.secondary }]}>{shop.rating.toFixed(1)}</Text>
                       </View>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <TouchableOpacity
+                        onPress={() => navigation.navigate('ShopReviews', { shopId })}
+                        activeOpacity={0.7}
+                        style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
+                      >
                         <Text style={[typography.bodySm, { color: colors.secondary }]}>리뷰 {shop.reviewCount}개</Text>
                         <Ionicons name="chevron-forward" size={10} color={colors.secondary} />
-                      </View>
+                      </TouchableOpacity>
                     </View>
                   </View>
                 </View>
@@ -102,12 +110,27 @@ export default function ShopDetailScreen({ route, navigation }: Props) {
                   >
                     <TabBarIcon name="스네일" color={colors.secondary} />
                   </TouchableOpacity>
-                  <View style={{ alignItems: 'center', width: 32 }}>
-                    <Ionicons name="heart-outline" size={35} color={colors.secondary} />
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => requireAuth(() => {
+                      const next = !isShopFavorited;
+                      setIsShopFavorited(next);
+                      setShopFavoriteCount((prev) => {
+                        const base = prev ?? shop.favoriteCount;
+                        return next ? base + 1 : base - 1;
+                      });
+                    }, '로그인하고 마음에 드는 샵을 찜해보세요')}
+                    style={{ alignItems: 'center', width: 32 }}
+                  >
+                    <Ionicons
+                      name={isShopFavorited ? 'heart' : 'heart-outline'}
+                      size={28}
+                      color={isShopFavorited ? '#FF6B6B' : colors.secondary}
+                    />
                     <Text style={{ fontSize: 8, fontFamily: fontFamily.medium, color: colors.secondary, marginTop: 3 }}>
-                      {shop.favoriteCount}
+                      {shopFavoriteCount ?? shop.favoriteCount}
                     </Text>
-                  </View>
+                  </TouchableOpacity>
                 </View>
               </View>
 
@@ -135,6 +158,7 @@ export default function ShopDetailScreen({ route, navigation }: Props) {
               <View style={{ paddingHorizontal: 20 }}>
                 <TouchableOpacity
                   activeOpacity={0.8}
+                  onPress={() => requireAuth(() => navigation.navigate('ShopInquiry', { shopId }), '로그인하고 문의를 남겨보세요')}
                   style={{ height: 35, borderRadius: 5, backgroundColor: colors.secondary, alignItems: 'center', justifyContent: 'center' }}
                 >
                   <Text style={[typography.caption, { color: colors.background }]}>문의하기</Text>

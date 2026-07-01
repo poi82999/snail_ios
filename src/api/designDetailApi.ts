@@ -31,6 +31,8 @@ function mapDesigner(designer: DesignDesignerPublic): Designer {
     position: designer.position ?? '',
     profileImageUri: designer.profile_image_url ?? '',
     specialtyTags: designer.specialty_tags ?? [],
+    // 백엔드에 duration_minutes 필드가 추가되면 자동으로 반영됨
+    durationMinutes: (designer as any).duration_minutes ?? null,
   };
 }
 
@@ -56,8 +58,7 @@ function mapDesignToDetail(design: DesignPublic): DesignDetail {
     isLiked: design.favorited_by_me ?? false,
     tab: [],
     duration: design.duration_minutes,
-    // owner_tags(사장님이 직접 단 태그)만 노출. AI 태그는 기획상 손님에게 노출 금지(IA_SPEC).
-    tags: design.owner_tags ?? [],
+    tags: [],
     designers: (design.designers ?? []).map(mapDesigner),
     options: (design.options ?? [])
       .filter((option) => option.is_active)
