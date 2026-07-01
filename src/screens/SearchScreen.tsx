@@ -17,7 +17,7 @@ import { FilterId, RootStackParamList, SearchFilters } from '../types';
 import { chunkIntoPairs } from '../utils/array';
 import { FILTER_CHIPS } from '../api/filterChips';
 import { useSearch, useSearchShops } from '../hooks/useSearch';
-import { useLikeToggle } from '../hooks/useHome';
+import { useGuardedLikeToggle } from '../hooks/useHome';
 import { useRecentSearches } from '../hooks/useRecentSearches';
 import FilterChip from '../components/FilterChip';
 import FilterModal from '../components/FilterModal';
@@ -56,7 +56,7 @@ export default function SearchScreen() {
     }
   }
   const { recent, add, remove, clear } = useRecentSearches();
-  const { mutate: toggleLike } = useLikeToggle();
+  const { toggleLike } = useGuardedLikeToggle();
 
   useEffect(() => {
     const timer = setTimeout(() => inputRef.current?.focus(), 100);

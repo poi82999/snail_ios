@@ -6,6 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import tw from 'twrnc';
 import { useAuth, useSignOut } from '../hooks/useAuth';
+import { useRequireAuth } from '../hooks/useRequireAuth';
 import { useNotifications } from '../hooks/useNotifications';
 import { colors, typography } from '../theme/tokens';
 import { fontFamily } from '../theme/fonts';
@@ -28,7 +29,7 @@ const MENU_SECTIONS = [
     key: '고객 센터',
     icon: 'help-circle-outline' as const,
     items: [
-      { label: '1:1 문의', screen: 'Inquiry' as const },
+      { label: '1:1 문의', screen: 'Inquiry' as const, authRequired: true },
       { label: '공지사항', screen: 'Notice' as const },
       { label: '이용약관', screen: 'Terms' as const },
     ],
@@ -37,7 +38,7 @@ const MENU_SECTIONS = [
     key: '알림 설정',
     icon: 'notifications-outline' as const,
     items: [
-      { label: '알림 설정', screen: 'NotificationSettings' as const },
+      { label: '알림 설정', screen: 'NotificationSettings' as const, authRequired: true },
     ],
   },
 ] as const;
@@ -56,6 +57,7 @@ function Divider() {
 export default function ProfileScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { user } = useAuth();
+  const { isAuthenticated, requireAuth } = useRequireAuth();
   const { mutate: signOut, isPending: isSigningOut } = useSignOut();
   const { unreadCount } = useNotifications();
 
@@ -105,7 +107,7 @@ export default function ProfileScreen() {
               <Button
                 label="수정"
                 variant="outline"
-                onPress={() => navigation.navigate('ProfileEdit')}
+                onPress={() => requireAuth(() => navigation.navigate('ProfileEdit'), '로그인하고 프로필을 수정해보세요')}
                 style={{ height: 30, paddingHorizontal: 16, borderRadius: 6, borderColor: 'rgba(125,105,93,0.3)', backgroundColor: colors.background }}
               />
             </View>
@@ -139,7 +141,12 @@ export default function ProfileScreen() {
               <TouchableOpacity
                 key={item.label}
                 activeOpacity={0.7}
-                onPress={() => { if (item.screen) navigation.navigate(item.screen as never); }}
+                onPress={() => {
+                  if (!item.screen) return;
+                  const go = () => navigation.navigate(item.screen as never);
+                  if ('authRequired' in item && item.authRequired) requireAuth(go);
+                  else go();
+                }}
                 style={tw`flex-row items-center justify-between px-[20px] h-[48px]`}
               >
                 <Text style={[typography.bodySm, { color: colors.secondary }]}>{item.label}</Text>
@@ -160,20 +167,31 @@ export default function ProfileScreen() {
 
         <Divider />
 
-        {/* 로그아웃 */}
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={handleLogout}
-          disabled={isSigningOut}
-          style={tw`flex-row items-center justify-between px-[20px] h-[48px]`}
-        >
-          <Text style={[typography.bodySm, { color: colors.secondary50 }]}>로그아웃</Text>
-          {isSigningOut ? (
-            <ActivityIndicator size="small" color={colors.secondary50} />
-          ) : (
-            <Ionicons name="log-out-outline" size={18} color={colors.secondary50} />
-          )}
-        </TouchableOpacity>
+        {/* 로그아웃 / 로그인 (비회원이면 로그인으로 토글) */}
+        {isAuthenticated ? (
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={handleLogout}
+            disabled={isSigningOut}
+            style={tw`flex-row items-center justify-between px-[20px] h-[48px]`}
+          >
+            <Text style={[typography.bodySm, { color: colors.secondary50 }]}>로그아웃</Text>
+            {isSigningOut ? (
+              <ActivityIndicator size="small" color={colors.secondary50} />
+            ) : (
+              <Ionicons name="log-out-outline" size={18} color={colors.secondary50} />
+            )}
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('Login')}
+            style={tw`flex-row items-center justify-between px-[20px] h-[48px]`}
+          >
+            <Text style={[typography.bodySm, { color: colors.secondary }]}>로그인</Text>
+            <Ionicons name="log-in-outline" size={18} color={colors.secondary} />
+          </TouchableOpacity>
+        )}
 
         <View style={tw`h-[20px]`} />
       </ScrollView>

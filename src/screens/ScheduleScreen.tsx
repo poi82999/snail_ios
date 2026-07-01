@@ -7,6 +7,8 @@ import tw from 'twrnc';
 import { colors, typography, shadows } from '../theme/tokens';
 import { useReservations } from '../hooks/useSchedule';
 import { useNotifications } from '../hooks/useNotifications';
+import { useAuth } from '../hooks/useAuth';
+import GuestEmptyState from '../components/GuestEmptyState';
 import { Reservation, ReservationStatus, RootStackParamList } from '../types';
 import { Ionicons } from '@expo/vector-icons';
 import Logo from '../components/Logo';
@@ -215,11 +217,24 @@ function EmptyItem({ message }: { message: string }) {
 // ─── 메인 화면 ────────────────────────────────────────────────────
 export default function ScheduleScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { isAuthenticated } = useAuth();
   const { data: reservations, isLoading, isError, refetch } = useReservations();
   const { unreadCount } = useNotifications();
 
   const futureItems = (reservations ?? []).filter((r) => FUTURE_STATUSES.includes(r.status));
   const pastItems = (reservations ?? []).filter((r) => PAST_STATUSES.includes(r.status));
+
+  // 비회원: 헤더만 유지하고 로그인 유도 빈 상태
+  if (!isAuthenticated) {
+    return (
+      <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>
+        <View style={tw`flex-row items-center justify-between px-[20px] h-[54px]`}>
+          <Logo />
+        </View>
+        <GuestEmptyState message="로그인하고 예약 일정을 확인해보세요" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>

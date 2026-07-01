@@ -10,6 +10,7 @@ import tw from 'twrnc';
 import { RootStackParamList, Snap } from '../types';
 import { useDesignDetail, useRelatedDesigns } from '../hooks/useDesignDetail';
 import { useLikeToggle } from '../hooks/useHome';
+import { useRequireAuth } from '../hooks/useRequireAuth';
 import { useDesignReviews } from '../hooks/useReviews';
 import { useDesignSnails } from '../hooks/useSnail';
 import { colors, typography } from '../theme/tokens';
@@ -54,6 +55,7 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
   const { data: reviews = [] } = useDesignReviews(designId);
   const { snaps: snailPosts } = useDesignSnails(designId);
   const { mutate: toggleLike } = useLikeToggle();
+  const { requireAuth } = useRequireAuth();
   const [activeTab, setActiveTab] = useState<DetailTab>('스네일');
   const [likedOverride, setLikedOverride] = useState<boolean | null>(null);
   const [reportReviewId, setReportReviewId] = useState<string | null>(null);
@@ -89,9 +91,11 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
   const liked = likedOverride ?? design.isLiked;
   const likeCount = design.likeCount + (liked === design.isLiked ? 0 : liked ? 1 : -1);
   function onHeart() {
-    const next = !liked;
-    setLikedOverride(next);
-    toggleLike({ designId, isLiked: next });
+    requireAuth(() => {
+      const next = !liked;
+      setLikedOverride(next);
+      toggleLike({ designId, isLiked: next });
+    }, '로그인하고 마음에 드는 디자인을 찜해보세요');
   }
 
   return (
@@ -295,10 +299,12 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
                     label={createInquiry.isPending ? '전송 중...' : '문의 보내기'}
                     onPress={() => {
                       if (!inquiryBody.trim() || createInquiry.isPending) return;
-                      createInquiry.mutate(
-                        { shopId: design.shopId, body: inquiryBody.trim(), designId: designId },
-                        { onSuccess: () => setInquirySent(true) }
-                      );
+                      requireAuth(() => {
+                        createInquiry.mutate(
+                          { shopId: design.shopId, body: inquiryBody.trim(), designId: designId },
+                          { onSuccess: () => setInquirySent(true) }
+                        );
+                      }, '로그인하고 문의를 남겨보세요');
                     }}
                     style={{ opacity: inquiryBody.trim().length === 0 || createInquiry.isPending ? 0.5 : 1 }}
                   />
@@ -336,7 +342,7 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
         </TouchableOpacity>
         <Button
           label="예약하기"
-          onPress={() => navigation.navigate('Booking', { designId })}
+          onPress={() => requireAuth(() => navigation.navigate('Booking', { designId }), '로그인하고 예약을 진행해보세요')}
           style={{ width: 250, height: 42 }}
         />
       </View>

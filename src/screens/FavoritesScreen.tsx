@@ -9,8 +9,10 @@ import { colors, typography } from '../theme/tokens';
 import DesignCard from '../components/DesignCard';
 import ShopSearchCard from '../components/ShopSearchCard';
 import TabSelector from '../components/TabSelector';
+import GuestEmptyState from '../components/GuestEmptyState';
 import { chunkIntoPairs } from '../utils/array';
-import { useLikeToggle } from '../hooks/useHome';
+import { useGuardedLikeToggle } from '../hooks/useHome';
+import { useAuth } from '../hooks/useAuth';
 import { useFavoriteDesigns, useFavoriteShops } from '../hooks/useFavorites';
 
 type FavTab = '디자인' | '샵';
@@ -20,7 +22,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Favorites'>;
 
 export default function FavoritesScreen({ navigation }: Props) {
   const [activeTab, setActiveTab] = useState<FavTab>('디자인');
-  const { mutate: toggleLike } = useLikeToggle();
+  const { toggleLike } = useGuardedLikeToggle();
+  const { isAuthenticated } = useAuth();
 
   const {
     data: designData,
@@ -42,6 +45,24 @@ export default function FavoritesScreen({ navigation }: Props) {
   const shops   = shopData?.pages.flatMap(p => p.shops) ?? [];
   const designPairs = chunkIntoPairs(designs);
   const shopPairs   = chunkIntoPairs(shops);
+
+  // 비회원: 헤더만 유지하고 로그인 유도 빈 상태
+  if (!isAuthenticated) {
+    return (
+      <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>
+        <View style={{ height: 54, paddingHorizontal: 22, flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7} style={{ width: 32 }}>
+            <Ionicons name="chevron-back" size={24} color={colors.secondary} />
+          </TouchableOpacity>
+          <Text style={[typography.headingMd, { color: colors.secondary, flex: 1, textAlign: 'center' }]}>
+            찜 목록
+          </Text>
+          <View style={{ width: 32 }} />
+        </View>
+        <GuestEmptyState message="로그인하고 찜한 디자인을 확인해보세요" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>

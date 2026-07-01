@@ -6,7 +6,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import tw from 'twrnc';
 import { RootStackParamList } from '../types';
 import { useRelatedDesigns } from '../hooks/useDesignDetail';
-import { useLikeToggle } from '../hooks/useHome';
+import { useGuardedLikeToggle } from '../hooks/useHome';
 import { colors, typography } from '../theme/tokens';
 import DesignCard from '../components/DesignCard';
 import { chunkIntoPairs } from '../utils/array';
@@ -16,7 +16,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'RelatedDesigns'>;
 export default function RelatedDesignsScreen({ route, navigation }: Props) {
   const { designId } = route.params;
   const { data: designs = [], isLoading, isError, refetch } = useRelatedDesigns(designId);
-  const { mutate: toggleLike } = useLikeToggle();
+  const { toggleLike } = useGuardedLikeToggle();
   const pairs = chunkIntoPairs(designs);
 
   return (

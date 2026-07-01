@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import tw from 'twrnc';
-import { useLikeToggle } from '../hooks/useHome';
+import { useGuardedLikeToggle } from '../hooks/useHome';
 import { useNotifications } from '../hooks/useNotifications';
 import { useInfiniteDesigns } from '../hooks/useInfiniteDesigns';
 import { FILTER_CHIPS } from '../api/filterChips';
@@ -63,7 +63,7 @@ export default function HomeScreen() {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteDesigns(activeTab, filters);
-  const { mutate: toggleLike } = useLikeToggle();
+  const { toggleLike } = useGuardedLikeToggle();
   const { unreadCount } = useNotifications();
 
   // 필터 적용 후에도 전체 데이터 기준 최대가를 유지 (한번 본 최대값은 줄어들지 않음)
