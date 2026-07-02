@@ -58,3 +58,17 @@ export async function toggleFavorite(designId: string): Promise<FavoriteToggleRe
     throw toApiError(error);
   }
 }
+
+// 샵 찜 토글 — 디자인 찜과 완전 동일 패턴(백엔드 PR #12 계약).
+// openapi publish 전이라 응답 타입은 디자인 찜의 LikeToggleResponse를 재사용한다(형태 동일).
+// publish 후 gen:api 재생성 시 전용 경로 타입으로 교체 가능.
+export async function toggleShopFavorite(shopId: string): Promise<FavoriteToggleResult> {
+  try {
+    const response = await apiClient.post<LikeToggleResponse>(
+      `/shops/${encodeURIComponent(shopId)}/favorite`
+    );
+    return { liked: response.data.liked, likeCount: response.data.like_count };
+  } catch (error) {
+    throw toApiError(error);
+  }
+}

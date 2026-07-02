@@ -197,6 +197,7 @@ export interface Shop {
   rating: number;
   reviewCount: number;
   favoriteCount: number;
+  isFavorited: boolean; // 서버 favorited_by_me (스펙 미노출 시 false)
   address: string;
   todayHoursLabel: string; // "11:00 - 21:00" 또는 "휴무"
   phoneNumber: string;

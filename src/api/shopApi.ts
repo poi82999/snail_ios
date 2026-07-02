@@ -34,7 +34,11 @@ export function getShopThumbnailUri(shop: ShopPublic): string {
   return shop.thumbnail_url ?? thumbnailImage?.image_url ?? shop.images?.[0]?.image_url ?? '';
 }
 
-function mapShopToUi(shop: ShopPublic): Shop {
+// favorited_by_me는 백엔드 PR #10/#12에서 추가 — 스펙 publish 전이라 옵셔널 확장으로 읽는다.
+// publish 후 gen:api 재생성 시 ShopPublic에 흡수되면 이 확장 타입은 제거 가능.
+type ShopPublicWithFavorite = ShopPublic & { favorited_by_me?: boolean | null };
+
+function mapShopToUi(shop: ShopPublicWithFavorite): Shop {
   return {
     id: shop.id,
     name: shop.name,
@@ -42,6 +46,7 @@ function mapShopToUi(shop: ShopPublic): Shop {
     rating: Number(shop.average_rating),
     reviewCount: shop.review_count,
     favoriteCount: shop.favorite_count,
+    isFavorited: shop.favorited_by_me ?? false,
     address: shop.address,
     todayHoursLabel: getTodayHoursLabel(shop),
     phoneNumber: shop.phone_number,
