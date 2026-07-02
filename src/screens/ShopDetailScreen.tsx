@@ -7,10 +7,12 @@ import tw from 'twrnc';
 import { RootStackParamList } from '../types';
 import { useShopDesigns, useShopDetail } from '../hooks/useShop';
 import { useGuardedLikeToggle } from '../hooks/useHome';
+import { useShopReviews } from '../hooks/useReviews';
 import { useRequireAuth } from '../hooks/useRequireAuth';
 import { colors, typography } from '../theme/tokens';
 import { fontFamily } from '../theme/fonts';
 import DesignCard from '../components/DesignCard';
+import ReviewCard from '../components/ReviewCard';
 import AvatarPlaceholder from '../components/AvatarPlaceholder';
 import TabBarIcon from '../components/TabBarIcon';
 import { chunkIntoPairs } from '../utils/array';
@@ -24,6 +26,7 @@ export default function ShopDetailScreen({ route, navigation }: Props) {
   const { shopId } = route.params;
   const { data: shop, isLoading, isError, refetch } = useShopDetail(shopId);
   const { data: designs = [], isLoading: isDesignsLoading } = useShopDesigns(shopId);
+  const { data: reviews = [] } = useShopReviews(shopId);
   const { toggleLike } = useGuardedLikeToggle();
   const { requireAuth } = useRequireAuth();
   const designPairs = chunkIntoPairs(designs);
@@ -168,11 +171,33 @@ export default function ShopDetailScreen({ route, navigation }: Props) {
           </View>
         }
         ListFooterComponent={
-          isDesignsLoading ? (
-            <View style={tw`py-[20px] items-center`}>
-              <ActivityIndicator color={colors.secondary} />
+          <View style={tw`pb-[100px]`}>
+            {isDesignsLoading ? (
+              <View style={tw`py-[20px] items-center`}>
+                <ActivityIndicator color={colors.secondary} />
+              </View>
+            ) : null}
+
+            <View style={{ paddingHorizontal: 20, paddingTop: 24, gap: 24 }}>
+              <Text style={[typography.filter, { color: colors.secondary }]}>리뷰</Text>
+              {reviews.length > 0 ? (
+                reviews.map((review) => (
+                  <ReviewCard
+                    key={review.id}
+                    id={review.id}
+                    username={review.username}
+                    rating={review.rating}
+                    date={review.date}
+                    comment={review.comment}
+                  />
+                ))
+              ) : (
+                <View style={tw`items-center justify-center py-[60px]`}>
+                  <Text style={[typography.bodySm, { color: colors.secondary50 }]}>후기가 없어요</Text>
+                </View>
+              )}
             </View>
-          ) : null
+          </View>
         }
         renderItem={({ item: [left, right] }) => (
           <View style={tw`flex-row gap-x-[8px] px-[0px]`}>

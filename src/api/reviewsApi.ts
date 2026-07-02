@@ -3,6 +3,8 @@ import type { components, paths } from '../types/api';
 
 type ReviewsResponse =
   paths['/api/v1/designs/{design_id}/reviews']['get']['responses'][200]['content']['application/json'];
+type ShopReviewsResponse =
+  paths['/api/v1/shops/{shop_id}/reviews']['get']['responses'][200]['content']['application/json'];
 type ReviewPublic = components['schemas']['ReviewPublic'];
 type ReviewCreate = components['schemas']['ReviewCreate'];
 
@@ -40,13 +42,11 @@ export async function fetchDesignReviews(designId: string): Promise<DesignReview
   return response.data.map(mapReviewToUi);
 }
 
-type ShopReviewsResponse =
-  paths['/api/v1/shops/{shop_id}/reviews']['get']['responses'][200]['content']['application/json'];
-
 export async function fetchShopReviews(shopId: string): Promise<DesignReview[]> {
   const response = await apiClient.get<ShopReviewsResponse>(
     `/shops/${encodeURIComponent(shopId)}/reviews`
   );
+
   return response.data.map(mapReviewToUi);
 }
 

@@ -3,6 +3,8 @@ import { toApiError } from './errors';
 
 const DEVICE_TOKEN_ENDPOINT = '/me/device-tokens';
 
+let lastRegisteredToken: string | null = null;
+
 export type DevicePlatform = 'ios' | 'android';
 
 export interface DeviceTokenPayload {
@@ -14,7 +16,24 @@ export interface DeviceTokenPayload {
 export async function registerDeviceToken(payload: DeviceTokenPayload): Promise<void> {
   try {
     await apiClient.post(DEVICE_TOKEN_ENDPOINT, payload);
+    lastRegisteredToken = payload.token;
   } catch (error) {
     throw toApiError(error);
+  }
+}
+
+export async function unregisterDeviceToken(): Promise<void> {
+  const token = lastRegisteredToken;
+
+  if (!token) return;
+
+  try {
+    await apiClient.delete<void>(
+      `${DEVICE_TOKEN_ENDPOINT}/${encodeURIComponent(token)}`
+    );
+  } catch (error) {
+    throw toApiError(error);
+  } finally {
+    lastRegisteredToken = null;
   }
 }
