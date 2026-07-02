@@ -101,16 +101,17 @@ export default function BookingConfirmScreen({ route, navigation }: Props) {
   if (isSuccess) {
     // 자동수락 샵은 생성 즉시 confirmed로 응답 → "확정", 그 외(pending/payment_pending)는 "승인 대기".
     const isConfirmed = data?.status === 'confirmed';
-    // 계좌이체 안내 샵이면 예약 시점 스냅샷(예약금·계좌)을 안내한다.
-    // bank_snapshot은 스펙상 불투명 객체라 로컬 타입으로 좁혀 읽는다.
+    // 계좌이체 안내 샵이면 예약금 안내를 보여준다. 예약금/계좌 스냅샷은 사장님 수락
+    // 시점(payment_pending)에 채워지므로 생성 직후엔 보통 null — 그 경우 안내 문구로 대체.
+    // bank_snapshot은 스펙상 불투명 객체라 로컬 타입으로 좁혀 읽는다(실응답: account_number/account_holder).
     const bank = (data?.bank_snapshot ?? null) as {
       bank_name?: string | null;
-      bank_account_number?: string | null;
-      bank_account_holder?: string | null;
+      account_number?: string | null;
+      account_holder?: string | null;
     } | null;
     const depositAmount = data?.deposit_amount_snapshot ?? null;
     const needsDeposit = !isConfirmed && data?.payment_method_snapshot === 'bank_transfer_guide';
-    const bankLine = [bank?.bank_name, bank?.bank_account_number, bank?.bank_account_holder]
+    const bankLine = [bank?.bank_name, bank?.account_number, bank?.account_holder]
       .filter(Boolean)
       .join(' ');
 
@@ -151,7 +152,7 @@ export default function BookingConfirmScreen({ route, navigation }: Props) {
               <Text style={{ fontSize: 13, color: colors.secondary, textAlign: 'center', lineHeight: 20 }}>
                 {depositAmount != null
                   ? `예약금 ${depositAmount.toLocaleString('ko-KR')}원을 샵 계좌로 입금해 주세요.`
-                  : '샵에서 안내하는 예약금을 샵 계좌로 입금해 주세요.'}
+                  : '사장님이 수락하면 예약금과 계좌를 안내해 드려요.'}
               </Text>
               {bankLine.length > 0 ? (
                 <Text style={{ fontSize: 14, fontWeight: '600', color: colors.primary, textAlign: 'center' }}>
@@ -159,7 +160,7 @@ export default function BookingConfirmScreen({ route, navigation }: Props) {
                 </Text>
               ) : (
                 <Text style={{ fontSize: 12, color: colors.secondary50, textAlign: 'center' }}>
-                  계좌 정보는 예약 내역에서 확인할 수 있어요.
+                  수락 알림이 오면 일정 {'>'} 예약 내역에서 확인할 수 있어요.
                 </Text>
               )}
             </View>
