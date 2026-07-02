@@ -12,10 +12,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import tw from 'twrnc';
+import Logo from '../components/Logo';
 import SnailCard from '../components/SnailCard';
 import { useSnailFeed, useToggleSnapLike } from '../hooks/useSnail';
 import type { RootStackParamList, Snap, SnapFeedType } from '../types';
-import { colors, typography } from '../theme/tokens';
+import { colors } from '../theme/tokens';
 import { fontFamily } from '../theme/fonts';
 import ErrorState from '../components/state/ErrorState';
 import EmptyState from '../components/state/EmptyState';
@@ -96,15 +97,15 @@ export default function SnailScreen(): React.ReactElement {
 
   return (
     <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>
-      {/* Top Bar */}
-      <View style={tw`h-[54px] px-[20px] flex-row items-center justify-between`}>
-        <Text style={[typography.headingLg, { color: colors.secondary }]}>SNAIL</Text>
-        <View style={tw`flex-row items-center gap-x-[10px]`}>
+      {/* Top Bar — 홈/일정/프로필 탭과 동일한 디자인시스템 (Logo + 28px 아이콘, gap 8px) */}
+      <View style={tw`flex-row items-center justify-between px-[20px] h-[54px]`}>
+        <Logo />
+        <View style={tw`flex-row items-center gap-x-[8px]`}>
           <TouchableOpacity onPress={() => navigation.navigate('Search')} activeOpacity={0.7}>
-            <Ionicons name="search-outline" size={35} color={colors.secondary} />
+            <Ionicons name="search-outline" size={28} color={colors.secondary} />
           </TouchableOpacity>
-          <TouchableOpacity activeOpacity={0.7}>
-            <Ionicons name="heart-outline" size={35} color={colors.secondary} />
+          <TouchableOpacity onPress={() => navigation.navigate('Favorites')} activeOpacity={0.7}>
+            <Ionicons name="heart-outline" size={28} color={colors.secondary} />
           </TouchableOpacity>
         </View>
       </View>
