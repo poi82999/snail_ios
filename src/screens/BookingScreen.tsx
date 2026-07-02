@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, Image, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -49,6 +49,7 @@ export default function BookingScreen({ route, navigation }: Props) {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedDesignerId, setSelectedDesignerId] = useState<string | null>(null);
   const [selectedStartAt, setSelectedStartAt] = useState<string | null>(null);
+  const [userRequest, setUserRequest] = useState('');
 
   const pickedOptions = (Object.keys(selectedOptions) as DesignOptionKind[])
     .map((k) => grouped[k].find((o) => o.id === selectedOptions[k]))
@@ -160,7 +161,11 @@ export default function BookingScreen({ route, navigation }: Props) {
         </View>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={tw`gap-y-[20px] py-[20px]`}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={tw`gap-y-[20px] py-[20px]`}
+      >
         {/* 추가 옵션 */}
         <View style={tw`gap-y-[20px]`}>
           <View style={tw`px-[20px]`}>
@@ -194,6 +199,36 @@ export default function BookingScreen({ route, navigation }: Props) {
               </View>
             );
           })}
+        </View>
+
+        <Divider />
+
+        {/* 요청사항 — 추가 옵션과 날짜 사이 */}
+        <View style={tw`gap-y-[20px]`}>
+          <View style={tw`px-[20px] flex-row items-center justify-between`}>
+            <Text style={[typography.headingMd, { color: colors.secondary }]}>요청사항</Text>
+            <Text style={[typography.caption, { color: colors.secondary50 }]}>{userRequest.length}/200</Text>
+          </View>
+          <View style={tw`px-[20px]`}>
+            <TextInput
+              value={userRequest}
+              onChangeText={setUserRequest}
+              multiline
+              maxLength={200}
+              placeholder="요청사항을 입력해주세요 (선택)"
+              placeholderTextColor={colors.secondary50}
+              style={[
+                tw`h-[112px] rounded-[8px] border px-[14px] py-[12px]`,
+                {
+                  borderColor: colors.line,
+                  color: colors.primary,
+                  fontSize: 14,
+                  lineHeight: 20,
+                  textAlignVertical: 'top',
+                },
+              ]}
+            />
+          </View>
         </View>
 
         <Divider />
@@ -310,6 +345,7 @@ export default function BookingScreen({ route, navigation }: Props) {
             startAt: selectedStartAt!,
             designerId: selectedDesignerId,
             selectedOptionIds,
+            userRequest: userRequest.trim() || undefined,
           })}
         />
       </View>

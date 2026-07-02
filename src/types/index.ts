@@ -18,6 +18,7 @@ export type RootStackParamList = {
     startAt: string; // 슬롯 start_at(ISO 8601, UTC) 그대로
     designerId?: string | null;
     selectedOptionIds: string[];
+    userRequest?: string; // BookingScreen에서 입력한 요청사항 (trim 후 비면 undefined)
   };
   ReservationDetail: { reservationId: string };
   ReviewWrite: { reservationId: string };
