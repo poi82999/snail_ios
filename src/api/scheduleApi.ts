@@ -18,13 +18,26 @@ function mapReservationToUi(reservation: ReservationMe): Reservation {
   };
 }
 
+// bank_snapshot은 스펙상 불투명 객체 — 실서버 응답 필드명(account_number/account_holder) 기준.
+type BankSnapshot = {
+  bank_name?: string | null;
+  account_number?: string | null;
+  account_holder?: string | null;
+};
+
 function mapReservationToDetailUi(reservation: ReservationMe): ReservationDetail {
+  const bank = (reservation.bank_snapshot ?? null) as BankSnapshot | null;
+
   return {
     id: reservation.id,
     status: reservation.status,
     startAt: reservation.start_at,
     endAt: reservation.end_at,
     userRequest: reservation.user_request ?? null,
+    depositAmount: reservation.deposit_amount_snapshot ?? null,
+    bankName: bank?.bank_name ?? null,
+    bankAccountNumber: bank?.account_number ?? null,
+    bankAccountHolder: bank?.account_holder ?? null,
     rejectedReason: reservation.rejected_reason ?? null,
     cancelledReason: reservation.cancelled_reason ?? null,
     shopId: reservation.shop_id,

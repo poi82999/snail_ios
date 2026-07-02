@@ -93,6 +93,11 @@ export default function ReservationDetailScreen({ route, navigation }: Props) {
 
   const canCancel = reservation.status === 'pending' || reservation.status === 'payment_pending' || reservation.status === 'confirmed';
   const canReview = reservation.status === 'completed';
+  // 예약금 안내 — 사장님 수락 시점에 스냅샷이 채워지므로 payment_pending에서만 노출
+  const showDeposit = reservation.status === 'payment_pending';
+  const bankLine = [reservation.bankName, reservation.bankAccountNumber, reservation.bankAccountHolder]
+    .filter(Boolean)
+    .join(' ');
   const reasonLabel = reservation.status === 'rejected' ? '거절 사유' : '취소 사유';
   const reasonText = reservation.rejectedReason ?? reservation.cancelledReason;
 
@@ -127,6 +132,20 @@ export default function ReservationDetailScreen({ route, navigation }: Props) {
           </View>
           <Text style={[typography.caption, { color: colors.secondary50 }]}>{computeDday(reservation.startAt)}</Text>
         </View>
+
+        {/* 예약금 입금 안내 — 사장님 수락 후(payment_pending) 스냅샷 기준 */}
+        {showDeposit && (
+          <View style={[tw`rounded-[10px] px-[16px] py-[14px] gap-y-[8px]`, { backgroundColor: 'rgba(125,105,93,0.08)' }]}>
+            <Text style={[typography.bodyMd, { color: colors.primary }]}>예약금 입금 안내</Text>
+            {reservation.depositAmount != null && (
+              <InfoRow label="예약금" value={`${reservation.depositAmount.toLocaleString('ko-KR')}원`} />
+            )}
+            {bankLine.length > 0 && <InfoRow label="계좌" value={bankLine} />}
+            <Text style={[typography.caption, { color: colors.secondary50 }]}>
+              입금이 확인되면 예약이 확정돼요.
+            </Text>
+          </View>
+        )}
 
         {/* 디자인 정보 */}
         <View style={tw`gap-y-[12px]`}>

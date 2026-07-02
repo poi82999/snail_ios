@@ -178,6 +178,11 @@ export interface ReservationDetail {
   startAt: string; // ISO 8601 UTC
   endAt: string; // ISO 8601 UTC
   userRequest: string | null;
+  // 예약금/계좌 스냅샷 — 사장님 수락 시점(payment_pending 전환)에 백엔드가 채움. 그 전엔 null.
+  depositAmount: number | null;
+  bankName: string | null;
+  bankAccountNumber: string | null;
+  bankAccountHolder: string | null;
   rejectedReason: string | null;
   cancelledReason: string | null;
   shopId: string;
