@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, Image, TouchableOpacity, ScrollView, Linking, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Image, TouchableOpacity, ScrollView, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -10,6 +10,7 @@ import { useShopDetail } from '../hooks/useShop';
 import { getErrorMessage } from '../api/errors';
 import { colors, typography, shadows } from '../theme/tokens';
 import Button from '../components/Button';
+import CancelReservationModal from '../components/CancelReservationModal';
 import LoadingState from '../components/state/LoadingState';
 import ErrorState from '../components/state/ErrorState';
 
@@ -74,6 +75,8 @@ export default function ReservationDetailScreen({ route, navigation }: Props) {
   const { data: reservation, isLoading, isError, refetch } = useReservationDetail(reservationId);
   const { data: shop } = useShopDetail(reservation?.shopId ?? '');
   const { mutate: cancel, isPending: isCancelling } = useCancelReservation();
+  const [cancelModalVisible, setCancelModalVisible] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -101,19 +104,16 @@ export default function ReservationDetailScreen({ route, navigation }: Props) {
   const reasonLabel = reservation.status === 'rejected' ? '거절 사유' : '취소 사유';
   const reasonText = reservation.rejectedReason ?? reservation.cancelledReason;
 
-  function onCancelPress() {
-    Alert.alert('예약을 취소할까요?', '취소하면 되돌릴 수 없어요.', [
-      { text: '아니요', style: 'cancel' },
+  // 백엔드가 취소 사유를 필수로 요구(CANCEL_REASON_REQUIRED) → 모달에서 사유를 받아 전달한다.
+  function onCancelSubmit(reason: string) {
+    setCancelError(null);
+    cancel(
+      { reservationId, reason },
       {
-        text: '예약 취소',
-        style: 'destructive',
-        onPress: () =>
-          cancel(
-            { reservationId },
-            { onError: (error) => Alert.alert('취소에 실패했어요', getErrorMessage(error)) }
-          ),
-      },
-    ]);
+        onSuccess: () => setCancelModalVisible(false),
+        onError: (error) => setCancelError(getErrorMessage(error)),
+      }
+    );
   }
 
   return (
@@ -259,9 +259,11 @@ export default function ReservationDetailScreen({ route, navigation }: Props) {
         <View style={[tw`p-[20px]`, { backgroundColor: colors.background, ...shadows.bar }]}>
           {canCancel ? (
             <Button
-              label={isCancelling ? '취소하는 중...' : '예약 취소'}
-              disabled={isCancelling}
-              onPress={onCancelPress}
+              label="예약 취소"
+              onPress={() => {
+                setCancelError(null);
+                setCancelModalVisible(true);
+              }}
               style={tw`w-full`}
             />
           ) : (
@@ -273,6 +275,14 @@ export default function ReservationDetailScreen({ route, navigation }: Props) {
           )}
         </View>
       )}
+
+      <CancelReservationModal
+        visible={cancelModalVisible}
+        onClose={() => setCancelModalVisible(false)}
+        isPending={isCancelling}
+        errorMessage={cancelError}
+        onSubmit={onCancelSubmit}
+      />
     </SafeAreaView>
   );
 }
