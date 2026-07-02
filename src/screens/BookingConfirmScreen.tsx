@@ -4,7 +4,6 @@ import {
   Image,
   ScrollView,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -61,13 +60,13 @@ function SummaryRow({
 }
 
 export default function BookingConfirmScreen({ route, navigation }: Props) {
-  const { designId, startAt, designerId, selectedOptionIds } = route.params;
+  // 요청사항은 BookingScreen(추가 옵션·날짜 사이)에서 입력받아 파라미터로 전달된다.
+  const { designId, startAt, designerId, selectedOptionIds, userRequest = '' } = route.params;
   const { design, selectedOptions, totalPrice, totalDuration } = useBookingSummary(
     designId,
     selectedOptionIds
   );
   const { mutate, status, error, data } = useCreateReservation();
-  const [userRequest, setUserRequest] = useState('');
   const [noticeChecked, setNoticeChecked] = useState(false);
   const designerName = designerId
     ? design?.designers.find((designer) => designer.id === designerId)?.name ?? (design ? '자동 배정' : '불러오는 중...')
@@ -206,33 +205,8 @@ export default function BookingConfirmScreen({ route, navigation }: Props) {
             <SummaryRow label="시간" value={formatSlotLabel(startAt)} />
             <SummaryRow label="디자이너" value={designerName} />
             <SummaryRow label="옵션" value={optionLabel} />
+            <SummaryRow label="요청사항" value={userRequest.trim() || '없음'} />
           </View>
-        </View>
-
-        <View style={tw`px-[20px] pt-[24px] gap-y-[10px]`}>
-          <View style={tw`flex-row items-center justify-between`}>
-            <Text style={{ fontSize: 18, lineHeight: 26, fontWeight: '600', color: TEXT }}>요청사항</Text>
-            <Text style={{ fontSize: 12, lineHeight: 16, color: colors.secondary50 }}>{userRequest.length}/200</Text>
-          </View>
-          <TextInput
-            value={userRequest}
-            onChangeText={setUserRequest}
-            multiline
-            maxLength={200}
-            placeholder="요청사항을 입력해주세요 (선택)"
-            placeholderTextColor={colors.secondary50}
-            editable={!isPending}
-            style={[
-              tw`h-[112px] rounded-[8px] border px-[14px] py-[12px]`,
-              {
-                borderColor: BORDER,
-                color: colors.primary,
-                fontSize: 14,
-                lineHeight: 20,
-                textAlignVertical: 'top',
-              },
-            ]}
-          />
         </View>
 
         <View style={tw`px-[20px] pt-[24px] gap-y-[12px]`}>
