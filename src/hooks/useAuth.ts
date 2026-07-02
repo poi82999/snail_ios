@@ -42,6 +42,8 @@ export function useSignInWithApple() {
   const queryClient = useQueryClient();
 
   return useMutation<UserMe, ApiError, AppleSignInParams>({
+    // ['auth', ...] 키는 queryClient 전역 401 안전망(로그인 유도 모달)에서 제외된다.
+    mutationKey: ['auth', 'apple'],
     mutationFn: signInWithApple,
     onSuccess: (user: UserMe) => {
       queryClient.setQueryData(AUTH_SESSION_QUERY_KEY, user);
@@ -53,6 +55,7 @@ export function useSignOut() {
   const queryClient = useQueryClient();
 
   return useMutation<void, ApiError, void>({
+    mutationKey: ['auth', 'signOut'],
     mutationFn: signOut,
     onSuccess: () => {
       queryClient.setQueryData(AUTH_SESSION_QUERY_KEY, null);
@@ -65,6 +68,7 @@ export function useDevLogin() {
   const queryClient = useQueryClient();
 
   return useMutation<UserMe, ApiError, string | null | undefined>({
+    mutationKey: ['auth', 'devLogin'],
     mutationFn: (nickname) => devLogin(nickname),
     onSuccess: (user: UserMe) => {
       queryClient.setQueryData(AUTH_SESSION_QUERY_KEY, user);
@@ -87,6 +91,7 @@ export function useRegister() {
   const queryClient = useQueryClient();
 
   return useMutation<UserMe, ApiError, RegisterParams>({
+    mutationKey: ['auth', 'register'],
     mutationFn: registerUser,
     onSuccess: (user) => {
       queryClient.setQueryData(AUTH_SESSION_QUERY_KEY, user);
@@ -109,6 +114,7 @@ export function useEmailLogin() {
   const queryClient = useQueryClient();
 
   return useMutation<UserMe, ApiError, LoginParams>({
+    mutationKey: ['auth', 'emailLogin'],
     mutationFn: loginUser,
     onSuccess: (user) => {
       queryClient.setQueryData(AUTH_SESSION_QUERY_KEY, user);
