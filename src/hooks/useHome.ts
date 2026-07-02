@@ -106,7 +106,9 @@ export function useLikeToggle() {
       });
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['designs'] });
+      // 목록(['designs'])은 refetch하지 않는다. onMutate의 낙관적 패치(isLiked/likeCount)로
+      // 충분하고, 여기서 invalidate하면 서버 relevance 재정렬로 찜한 카드가 튀어 오른다.
+      // 실제 카운트 정합은 다음 자연스러운 새로고침(화면 재진입/staleTime 만료) 때 맞춰진다.
       queryClient.invalidateQueries({ queryKey: ['design'] });
       queryClient.invalidateQueries({ queryKey: ['shop'] });
     },
