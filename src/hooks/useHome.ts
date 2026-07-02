@@ -111,6 +111,9 @@ export function useLikeToggle() {
       // 실제 카운트 정합은 다음 자연스러운 새로고침(화면 재진입/staleTime 만료) 때 맞춰진다.
       queryClient.invalidateQueries({ queryKey: ['design'] });
       queryClient.invalidateQueries({ queryKey: ['shop'] });
+      // 찜한 디자인 목록 화면(['favorites','designs'])은 반드시 새로고침해야
+      // 찜/해제가 즉시 반영된다(홈 목록과 달리 여기선 재정렬 문제 없음).
+      queryClient.invalidateQueries({ queryKey: ['favorites', 'designs'] });
     },
   });
 }
