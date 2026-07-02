@@ -18,6 +18,7 @@ export type RootStackParamList = {
     startAt: string; // 슬롯 start_at(ISO 8601, UTC) 그대로
     designerId?: string | null;
     selectedOptionIds: string[];
+    userRequest?: string; // BookingScreen에서 입력한 요청사항 (trim 후 비면 undefined)
   };
   ReservationDetail: { reservationId: string };
   ReviewWrite: { reservationId: string };
@@ -197,6 +198,7 @@ export interface Shop {
   rating: number;
   reviewCount: number;
   favoriteCount: number;
+  isFavorited: boolean; // 서버 favorited_by_me (스펙 미노출 시 false)
   address: string;
   todayHoursLabel: string; // "11:00 - 21:00" 또는 "휴무"
   phoneNumber: string;

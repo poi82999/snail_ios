@@ -7,6 +7,7 @@ import {
   NativeScrollEvent,
   NativeSyntheticEvent,
   Platform,
+  Share,
   Text,
   TextInput,
   TouchableOpacity,
@@ -168,6 +169,20 @@ export default function SnapDetailScreen({ route, navigation }: Props) {
       onSuccess: (data) => setFollowedOverride(data.followed),
       onError: () => setFollowedOverride(null),
     });
+  }
+
+  async function handleShare(): Promise<void> {
+    // snail://snap/:snapId — App.tsx linking config의 SnapDetail 경로와 일치
+    const shareUrl = `snail://snap/${currentSnap.id}`;
+    const message = [`${currentSnap.author.nickname}님의 스네일`, currentSnap.body.trim(), shareUrl]
+      .filter((part) => part.length > 0)
+      .join('\n\n');
+
+    try {
+      await Share.share({ message });
+    } catch {
+      // 사용자가 공유 시트를 닫은 경우 등은 조용히 무시한다.
+    }
   }
 
   function removeCommentLikeOverride(commentId: string): void {
@@ -408,7 +423,7 @@ export default function SnapDetailScreen({ route, navigation }: Props) {
               <Text style={{ color: colors.secondary, fontSize: 9 }}>{saveCount.toLocaleString('ko-KR')}</Text>
             </TouchableOpacity>
           </View>
-          <TouchableOpacity activeOpacity={0.7} style={tw`items-center gap-y-[2px]`}>
+          <TouchableOpacity onPress={handleShare} activeOpacity={0.7} style={tw`items-center gap-y-[2px]`}>
             <Ionicons name="share-social-outline" size={27} color={colors.secondary} />
             <Text style={{ color: colors.secondary, fontSize: 9 }}>공유</Text>
           </TouchableOpacity>

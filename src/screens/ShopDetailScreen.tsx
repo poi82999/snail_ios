@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import tw from 'twrnc';
 import { RootStackParamList } from '../types';
-import { useShopDesigns, useShopDetail } from '../hooks/useShop';
+import { useShopDesigns, useShopDetail, useShopFavoriteToggle } from '../hooks/useShop';
 import { useGuardedLikeToggle } from '../hooks/useHome';
 import { useShopReviews } from '../hooks/useReviews';
 import { useRequireAuth } from '../hooks/useRequireAuth';
@@ -29,9 +29,10 @@ export default function ShopDetailScreen({ route, navigation }: Props) {
   const { data: reviews = [] } = useShopReviews(shopId);
   const { toggleLike } = useGuardedLikeToggle();
   const { requireAuth } = useRequireAuth();
+  const shopFavorite = useShopFavoriteToggle(shopId);
   const designPairs = chunkIntoPairs(designs);
-  const [isShopFavorited, setIsShopFavorited] = useState(false);
-  const [shopFavoriteCount, setShopFavoriteCount] = useState<number | null>(null);
+  // 서버값(shop.isFavorited/favoriteCount) 위에 낙관적 오버라이드를 얹어 탭 직후 반영한다.
+  const [favoriteOverride, setFavoriteOverride] = useState<{ liked: boolean; count: number } | null>(null);
 
   if (isLoading) {
     return (
@@ -47,6 +48,21 @@ export default function ShopDetailScreen({ route, navigation }: Props) {
         <ErrorState onRetry={() => refetch()} />
       </SafeAreaView>
     );
+  }
+
+  const shopFavorited = favoriteOverride?.liked ?? shop.isFavorited;
+  const shopFavoriteCount = favoriteOverride?.count ?? shop.favoriteCount;
+
+  function handleToggleShopFavorite(): void {
+    requireAuth(() => {
+      const next = !shopFavorited;
+      setFavoriteOverride({ liked: next, count: Math.max(0, shopFavoriteCount + (next ? 1 : -1)) });
+      shopFavorite.mutate(undefined, {
+        // 응답이 토글 후 최종 상태이므로 서버 기준으로 확정한다.
+        onSuccess: (result) => setFavoriteOverride({ liked: result.liked, count: result.likeCount }),
+        onError: () => setFavoriteOverride(null),
+      });
+    }, '로그인하고 마음에 드는 샵을 찜해보세요');
   }
 
   return (
@@ -115,23 +131,17 @@ export default function ShopDetailScreen({ route, navigation }: Props) {
                   </TouchableOpacity>
                   <TouchableOpacity
                     activeOpacity={0.7}
-                    onPress={() => requireAuth(() => {
-                      const next = !isShopFavorited;
-                      setIsShopFavorited(next);
-                      setShopFavoriteCount((prev) => {
-                        const base = prev ?? shop.favoriteCount;
-                        return next ? base + 1 : base - 1;
-                      });
-                    }, '로그인하고 마음에 드는 샵을 찜해보세요')}
+                    onPress={handleToggleShopFavorite}
+                    disabled={shopFavorite.isPending}
                     style={{ alignItems: 'center', width: 32 }}
                   >
                     <Ionicons
-                      name={isShopFavorited ? 'heart' : 'heart-outline'}
+                      name={shopFavorited ? 'heart' : 'heart-outline'}
                       size={28}
-                      color={isShopFavorited ? '#FF6B6B' : colors.secondary}
+                      color={shopFavorited ? '#FF6B6B' : colors.secondary}
                     />
                     <Text style={{ fontSize: 8, fontFamily: fontFamily.medium, color: colors.secondary, marginTop: 3 }}>
-                      {shopFavoriteCount ?? shop.favoriteCount}
+                      {shopFavoriteCount}
                     </Text>
                   </TouchableOpacity>
                 </View>

@@ -16,10 +16,14 @@ export function shouldRetryQuery(failureCount: number, error: unknown): boolean 
 // 어떤 mutation이든 인증 만료/비로그인(UNAUTHORIZED·401)으로 실패하면 전역 로그인
 // 유도 화면(LoginPrompt)을 띄운다. 찜/예약/스네일/팔로우의 비로그인 처리를 한 곳에서
 // 일관되게 보장한다. (선제 차단은 useRequireAuth, 여기는 빠짐없이 잡는 안전망.)
+// 단, 인증 mutation(mutationKey가 ['auth', ...]) 자체의 401은 제외 — 로그인 실패
+// (비밀번호 오류 등)에 안전망이 반응하면 로그인 화면 위에 "로그인이 필요해요" 모달이
+// 떠서 인라인 에러 메시지를 가린다. 인증 화면은 각자 onError로 직접 처리한다.
 const mutationCache = new MutationCache({
-  onError: (error) => {
+  onError: (error, _variables, _context, mutation) => {
     const apiError = error as ApiError | undefined;
-    if (apiError?.code === 'UNAUTHORIZED' || apiError?.status === 401) {
+    const isAuthMutation = mutation.options.mutationKey?.[0] === 'auth';
+    if (!isAuthMutation && (apiError?.code === 'UNAUTHORIZED' || apiError?.status === 401)) {
       promptLoginGate();
       return;
     }
