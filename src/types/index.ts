@@ -6,7 +6,7 @@ export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   LoginPrompt: { message?: string } | undefined;
-  Main: undefined;
+  Main: { screen?: '홈' | '스네일' | '주변' | '일정' | '프로필' } | undefined;
   Search: { initialQuery?: string } | undefined;
   DesignDetail: { designId: string };
   ShopDetail: { shopId: string };
