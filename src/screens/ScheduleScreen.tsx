@@ -44,8 +44,6 @@ function computeDday(startAt: string): string {
 // ─── 방문 예정 카드 ───────────────────────────────────────────────
 function FutureCard({ reservation }: { reservation: Reservation }) {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  // 사장님이 아직 확정 안 한 상태(결제 대기 포함)는 버튼을 비활성으로 표시한다.
-  const isPending = reservation.status === 'pending' || reservation.status === 'payment_pending';
 
   return (
     <View
@@ -88,19 +86,16 @@ function FutureCard({ reservation }: { reservation: Reservation }) {
         </View>
       </TouchableOpacity>
 
-      {/* 예약 내역 버튼 (filled) — 사장님 확정 전이면 비활성 */}
+      {/* 예약 내역 버튼 (filled) — 대기 상태에서도 예약 상세로 이동 가능 */}
       <TouchableOpacity
-        activeOpacity={isPending ? 1 : 0.8}
-        disabled={isPending}
+        activeOpacity={0.8}
         onPress={() => navigation.navigate('ReservationDetail', { reservationId: reservation.id })}
         style={[
           tw`h-[35px] rounded-[5px] items-center justify-center`,
-          { backgroundColor: isPending ? colors.primary10 : colors.secondary },
+          { backgroundColor: colors.secondary },
         ]}
       >
-        <Text style={[typography.caption, { color: colors.background }]}>
-          {isPending ? '예약 대기중이에요' : '예약 내역'}
-        </Text>
+        <Text style={[typography.caption, { color: colors.background }]}>예약 내역</Text>
       </TouchableOpacity>
     </View>
   );

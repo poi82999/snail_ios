@@ -101,9 +101,22 @@ export default function BookingConfirmScreen({ route, navigation }: Props) {
   if (isSuccess) {
     // 자동수락 샵은 생성 즉시 confirmed로 응답 → "확정", 그 외(pending/payment_pending)는 "승인 대기".
     const isConfirmed = data?.status === 'confirmed';
+    // 계좌이체 안내 샵이면 예약 시점 스냅샷(예약금·계좌)을 안내한다.
+    // bank_snapshot은 스펙상 불투명 객체라 로컬 타입으로 좁혀 읽는다.
+    const bank = (data?.bank_snapshot ?? null) as {
+      bank_name?: string | null;
+      bank_account_number?: string | null;
+      bank_account_holder?: string | null;
+    } | null;
+    const depositAmount = data?.deposit_amount_snapshot ?? null;
+    const needsDeposit = !isConfirmed && data?.payment_method_snapshot === 'bank_transfer_guide';
+    const bankLine = [bank?.bank_name, bank?.bank_account_number, bank?.bank_account_holder]
+      .filter(Boolean)
+      .join(' ');
+
     return (
       <SafeAreaView style={tw`flex-1 bg-white`}>
-        <View style={tw`flex-1 items-center justify-center px-[40px] gap-[16px]`}>
+        <View style={tw`flex-1 items-center justify-center px-[32px] gap-[16px]`}>
           <View
             style={[
               tw`w-[64px] h-[64px] rounded-full items-center justify-center`,
@@ -117,22 +130,49 @@ export default function BookingConfirmScreen({ route, navigation }: Props) {
             />
           </View>
           <Text style={{ fontSize: 20, fontWeight: '700', color: colors.primary, textAlign: 'center', marginTop: 8 }}>
-            {isConfirmed ? '예약이 확정되었어요!' : '예약을 요청했어요!'}
+            {isConfirmed ? '예약이 확정되었어요!' : '예약이 요청되었어요!'}
           </Text>
           <Text style={{ fontSize: 14, color: colors.secondary50, textAlign: 'center', lineHeight: 22 }}>
             {isConfirmed
               ? '예약이 바로 확정되었어요.\n일정에서 확인할 수 있어요.'
               : '사장님의 수락을 기다리는 중이에요.\n수락되면 알림으로 알려드릴게요.'}
           </Text>
+
+          {needsDeposit && (
+            <View
+              style={[
+                tw`w-full rounded-[10px] px-[16px] py-[14px] gap-y-[6px] mt-[4px]`,
+                { backgroundColor: 'rgba(125,105,93,0.08)' },
+              ]}
+            >
+              <Text style={{ fontSize: 14, fontWeight: '700', color: colors.primary, textAlign: 'center' }}>
+                예약금 입금 안내
+              </Text>
+              <Text style={{ fontSize: 13, color: colors.secondary, textAlign: 'center', lineHeight: 20 }}>
+                {depositAmount != null
+                  ? `예약금 ${depositAmount.toLocaleString('ko-KR')}원을 샵 계좌로 입금해 주세요.`
+                  : '샵에서 안내하는 예약금을 샵 계좌로 입금해 주세요.'}
+              </Text>
+              {bankLine.length > 0 ? (
+                <Text style={{ fontSize: 14, fontWeight: '600', color: colors.primary, textAlign: 'center' }}>
+                  {bankLine}
+                </Text>
+              ) : (
+                <Text style={{ fontSize: 12, color: colors.secondary50, textAlign: 'center' }}>
+                  계좌 정보는 예약 내역에서 확인할 수 있어요.
+                </Text>
+              )}
+            </View>
+          )}
         </View>
 
         <View style={tw`px-[20px] pb-[32px]`}>
           <TouchableOpacity
-            onPress={() => navigation.popToTop()}
+            onPress={() => navigation.navigate('Main', { screen: '일정' })}
             activeOpacity={0.8}
             style={[tw`h-[48px] rounded-[8px] items-center justify-center`, { backgroundColor: colors.secondary }]}
           >
-            <Text style={{ fontSize: 15, fontWeight: '600', color: colors.background }}>홈으로 돌아가기</Text>
+            <Text style={{ fontSize: 15, fontWeight: '600', color: colors.background }}>확인</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
