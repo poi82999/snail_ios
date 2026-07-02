@@ -13,7 +13,18 @@ import ReservationDetailScreen from '../screens/ReservationDetailScreen';
 import ReviewWriteScreen from '../screens/ReviewWriteScreen';
 import NotificationScreen from '../screens/NotificationScreen';
 import LoginScreen from '../screens/LoginScreen';
+import RegisterScreen from '../screens/RegisterScreen';
+import LoginPromptScreen from '../screens/LoginPromptScreen';
 import InquiryScreen from '../screens/InquiryScreen';
+import CouponScreen from '../screens/CouponScreen';
+import RelatedDesignsScreen from '../screens/RelatedDesignsScreen';
+import ShopReviewsScreen from '../screens/ShopReviewsScreen';
+import ShopInquiryScreen from '../screens/ShopInquiryScreen';
+import FavoritesScreen from '../screens/FavoritesScreen';
+import NotificationSettingsScreen from '../screens/NotificationSettingsScreen';
+import NoticeScreen from '../screens/NoticeScreen';
+import TermsScreen from '../screens/TermsScreen';
+import ProfileEditScreen from '../screens/ProfileEditScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -21,6 +32,12 @@ export default function RootNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Register" component={RegisterScreen} options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen
+        name="LoginPrompt"
+        component={LoginPromptScreen}
+        options={{ presentation: 'transparentModal', animation: 'slide_from_bottom' }}
+      />
       <Stack.Screen name="Main" component={TabNavigator} />
       <Stack.Screen name="Search" component={SearchScreen} options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="DesignDetail" component={DesignDetailScreen} options={{ animation: 'slide_from_right' }} />
@@ -33,6 +50,15 @@ export default function RootNavigator() {
       <Stack.Screen name="ReviewWrite" component={ReviewWriteScreen} options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="Notifications" component={NotificationScreen} options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="Inquiry" component={InquiryScreen} options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="Coupon" component={CouponScreen} options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="RelatedDesigns" component={RelatedDesignsScreen} options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="ShopReviews" component={ShopReviewsScreen} options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="ShopInquiry" component={ShopInquiryScreen} options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="Favorites" component={FavoritesScreen} options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="Notice" component={NoticeScreen} options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="Terms" component={TermsScreen} options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} options={{ animation: 'slide_from_right' }} />
     </Stack.Navigator>
   );
 }

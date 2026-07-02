@@ -63,7 +63,6 @@ export default function ReserveTimeBar({ slots, selectedDesignerId, durationMinu
       marks.push({ label: formatHourLabel(new Date(t)), left: ((t - rangeStart) / CELL_MS) * CELL_WIDTH });
     }
     return marks;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rangeStart, rangeEnd]);
 
   // CELL_WIDTH(30.95)는 부동소수점이라 픽셀 단위로 left/CELL_WIDTH를 반복 나누면 경계값이

@@ -7,11 +7,7 @@ export function chipContainerStyle(isActive: boolean): ViewStyle {
   return {
     borderColor: isActive ? colors.secondary : 'rgba(125,105,93,0.3)',
     backgroundColor: isActive ? colors.secondary : colors.background,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.1,
-    shadowRadius: isActive ? 3.78 : 7.559,
-    // Android elevation은 Figma의 옅은(opacity 0.1) 블러와 렌더링 모델이 달라 과해 보임 — 생략
+    shadowOpacity: 0,
     elevation: 0,
   };
 }

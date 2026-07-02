@@ -1,138 +1,199 @@
 import React, { useState } from 'react';
-import { View, Text, Image, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, Image, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import tw from 'twrnc';
-import { useAuth } from '../hooks/useAuth';
-import { shadows } from '../theme/tokens';
+import { useAuth, useSignOut } from '../hooks/useAuth';
+import { useRequireAuth } from '../hooks/useRequireAuth';
+import { useNotifications } from '../hooks/useNotifications';
+import { colors, typography } from '../theme/tokens';
 import { fontFamily } from '../theme/fonts';
+import AvatarPlaceholder from '../components/AvatarPlaceholder';
+import Logo from '../components/Logo';
+import Button from '../components/Button';
 import type { RootStackParamList } from '../types';
 
-const MOCK_POSTS = Array.from({ length: 9 });
+const APP_VERSION = '1.0.0';
+
+const MENU_SECTIONS = [
+  {
+    key: '쿠폰함',
+    icon: 'ticket-outline' as const,
+    items: [
+      { label: '쿠폰함', screen: 'Coupon' as const },
+    ],
+  },
+  {
+    key: '고객 센터',
+    icon: 'help-circle-outline' as const,
+    items: [
+      { label: '1:1 문의', screen: 'Inquiry' as const, authRequired: true },
+      { label: '공지사항', screen: 'Notice' as const },
+      { label: '이용약관', screen: 'Terms' as const },
+    ],
+  },
+  {
+    key: '알림 설정',
+    icon: 'notifications-outline' as const,
+    items: [
+      { label: '알림 설정', screen: 'NotificationSettings' as const, authRequired: true },
+    ],
+  },
+] as const;
 
 const STATS = [
-  { value: '00', label: '게시물' },
-  { value: '00', label: '팔로워' },
-  { value: '00', label: '팔로잉' },
+  { value: '0', label: '게시글' },
+  { value: '0', label: '팔로워' },
+  { value: '0', label: '팔로잉' },
 ];
 
-const ACTIONS = [
-  { icon: 'ticket-outline' as const, label: '쿠폰함' },
-  { icon: 'chatbox-outline' as const, label: '문의하기' },
-  { icon: 'heart-outline' as const, label: '좋아요' },
-];
+
+function Divider() {
+  return <View style={{ height: 1, backgroundColor: colors.line, marginHorizontal: 20 }} />;
+}
 
 export default function ProfileScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  // 로그인 세션의 실제 유저 정보를 표시한다. 통계/게시물은 전용 엔드포인트가 없어 placeholder 유지.
   const { user } = useAuth();
+  const { isAuthenticated, requireAuth } = useRequireAuth();
+  const { mutate: signOut, isPending: isSigningOut } = useSignOut();
+  const { unreadCount } = useNotifications();
+
+  function handleLogout() {
+    signOut(undefined, {
+      onSettled: () => {
+        // flat stack이라 인증 분기가 없으므로 스택을 비우고 Login으로 보낸다.
+        navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+      },
+    });
+  }
   const displayName = user?.nickname ?? '사용자';
-  const displayBio = user?.bio ?? '안녕하세요 자기소개입니다';
   const avatarUri = user?.profile_image_url ?? null;
   const [avatarError, setAvatarError] = useState(false);
   const showAvatar = Boolean(avatarUri) && !avatarError;
 
   return (
     <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>
-      {/* Top Bar */}
-      <View style={tw`flex-row items-center justify-between px-[20px] h-[54px] bg-white`}>
-        <Text style={[tw`text-[14px] text-[#6F6F6F]`, { fontFamily: fontFamily.semibold }]}>프로필</Text>
-        <View style={tw`flex-row items-center gap-[10px]`}>
-          <TouchableOpacity activeOpacity={0.7}>
-            <Ionicons name="notifications-outline" size={27} color="#6F6F6F" />
+      {/* 헤더 */}
+      <View style={tw`flex-row items-center justify-between px-[20px] h-[54px]`}>
+        <Logo />
+        <View style={tw`flex-row items-center gap-x-[8px]`}>
+          <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Notifications')} style={tw`relative`}>
+            <Ionicons name="notifications-outline" size={28} color={colors.secondary} />
+            {unreadCount > 0 && (
+              <View style={tw`absolute top-0 right-0 w-[8px] h-[8px] rounded-full bg-[#E8604C]`} />
+            )}
           </TouchableOpacity>
           <TouchableOpacity activeOpacity={0.7}>
-            <Ionicons name="settings-outline" size={27} color="#6F6F6F" />
+            <Ionicons name="heart-outline" size={28} color={colors.secondary} />
           </TouchableOpacity>
         </View>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* My Profile */}
-        <View style={tw`py-[20px] gap-y-[15px]`}>
-          {/* Profile image + stats */}
-          <View style={tw`flex-row items-center px-[20px] gap-[40px]`}>
+        {/* 프로필 영역 */}
+        <View style={tw`px-[20px] pt-[16px] pb-[24px]`}>
+          {/* 아바타 + 닉네임 + 수정버튼 */}
+          <View style={tw`flex-row items-center gap-[16px]`}>
             {showAvatar ? (
-              <Image
-                source={{ uri: avatarUri! }}
-                style={tw`w-[59px] h-[59px] rounded-full`}
-                resizeMode="cover"
-                onError={() => setAvatarError(true)}
-              />
+              <Image source={{ uri: avatarUri! }} style={tw`w-[60px] h-[60px] rounded-full`} resizeMode="cover" onError={() => setAvatarError(true)} />
             ) : (
-              <View style={tw`w-[59px] h-[59px] rounded-full bg-[#D9D9D9]`} />
+              <AvatarPlaceholder size={60} />
             )}
-            <View style={tw`flex-row items-center gap-[63px]`}>
-              {STATS.map(({ value, label }) => (
-                <View key={label} style={tw`items-center gap-y-[9px] w-[34px]`}>
-                  <Text style={[tw`text-[18px] text-[#6F6F6F]`, { fontFamily: fontFamily.semibold }]}>{value}</Text>
-                  <Text style={[tw`text-[12px] text-[#6F6F6F]`, { fontFamily: fontFamily.medium }]}>{label}</Text>
-                </View>
-              ))}
+            <View style={tw`flex-1 flex-row items-center justify-between`}>
+              <Text style={[typography.bodyMd, { color: colors.secondary, fontFamily: fontFamily.semibold }]}>{displayName}</Text>
+              <Button
+                label="수정"
+                variant="outline"
+                onPress={() => requireAuth(() => navigation.navigate('ProfileEdit'), '로그인하고 프로필을 수정해보세요')}
+                style={{ height: 30, paddingHorizontal: 16, borderRadius: 6, borderColor: 'rgba(125,105,93,0.3)', backgroundColor: colors.background }}
+              />
             </View>
           </View>
 
-          {/* Name + bio */}
-          <View style={tw`px-[20px] gap-y-[9px]`}>
-            <Text style={[tw`text-[18px] text-[#6F6F6F]`, { fontFamily: fontFamily.semibold }]}>{displayName}</Text>
-            <Text style={[tw`text-[12px] text-[#6F6F6F]`, { fontFamily: fontFamily.medium }]}>{displayBio}</Text>
-          </View>
-
-          {/* Edit / Share buttons */}
-          <View style={tw`flex-row px-[20px] gap-[26px]`}>
-            {['프로필 수정', '프로필 공유'].map((label) => (
-              <TouchableOpacity
-                key={label}
-                activeOpacity={0.7}
-                style={tw`flex-1 h-[35px] bg-[#D9D9D9] rounded-[5px] items-center justify-center`}
-              >
-                <Text style={[tw`text-[12px] text-[#6F6F6F]`, { fontFamily: fontFamily.bold }]}>{label}</Text>
-              </TouchableOpacity>
+          {/* 게시글 · 팔로워 · 팔로잉 */}
+          <View style={tw`flex-row items-center gap-[20px] mt-[12px]`}>
+            {STATS.map(({ value, label }) => (
+              <View key={label} style={tw`flex-row items-center gap-[4px]`}>
+                <Text style={[typography.bodySm, { color: colors.secondary, fontFamily: fontFamily.semibold }]}>{label}</Text>
+                <Text style={[typography.bodySm, { color: colors.secondary }]}>{value}</Text>
+              </View>
             ))}
           </View>
         </View>
 
-        {/* Action shortcuts card */}
-        <View style={tw`px-[10px] pb-[5px]`}>
-          <View
-            style={[
-              tw`bg-white rounded-[10px] h-[84px] flex-row items-center justify-evenly px-[20px]`,
-              shadows.bar,
-            ]}
+        <Divider />
+
+        {/* 메뉴 섹션 리스트 */}
+        {MENU_SECTIONS.map((section) => (
+          <View key={section.key}>
+            {/* 섹션 헤더 */}
+            <View style={tw`flex-row items-center gap-[6px] px-[20px] pt-[20px] pb-[8px]`}>
+              <Ionicons name={section.icon} size={16} color={colors.secondary50} />
+              <Text style={{ fontSize: 13, fontFamily: fontFamily.semibold, color: colors.secondary50 }}>
+                {section.key}
+              </Text>
+            </View>
+            {/* 섹션 아이템 */}
+            {section.items.map((item) => (
+              <TouchableOpacity
+                key={item.label}
+                activeOpacity={0.7}
+                onPress={() => {
+                  if (!item.screen) return;
+                  const go = () => navigation.navigate(item.screen as never);
+                  if ('authRequired' in item && item.authRequired) requireAuth(go);
+                  else go();
+                }}
+                style={tw`flex-row items-center justify-between px-[20px] h-[48px]`}
+              >
+                <Text style={[typography.bodySm, { color: colors.secondary }]}>{item.label}</Text>
+                <Ionicons name="chevron-forward" size={16} color={colors.secondary50} />
+              </TouchableOpacity>
+            ))}
+            <Divider />
+          </View>
+        ))}
+
+        {/* 앱 버전 */}
+        <View style={tw`flex-row items-center px-[20px] h-[48px]`}>
+          <Text style={{ fontSize: 13, fontFamily: fontFamily.semibold, color: colors.secondary50 }}>앱 버전</Text>
+          <Text style={{ fontSize: 13, fontFamily: fontFamily.regular, color: colors.secondary50, marginLeft: 12 }}>
+            ver {APP_VERSION}
+          </Text>
+        </View>
+
+        <Divider />
+
+        {/* 로그아웃 / 로그인 (비회원이면 로그인으로 토글) */}
+        {isAuthenticated ? (
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={handleLogout}
+            disabled={isSigningOut}
+            style={tw`flex-row items-center justify-between px-[20px] h-[48px]`}
           >
-            {ACTIONS.map(({ icon, label }) => (
-              <TouchableOpacity
-                key={label}
-                activeOpacity={0.7}
-                style={tw`items-center w-[38px]`}
-                onPress={() => { if (label === '문의하기') navigation.navigate('Inquiry'); }}
-              >
-                <Ionicons name={icon} size={35} color="#6F6F6F" />
-                <Text style={[tw`text-[8px] text-[#6F6F6F] text-center mt-[2px]`, { fontFamily: fontFamily.medium }]}>
-                  {label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
+            <Text style={[typography.bodySm, { color: colors.secondary50 }]}>로그아웃</Text>
+            {isSigningOut ? (
+              <ActivityIndicator size="small" color={colors.secondary50} />
+            ) : (
+              <Ionicons name="log-out-outline" size={18} color={colors.secondary50} />
+            )}
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('Login')}
+            style={tw`flex-row items-center justify-between px-[20px] h-[48px]`}
+          >
+            <Text style={[typography.bodySm, { color: colors.secondary }]}>로그인</Text>
+            <Ionicons name="log-in-outline" size={18} color={colors.secondary} />
+          </TouchableOpacity>
+        )}
 
-        {/* Post grid 3×3 */}
-        <View style={tw`flex-row flex-wrap mt-[5px]`}>
-          {MOCK_POSTS.map((_, i) => (
-            <View
-              key={i}
-              style={{
-                width: '33.33%',
-                aspectRatio: 1,
-                backgroundColor: '#D9D9D9',
-                borderWidth: 1,
-                borderColor: 'white',
-              }}
-            />
-          ))}
-        </View>
+        <View style={tw`h-[20px]`} />
       </ScrollView>
     </SafeAreaView>
   );

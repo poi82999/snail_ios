@@ -10,6 +10,7 @@ import tw from 'twrnc';
 import { RootStackParamList, Snap } from '../types';
 import { useDesignDetail, useRelatedDesigns } from '../hooks/useDesignDetail';
 import { useLikeToggle } from '../hooks/useHome';
+import { useRequireAuth } from '../hooks/useRequireAuth';
 import { useDesignReviews } from '../hooks/useReviews';
 import { useDesignSnails } from '../hooks/useSnail';
 import { colors, typography } from '../theme/tokens';
@@ -22,6 +23,7 @@ import ReportModal from '../components/ReportModal';
 import LoadingState from '../components/state/LoadingState';
 import ErrorState from '../components/state/ErrorState';
 import { useCreateShopInquiry } from '../hooks/useShopInquiry';
+import { getMaxDuration } from '../utils/duration';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DesignDetail'>;
 type DetailTab = '스네일' | '샵 후기' | '문의하기';
@@ -55,6 +57,7 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
   const { data: reviews = [] } = useDesignReviews(designId);
   const { snaps: snailPosts } = useDesignSnails(designId);
   const { mutate: toggleLike } = useLikeToggle();
+  const { requireAuth } = useRequireAuth();
   const [activeTab, setActiveTab] = useState<DetailTab>('스네일');
   const [likedOverride, setLikedOverride] = useState<boolean | null>(null);
   const [reportReviewId, setReportReviewId] = useState<string | null>(null);
@@ -85,9 +88,11 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
   const liked = likedOverride ?? design.isLiked;
   const likeCount = design.likeCount + (liked === design.isLiked ? 0 : liked ? 1 : -1);
   function onHeart() {
-    const next = !liked;
-    setLikedOverride(next);
-    toggleLike({ designId, isLiked: next });
+    requireAuth(() => {
+      const next = !liked;
+      setLikedOverride(next);
+      toggleLike({ designId, isLiked: next });
+    }, '로그인하고 마음에 드는 디자인을 찜해보세요');
   }
 
   return (
@@ -99,13 +104,13 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
         </TouchableOpacity>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <TouchableOpacity onPress={() => navigation.navigate('Main')} activeOpacity={0.7}>
-            <Ionicons name="home-outline" size={35} color={colors.secondary} />
+            <Ionicons name="home-outline" size={28} color={colors.secondary} />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => navigation.navigate('Search')} activeOpacity={0.7}>
-            <Ionicons name="search-outline" size={35} color={colors.secondary} />
+            <Ionicons name="search-outline" size={28} color={colors.secondary} />
           </TouchableOpacity>
-          <TouchableOpacity activeOpacity={0.7}>
-            <Ionicons name="heart-outline" size={35} color={colors.secondary} />
+          <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Favorites')}>
+            <Ionicons name="heart-outline" size={28} color={colors.secondary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -139,7 +144,7 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
             <Text style={[typography.headingLg, { color: colors.secondary }]}>{formattedPrice}</Text>
             <View style={tw`flex-row items-center gap-[4px]`}>
               <Ionicons name="alarm-outline" size={20} color={colors.secondary} />
-              <Text style={[typography.caption, { color: colors.secondary }]}>{design.duration}분</Text>
+              <Text style={[typography.caption, { color: colors.secondary }]}>{getMaxDuration(design)}분</Text>
             </View>
           </View>
           {design.tags.length > 0 && (
@@ -156,10 +161,14 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
 
         {/* 연관 추천 디자인 — useRelatedDesigns(/designs/{id}/related). 없으면 섹션 숨김 */}
         {relatedDesigns.length > 0 && (
-          <View style={{ padding: 20, gap: 12 }}>
-            <View style={tw`flex-row items-center justify-between`}>
+          <View style={{ gap: 12, paddingTop: 20, paddingBottom: 20 }}>
+            <View style={tw`flex-row items-center justify-between px-[20px]`}>
               <Text style={[typography.filter, { color: colors.secondary }]}>연관 추천 디자인</Text>
-              <TouchableOpacity activeOpacity={0.7} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                onPress={() => navigation.navigate('RelatedDesigns', { designId })}
+              >
                 <Text style={[typography.caption, { color: colors.secondary }]}>전체보기</Text>
                 <Ionicons name="chevron-forward" size={10} color={colors.secondary} />
               </TouchableOpacity>
@@ -169,6 +178,7 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
               data={relatedDesigns}
               keyExtractor={item => item.id}
               showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingLeft: 20 }}
               ItemSeparatorComponent={() => <View style={tw`w-[10px]`} />}
               renderItem={({ item }) => (
                 <TouchableOpacity
@@ -286,10 +296,12 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
                     label={createInquiry.isPending ? '전송 중...' : '문의 보내기'}
                     onPress={() => {
                       if (!inquiryBody.trim() || createInquiry.isPending) return;
-                      createInquiry.mutate(
-                        { shopId: design.shopId, body: inquiryBody.trim(), designId: designId },
-                        { onSuccess: () => setInquirySent(true) }
-                      );
+                      requireAuth(() => {
+                        createInquiry.mutate(
+                          { shopId: design.shopId, body: inquiryBody.trim(), designId: designId },
+                          { onSuccess: () => setInquirySent(true) }
+                        );
+                      }, '로그인하고 문의를 남겨보세요');
                     }}
                     style={{ opacity: inquiryBody.trim().length === 0 || createInquiry.isPending ? 0.5 : 1 }}
                   />
@@ -315,7 +327,7 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
         shadowColor: '#000', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.1, shadowRadius: 1.5, elevation: 3,
       }}>
         <TouchableOpacity onPress={onHeart} activeOpacity={0.7} style={{ width: 38, alignItems: 'center' }}>
-          <Ionicons name={liked ? 'heart' : 'heart-outline'} size={35} color={liked ? '#FF6B6B' : colors.secondary} />
+          <Ionicons name={liked ? 'heart' : 'heart-outline'} size={28} color={liked ? '#FF6B6B' : colors.secondary} />
           <Text style={[typography.caption, { color: colors.secondary }]}>{likeCount.toLocaleString()}</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -323,12 +335,12 @@ export default function DesignDetailScreen({ route, navigation }: Props) {
           activeOpacity={0.7}
           style={{ width: 38, alignItems: 'center' }}
         >
-          <Ionicons name="share-social-outline" size={35} color={colors.secondary} />
+          <Ionicons name="share-social-outline" size={28} color={colors.secondary} />
         </TouchableOpacity>
         <Button
           label="예약하기"
-          onPress={() => navigation.navigate('Booking', { designId })}
-          style={{ width: 250 }}
+          onPress={() => requireAuth(() => navigation.navigate('Booking', { designId }), '로그인하고 예약을 진행해보세요')}
+          style={{ width: 250, height: 42 }}
         />
       </View>
       <ReportModal

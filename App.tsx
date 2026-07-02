@@ -11,7 +11,6 @@ import RootNavigator from './src/navigation/RootNavigator';
 import { navigationRef } from './src/navigation/navigationRef';
 import { navigateToNotificationTarget } from './src/navigation/notificationRouting';
 import AppErrorBoundary from './src/components/AppErrorBoundary';
-import LoginGateModal from './src/components/LoginGateModal';
 import { queryClient } from './src/api/queryClient';
 import { useAuthBootstrap } from './src/hooks/useAuth';
 import { useRegisterPushToken } from './src/hooks/usePushToken';
@@ -70,8 +69,6 @@ function AppContent({ fontsReady }: { fontsReady: boolean }) {
     <NavigationContainer ref={navigationRef} linking={linking}>
       <StatusBar style="dark" />
       <RootNavigator />
-      {/* 비로그인 시 게이트된 액션에서 뜨는 전역 로그인 유도 모달 */}
-      <LoginGateModal />
     </NavigationContainer>
   );
 }

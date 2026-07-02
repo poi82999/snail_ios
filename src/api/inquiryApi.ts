@@ -1,4 +1,4 @@
-import { apiClient } from './client';
+import apiClient from './client';
 import type { components, paths } from '../types/api';
 
 function makeIdempotencyKey(): string {

@@ -5,7 +5,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import PlaceholderScreen from '../screens/PlaceholderScreen';
 import SnailScreen from '../screens/SnailScreen';
 import ScheduleScreen from '../screens/ScheduleScreen';
-import TabBarIcon, { TAB_ICON_SIZE } from '../components/TabBarIcon';
+import TabBarIcon from '../components/TabBarIcon';
 
 export type TabParamList = {
   홈: undefined;
@@ -24,7 +24,6 @@ export default function TabNavigator() {
         headerShown: false,
         tabBarStyle: {
           height: 85,
-          paddingHorizontal: 34,
           paddingTop: 10,
           paddingBottom: 16,
           backgroundColor: '#FFFFFF',
@@ -35,18 +34,24 @@ export default function TabNavigator() {
           shadowRadius: 1.5,
           elevation: 3,
         },
+        // 각 탭 아이템 paddingHorizontal: 19 → flex:1 슬롯(~78px) 내 유효 영역 40px
+        // 아이콘(40px)이 딱 맞게 들어가고, 아이콘 간 gap = 19+19 = 38px
+        tabBarItemStyle: {
+          paddingHorizontal: 22,
+          paddingVertical: 0,
+        },
         tabBarLabelStyle: {
           fontSize: 8,
           fontWeight: '500',
           marginTop: 3,
         },
         tabBarIconStyle: {
-          width: TAB_ICON_SIZE[route.name],
-          height: TAB_ICON_SIZE[route.name],
+          width: 32,
+          height: 32,
         },
         tabBarActiveTintColor: '#7D695D',
         tabBarInactiveTintColor: '#BBAFA8',
-        tabBarIcon: ({ color }) => <TabBarIcon name={route.name} color={color} />,
+        tabBarIcon: ({ color }) => <TabBarIcon name={route.name} color={color} size={32} />,
       })}
     >
       <Tab.Screen name="홈" component={HomeScreen} />

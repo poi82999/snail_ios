@@ -12,9 +12,13 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import tw from 'twrnc';
 import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead } from '../hooks/useNotifications';
+import { useAuth } from '../hooks/useAuth';
+import GuestEmptyState from '../components/GuestEmptyState';
 import type { NotificationPublic } from '../api/notificationApi';
 import { navigateToNotificationTarget } from '../navigation/notificationRouting';
 import type { RootStackParamList } from '../types';
+import { colors } from '../theme/tokens';
+import { fontFamily } from '../theme/fonts';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -77,6 +81,7 @@ function EmptyState() {
 
 export default function NotificationScreen() {
   const navigation = useNavigation<Nav>();
+  const { isAuthenticated } = useAuth();
   const { mutate: markRead } = useMarkNotificationRead();
   const { mutate: markAll } = useMarkAllNotificationsRead();
 
@@ -99,17 +104,33 @@ export default function NotificationScreen() {
     navigateToNotificationTarget(item);
   }
 
+  // 비회원: 헤더만 유지하고 로그인 유도 빈 상태
+  if (!isAuthenticated) {
+    return (
+      <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>
+        <View style={tw`flex-row items-center px-[20px] h-[54px]`}>
+          <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7} style={tw`w-[56px]`}>
+            <Ionicons name="chevron-back" size={24} color={colors.secondary} />
+          </TouchableOpacity>
+          <Text style={[tw`flex-1 text-center text-[16px]`, { fontFamily: fontFamily.semibold, color: colors.secondary }]}>알림</Text>
+          <View style={tw`w-[56px]`} />
+        </View>
+        <GuestEmptyState message="로그인하고 알림을 확인해보세요" />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={tw`flex-1 bg-white`} edges={['top']}>
       {/* Header */}
-      <View style={tw`flex-row items-center justify-between px-[20px] h-[54px]`}>
-        <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7} style={tw`p-[4px]`}>
-          <Ionicons name="chevron-back" size={24} color="#1A1A1A" />
+      <View style={tw`flex-row items-center px-[20px] h-[54px]`}>
+        <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7} style={tw`w-[56px]`}>
+          <Ionicons name="chevron-back" size={24} color={colors.secondary} />
         </TouchableOpacity>
-        <Text style={tw`text-[16px] font-semibold text-[#1A1A1A]`}>알림</Text>
+        <Text style={[tw`flex-1 text-center text-[16px]`, { fontFamily: fontFamily.semibold, color: colors.secondary }]}>알림</Text>
         {unreadCount > 0 ? (
-          <TouchableOpacity onPress={() => markAll()} activeOpacity={0.7}>
-            <Text style={tw`text-[13px] text-[#7D695D]`}>모두 읽음</Text>
+          <TouchableOpacity onPress={() => markAll()} activeOpacity={0.7} style={tw`w-[56px] items-end`}>
+            <Text style={[tw`text-[13px]`, { color: colors.secondary }]}>모두 읽음</Text>
           </TouchableOpacity>
         ) : (
           <View style={tw`w-[56px]`} />

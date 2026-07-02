@@ -27,7 +27,7 @@ function getTodayHoursLabel(shop: ShopPublic): string {
   return `${formatHourPart(entry.open_time)} - ${formatHourPart(entry.close_time)}`;
 }
 
-function getShopThumbnailUri(shop: ShopPublic): string {
+export function getShopThumbnailUri(shop: ShopPublic): string {
   const thumbnailImage = shop.images?.find((image) => image.is_thumbnail);
   return shop.thumbnail_url ?? thumbnailImage?.image_url ?? shop.images?.[0]?.image_url ?? '';
 }
