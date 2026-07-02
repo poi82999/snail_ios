@@ -1,6 +1,7 @@
 import apiClient from './client';
 import { clearTokens, setTokens } from './authToken';
 import { toApiError } from './errors';
+import { unregisterDeviceToken } from './pushTokenApi';
 import type { components, paths } from '../types/api';
 
 type AppleSignInOperation = paths['/api/v1/auth/apple']['post'];
@@ -91,6 +92,12 @@ export async function fetchMe(): Promise<UserMe> {
 }
 
 export async function signOut(): Promise<void> {
+  try {
+    await unregisterDeviceToken();
+  } catch {
+    // 로그아웃은 디바이스 토큰 해제 실패로 막지 않는다(best-effort).
+  }
+
   clearTokens();
 }
 
