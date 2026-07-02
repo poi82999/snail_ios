@@ -38,7 +38,8 @@ export default function RootNavigator() {
         component={LoginPromptScreen}
         options={{ presentation: 'transparentModal', animation: 'slide_from_bottom' }}
       />
-      <Stack.Screen name="Main" component={TabNavigator} />
+      {/* 로그인 → 홈 진입 시 replace 기본 전환(iOS 모달풍 슬라이드) 대신 fade */}
+      <Stack.Screen name="Main" component={TabNavigator} options={{ animation: 'fade' }} />
       <Stack.Screen name="Search" component={SearchScreen} options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="DesignDetail" component={DesignDetailScreen} options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="ShopDetail" component={ShopDetailScreen} options={{ animation: 'slide_from_right' }} />
